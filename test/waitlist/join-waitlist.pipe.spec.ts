@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
-import { JoinWaitlistPipe } from '../../src/waitlist/join-waitlist.pipe.js';
+import { JoinWaitlistPipe } from '../../src/modules/waitlist/join-waitlist.pipe.js';
 
 describe('JoinWaitlistPipe', () => {
   const pipe = new JoinWaitlistPipe();
@@ -12,17 +12,13 @@ describe('JoinWaitlistPipe', () => {
         email: '  JANE@EXAMPLE.COM  ',
         ignored: true,
       }),
-    ).toEqual({
-      name: 'Jane Doe',
-      email: 'jane@example.com',
-    });
+    ).toEqual({ name: 'Jane Doe', email: 'jane@example.com' });
   });
 
-  it('preserves the legacy missing-fields response', () => {
-    expect.assertions(2);
-
+  it('preserves the missing-fields response', () => {
     try {
       pipe.transform({ name: 42, email: 'jane@example.com' });
+      throw new Error('Expected validation to fail');
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(BadRequestException);
       expect((error as BadRequestException).getResponse()).toEqual({
@@ -32,11 +28,10 @@ describe('JoinWaitlistPipe', () => {
     }
   });
 
-  it('preserves the legacy invalid-email response', () => {
-    expect.assertions(1);
-
+  it('preserves the invalid-email response', () => {
     try {
       pipe.transform({ name: 'Jane', email: 'not-an-email' });
+      throw new Error('Expected validation to fail');
     } catch (error: unknown) {
       expect((error as BadRequestException).getResponse()).toEqual({
         success: false,
