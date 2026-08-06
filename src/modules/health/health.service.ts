@@ -1,5 +1,5 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service.js';
+import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 
 export interface HealthStatus {
   readonly status: 'ok' | 'ready';
@@ -11,10 +11,7 @@ export class HealthService {
   public constructor(private readonly prisma: PrismaService) {}
 
   public liveness(): HealthStatus {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-    };
+    return { status: 'ok', timestamp: new Date().toISOString() };
   }
 
   public async readiness(): Promise<HealthStatus> {
@@ -27,10 +24,6 @@ export class HealthService {
         details: null,
       });
     }
-
-    return {
-      status: 'ready',
-      timestamp: new Date().toISOString(),
-    };
+    return { status: 'ready', timestamp: new Date().toISOString() };
   }
 }

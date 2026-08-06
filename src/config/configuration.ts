@@ -16,6 +16,8 @@ const environmentSchema = z.object({
   HTTP_BODY_LIMIT: z.string().min(1).default('10mb'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(1).default(1),
   LOG_LEVEL: z.enum(['debug', 'log', 'warn', 'error', 'fatal']).default('log'),
+  JWT_SECRET: z.string().min(16),
+  TWO_FACTOR_SECRET_KEY: z.string().min(32),
 });
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;
@@ -37,6 +39,10 @@ export interface AppConfiguration {
   readonly logging: {
     readonly level: RuntimeEnvironment['LOG_LEVEL'];
   };
+  readonly auth: {
+    readonly jwtSecret: string;
+    readonly twoFactorSecretKey: string;
+  };
 }
 
 export const APP_CONFIGURATION = Symbol('APP_CONFIGURATION');
@@ -49,30 +55,28 @@ export class ConfigurationValidationError extends Error {
 }
 
 function normalizeTrustProxy(value: number): 0 | 1 {
-  if (value === 0 || value === 1) {
-    return value;
-  }
-
+  if (value === 0 || value === 1) return value;
   throw new ConfigurationValidationError(['TRUST_PROXY must be 0 or 1']);
 }
 
 function normalizeOrigins(value: string): readonly string[] {
-  const origins = value
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter((origin) => origin.length > 0);
-
-  return Object.freeze(origins);
+  return Object.freeze(
+    value
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0),
+  );
 }
 
 export function loadConfiguration(
   environment: Readonly<Record<string, string | undefined>>,
 ): AppConfiguration {
   const parsed = environmentSchema.safeParse(environment);
-
   if (!parsed.success) {
     throw new ConfigurationValidationError(
-      parsed.error.issues.map((issue) => `${issue.path.join('.') || 'environment'}: ${issue.message}`),
+      parsed.error.issues.map(
+        (issue) => `${issue.path.join('.') || 'environment'}: ${issue.message}`,
+      ),
     );
   }
 
@@ -82,16 +86,16 @@ export function loadConfiguration(
       host: parsed.data.HOST,
       port: parsed.data.PORT,
     },
-    database: {
-      url: parsed.data.DATABASE_URL,
-    },
+    database: { url: parsed.data.DATABASE_URL },
     http: {
       bodyLimit: parsed.data.HTTP_BODY_LIMIT,
       corsOrigins: normalizeOrigins(parsed.data.CORS_ORIGINS),
       trustProxy: normalizeTrustProxy(parsed.data.TRUST_PROXY),
     },
-    logging: {
-      level: parsed.data.LOG_LEVEL,
+    logging: { level: parsed.data.LOG_LEVEL },
+    auth: {
+      jwtSecret: parsed.data.JWT_SECRET,
+      twoFactorSecretKey: parsed.data.TWO_FACTOR_SECRET_KEY,
     },
   };
 
@@ -101,6 +105,7 @@ export function loadConfiguration(
     database: Object.freeze(configuration.database),
     http: Object.freeze(configuration.http),
     logging: Object.freeze(configuration.logging),
+    auth: Object.freeze(configuration.auth),
   });
 }
 

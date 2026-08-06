@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "domain": "interests",
+  "baseCommit": "311ac411d87e7dad6d6a826529ba3a52c4f52453",
+  "currentOwner": "Express",
+  "candidateOwner": "NestJS",
+  "cutoverState": "express-owner",
+  "rollbackState": "legacy-available",
+  "architecture": {
+    "module": "src/modules/interests",
+    "persistencePort": "src/modules/interests/interests.repository.ts",
+    "prismaAdapter": "src/infrastructure/prisma/repositories/prisma-interests.repository.ts",
+    "accessControl": "src/modules/auth"
+  },
+  "capabilities": [
+    { "method": "GET", "path": "/api/interests", "auth": "public" },
+    { "method": "POST", "path": "/api/interests", "auth": "jwt+admin+2fa" },
+    { "method": "PUT", "path": "/api/interests/:id", "auth": "jwt+admin+2fa" },
+    { "method": "DELETE", "path": "/api/interests/:id", "auth": "jwt+admin+2fa" },
+    { "method": "GET", "path": "/api/user/interests", "auth": "jwt" },
+    { "method": "POST", "path": "/api/user/interests", "auth": "jwt" },
+    { "method": "DELETE", "path": "/api/user/interests/:interestId", "auth": "jwt" }
+  ],
+  "intentionalCorrections": [
+    "Unexpected errors no longer disclose raw error.message values.",
+    "Malformed create and user-interest request bodies return stable 400 responses.",
+    "Deleting a missing interest returns the documented 404 response instead of a Prisma-derived 500."
+  ]
+}

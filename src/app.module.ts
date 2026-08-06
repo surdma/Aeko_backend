@@ -3,14 +3,16 @@ import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { LoggingModule } from './common/logging.module.js';
 import { RequestIdMiddleware } from './common/request-id.middleware.js';
 import { AppConfigurationModule } from './config/configuration.js';
-import { HealthModule } from './health/health.module.js';
-import { InterestsModule } from './interests/interests.module.js';
-import { WaitlistModule } from './waitlist/waitlist.module.js';
+import { AuthModule } from './modules/auth/auth.module.js';
+import { HealthModule } from './modules/health/health.module.js';
+import { InterestsModule } from './modules/interests/interests.module.js';
+import { WaitlistModule } from './modules/waitlist/waitlist.module.js';
 
 @Module({
   imports: [
     AppConfigurationModule.forRoot(),
     LoggingModule,
+    AuthModule,
     HealthModule,
     WaitlistModule,
     InterestsModule,

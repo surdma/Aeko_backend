@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HttpExceptionFilter } from '../../src/common/http-exception.filter.js';
 import { RequestIdMiddleware } from '../../src/common/request-id.middleware.js';
 import { SanitizedLogger } from '../../src/common/sanitized-logger.js';
-import { HealthModule } from '../../src/health/health.module.js';
-import { PrismaService } from '../../src/prisma/prisma.service.js';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service.js';
+import { HealthModule } from '../../src/modules/health/health.module.js';
 
 const verifyConnection = vi.fn<() => Promise<void>>();
 
@@ -36,9 +36,7 @@ describe('health endpoints', () => {
     await app.init();
   });
 
-  afterEach(async () => {
-    await app.close();
-  });
+  afterEach(async () => app.close());
 
   it('reports process liveness without querying PostgreSQL', async () => {
     const response = await request(app.getHttpServer())
@@ -53,7 +51,6 @@ describe('health endpoints', () => {
 
   it('reports readiness after PostgreSQL responds', async () => {
     verifyConnection.mockResolvedValue(undefined);
-
     const response = await request(app.getHttpServer())
       .get('/health/ready')
       .expect(200);

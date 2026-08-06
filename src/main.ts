@@ -18,27 +18,17 @@ export async function createApp(): Promise<INestApplication> {
 
   app.useLogger(logger);
   app.useGlobalFilters(app.get<HttpExceptionFilter>(HttpExceptionFilter));
-  app.enableCors({
-    credentials: true,
-    origin: [...configuration.http.corsOrigins],
-  });
-  app.useBodyParser('json', {
-    limit: configuration.http.bodyLimit,
-  });
-  app.useBodyParser('urlencoded', {
-    extended: true,
-    limit: configuration.http.bodyLimit,
-  });
+  app.enableCors({ credentials: true, origin: [...configuration.http.corsOrigins] });
+  app.useBodyParser('json', { limit: configuration.http.bodyLimit });
+  app.useBodyParser('urlencoded', { extended: true, limit: configuration.http.bodyLimit });
   app.set('trust proxy', configuration.http.trustProxy);
   app.enableShutdownHooks();
-
   return app;
 }
 
 async function bootstrap(): Promise<void> {
   const app = await createApp();
   const configuration = app.get<AppConfiguration>(APP_CONFIGURATION);
-
   await app.listen(configuration.app.port, configuration.app.host);
 }
 
