@@ -18,6 +18,7 @@
     "test:waitlist": "vitest run test/waitlist",
     "test:auth": "vitest run test/auth",
     "test:interests": "vitest run test/interests",
+    "test:support": "vitest run test/support",
     "quality": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm prisma validate",
     "inventory:legacy": "tsx scripts/migration/inventory-resolved.mts",
     "inventory:legacy:raw": "tsx scripts/migration/inventory-legacy.mts",

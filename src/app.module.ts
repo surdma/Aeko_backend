@@ -6,6 +6,7 @@ import { AppConfigurationModule } from './config/configuration.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { InterestsModule } from './modules/interests/interests.module.js';
+import { SupportModule } from './modules/support/support.module.js';
 import { WaitlistModule } from './modules/waitlist/waitlist.module.js';
 
 @Module({
@@ -16,6 +17,7 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module.js';
     HealthModule,
     WaitlistModule,
     InterestsModule,
+    SupportModule,
   ],
   providers: [HttpExceptionFilter],
 })

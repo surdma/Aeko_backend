@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HttpExceptionFilter } from '../../src/common/http-exception.filter.js';
 import { LoggingModule } from '../../src/common/logging.module.js';
 import { RequestIdMiddleware } from '../../src/common/request-id.middleware.js';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service.js';
 import { WaitlistModule } from '../../src/modules/waitlist/waitlist.module.js';
 import {
   WAITLIST_REPOSITORY,
@@ -40,6 +41,8 @@ describe('POST /api/waitlist', () => {
     const moduleReference = await Test.createTestingModule({
       imports: [TestAppModule],
     })
+      .overrideProvider(PrismaService)
+      .useValue({})
       .overrideProvider(WAITLIST_REPOSITORY)
       .useValue(repository)
       .compile();

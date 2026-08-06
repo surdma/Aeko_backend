@@ -8,6 +8,7 @@ import { HttpExceptionFilter } from '../../src/common/http-exception.filter.js';
 import { LoggingModule } from '../../src/common/logging.module.js';
 import { RequestIdMiddleware } from '../../src/common/request-id.middleware.js';
 import { AppConfigurationModule } from '../../src/config/configuration.js';
+import { PrismaService } from '../../src/infrastructure/prisma/prisma.service.js';
 import { AuthModule } from '../../src/modules/auth/auth.module.js';
 import {
   AUTH_REPOSITORY,
@@ -108,6 +109,8 @@ describe('interests domain', () => {
     const moduleReference = await Test.createTestingModule({
       imports: [TestAppModule],
     })
+      .overrideProvider(PrismaService)
+      .useValue({})
       .overrideProvider(AUTH_REPOSITORY)
       .useValue(authRepository)
       .overrideProvider(INTERESTS_REPOSITORY)
