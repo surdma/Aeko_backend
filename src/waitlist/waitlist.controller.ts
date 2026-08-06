@@ -12,12 +12,12 @@ import {
 } from '@nestjs/common';
 import type { WaitlistEntry } from '@prisma/client';
 import { Throttle, ThrottlerGuard, minutes } from '@nestjs/throttler';
+import { LegacyApiThrottlerExceptionFilter } from '../common/legacy-api-throttler-exception.filter.js';
 import {
   JoinWaitlistPipe,
   type JoinWaitlistInput,
 } from './join-waitlist.pipe.js';
 import { WaitlistService, type JoinWaitlistResult } from './waitlist.service.js';
-import { WaitlistThrottlerExceptionFilter } from './waitlist-throttler-exception.filter.js';
 
 interface JoinWaitlistSuccessResponse {
   readonly success: true;
@@ -35,7 +35,7 @@ function assertNever(value: never): never {
 
 @Controller('api/waitlist')
 @UseGuards(ThrottlerGuard)
-@UseFilters(WaitlistThrottlerExceptionFilter)
+@UseFilters(LegacyApiThrottlerExceptionFilter)
 export class WaitlistController {
   public constructor(private readonly waitlistService: WaitlistService) {}
 

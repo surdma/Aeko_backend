@@ -10,7 +10,7 @@ import { ThrottlerException } from '@nestjs/throttler';
 
 @Catch(ThrottlerException)
 @Injectable()
-export class WaitlistThrottlerExceptionFilter
+export class LegacyApiThrottlerExceptionFilter
   implements ExceptionFilter<ThrottlerException>
 {
   public constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
