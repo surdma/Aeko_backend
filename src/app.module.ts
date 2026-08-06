@@ -4,6 +4,7 @@ import { LoggingModule } from './common/logging.module.js';
 import { RequestIdMiddleware } from './common/request-id.middleware.js';
 import { AppConfigurationModule } from './config/configuration.js';
 import { HealthModule } from './health/health.module.js';
+import { InterestsModule } from './interests/interests.module.js';
 import { WaitlistModule } from './waitlist/waitlist.module.js';
 
 @Module({
@@ -12,6 +13,7 @@ import { WaitlistModule } from './waitlist/waitlist.module.js';
     LoggingModule,
     HealthModule,
     WaitlistModule,
+    InterestsModule,
   ],
   providers: [HttpExceptionFilter],
 })

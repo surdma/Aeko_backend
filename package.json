@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:foundation": "vitest run test/foundation",
     "test:waitlist": "vitest run test/waitlist",
+    "test:interests": "vitest run test/interests",
     "quality": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm prisma validate",
     "inventory:legacy": "tsx scripts/migration/inventory-resolved.mts",
     "inventory:legacy:raw": "tsx scripts/migration/inventory-legacy.mts",
