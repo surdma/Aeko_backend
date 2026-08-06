@@ -1,6 +1,10 @@
 name: NestJS migration quality
 
 on:
+  push:
+    branches:
+      - migration/nestjs-clean
+      - agent/nestjs-*
   pull_request:
     branches:
       - migration/nestjs-clean
@@ -11,10 +15,10 @@ permissions:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - name: Checkout migration continuation
+      - name: Checkout migration branch
         uses: actions/checkout@v4
 
       - name: Set up Node.js 24
@@ -28,13 +32,13 @@ jobs:
           corepack prepare pnpm@10.33.2 --activate
           pnpm --version
 
-      - name: Install and refresh the migration lockfile
+      - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
       - name: Run the full quality gate
         run: pnpm quality
 
-      - name: Upload generated lockfile for review
+      - name: Upload refreshed lockfile for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
