@@ -6,7 +6,7 @@ import {
   Injectable,
   type ExceptionFilter,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import { HttpAdapterHost } from '@nestjs/core';
 import type { RequestWithId } from './request-id.middleware.js';
 import { SanitizedLogger } from './sanitized-logger.js';
 
@@ -23,8 +23,23 @@ interface ErrorEnvelope {
   };
 }
 
+interface LegacyErrorEnvelope {
+  readonly success: false;
+  readonly message: string;
+  readonly error?: string;
+}
+
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isLegacyErrorEnvelope(value: unknown): value is LegacyErrorEnvelope {
+  return (
+    isRecord(value) &&
+    value.success === false &&
+    typeof value.message === 'string' &&
+    (value.error === undefined || typeof value.error === 'string')
+  );
 }
 
 function resolvePublicError(exception: unknown, status: number): PublicErrorBody {
@@ -70,28 +85,50 @@ function resolvePublicError(exception: unknown, status: number): PublicErrorBody
 @Catch()
 @Injectable()
 export class HttpExceptionFilter implements ExceptionFilter {
-  public constructor(private readonly logger: SanitizedLogger) {}
+  public constructor(
+    private readonly logger: SanitizedLogger,
+    private readonly httpAdapterHost: HttpAdapterHost,
+  ) {}
 
   public catch(exception: unknown, host: ArgumentsHost): void {
     const context = host.switchToHttp();
-    const response = context.getResponse<Response>();
+    const response = context.getResponse<unknown>();
     const request = context.getRequest<RequestWithId>();
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+    const requestId = request.requestId ?? 'unknown';
+    const exceptionResponse =
+      exception instanceof HttpException ? exception.getResponse() : undefined;
+
+    if (isLegacyErrorEnvelope(exceptionResponse)) {
+      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
+        this.logger.error('HTTP request failed', {
+          requestId,
+          method: request.method,
+          path: request.originalUrl,
+          status,
+          exception,
+        });
+      }
+
+      this.httpAdapterHost.httpAdapter.reply(response, exceptionResponse, status);
+      return;
+    }
+
     const publicError = resolvePublicError(exception, status);
     const envelope: ErrorEnvelope = {
       success: false,
       error: {
         ...publicError,
-        requestId: request.requestId,
+        requestId,
       },
     };
 
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error('HTTP request failed', {
-        requestId: request.requestId,
+        requestId,
         method: request.method,
         path: request.originalUrl,
         status,
@@ -99,6 +136,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
       });
     }
 
-    response.status(status).json(envelope);
+    this.httpAdapterHost.httpAdapter.reply(response, envelope, status);
   }
 }

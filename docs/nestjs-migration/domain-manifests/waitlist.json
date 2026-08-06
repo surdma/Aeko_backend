@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "domain": "waitlist",
+  "programmeOrder": 1,
+  "currentOwner": "Express",
+  "candidateOwner": "NestJS",
+  "cutoverState": "express-owner",
+  "rollbackState": "legacy-available",
+  "specialists": {
+    "planner": true,
+    "legacyExpressEngineer": true,
+    "nestjsBackendEngineer": true,
+    "blockchainIntegrationEngineer": false,
+    "reviewer": true
+  },
+  "candidateCapabilities": [
+    {
+      "kind": "http-route",
+      "method": "POST",
+      "path": "/api/waitlist",
+      "legacySource": "routes/waitlistRoutes.js",
+      "mountSource": "server.js",
+      "targetModule": "WaitlistModule",
+      "parityCaseIds": [
+        "waitlist:join:success",
+        "waitlist:join:missing-fields",
+        "waitlist:join:invalid-email",
+        "waitlist:join:duplicate-email",
+        "waitlist:join:unexpected-error"
+      ]
+    }
+  ],
+  "deferredCapabilities": [
+    {
+      "kind": "admin-resource",
+      "identifier": "AdminJS WaitlistEntry resource",
+      "source": "admin.js",
+      "reason": "Requires the complete authenticated AdminJS and operations migration."
+    },
+    {
+      "kind": "http-route",
+      "method": "GET",
+      "path": "/admin/waitlist-export",
+      "source": "admin.js",
+      "reason": "Requires AdminJS session parity and CSV export migration."
+    }
+  ]
+}
