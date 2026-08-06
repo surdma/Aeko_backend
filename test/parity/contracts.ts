@@ -1,60 +1,67 @@
 export type SafeNumeric = string | bigint;
 
 export interface EffectRecord {
-  kind: 'database' | 'provider' | 'blockchain';
-  name: string;
-  values: Record<string, unknown>;
+  readonly kind: 'database' | 'provider' | 'blockchain';
+  readonly name: string;
+  readonly values: Readonly<Record<string, unknown>>;
+}
+
+export interface RuntimeEventObservation {
+  readonly event: string;
+  readonly payload: unknown;
+  readonly acknowledgement?: unknown;
 }
 
 export interface RuntimeObservation {
-  status?: number;
-  headers?: Record<string, string>;
-  body?: unknown;
-  cookies?: string[];
-  events?: Array<{ event: string; payload: unknown; acknowledgement?: unknown }>;
-  effects: EffectRecord[];
+  readonly status?: number;
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly body?: unknown;
+  readonly cookies?: readonly string[];
+  readonly events?: readonly RuntimeEventObservation[];
+  readonly effects: readonly EffectRecord[];
 }
 
-interface BaseParityCase {
-  id: string;
-  description: string;
-  intentionalExceptions?: string[];
+export interface BaseParityCase {
+  readonly id: string;
+  readonly description: string;
+  readonly intentionalExceptions?: readonly string[];
+  readonly dynamicPaths?: readonly string[];
 }
 
 export interface HttpParityCase extends BaseParityCase {
-  kind: 'http' | 'webhook';
-  method: string;
-  path: string;
-  headers?: Record<string, string>;
-  body?: unknown;
+  readonly kind: 'http' | 'webhook';
+  readonly method: string;
+  readonly path: string;
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly body?: unknown;
 }
 
 export interface SocketParityCase extends BaseParityCase {
-  kind: 'socket';
-  namespace: string;
-  event: string;
-  payload: unknown;
+  readonly kind: 'socket';
+  readonly namespace: string;
+  readonly event: string;
+  readonly payload: unknown;
 }
 
 export interface EffectParityCase extends BaseParityCase {
-  kind: 'job' | 'provider' | 'database' | 'blockchain';
-  operation: string;
-  inputs: Record<string, unknown>;
+  readonly kind: 'job' | 'provider' | 'database' | 'blockchain';
+  readonly operation: string;
+  readonly inputs: Readonly<Record<string, unknown>>;
 }
 
 export type ParityCase = HttpParityCase | SocketParityCase | EffectParityCase;
 
 export interface ParityDifference {
-  path: string;
-  legacy: unknown;
-  nest: unknown;
-  intentional: boolean;
+  readonly path: string;
+  readonly legacy: unknown;
+  readonly nest: unknown;
+  readonly intentional: boolean;
 }
 
 export interface ParityResult {
-  caseId: string;
-  matched: boolean;
-  legacy: RuntimeObservation;
-  nest: RuntimeObservation;
-  differences: ParityDifference[];
+  readonly caseId: string;
+  readonly matched: boolean;
+  readonly legacy: RuntimeObservation;
+  readonly nest: RuntimeObservation;
+  readonly differences: readonly ParityDifference[];
 }
