@@ -3,6 +3,8 @@ dist/
 package-lock.json
 yarn-error.log
 yarn.lock
+pnpm-debug.log*
+.corepack-cache/
 
 # Environment files
 .env
@@ -25,27 +27,23 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage
 coverage/
 
-# Dependency directories
+# Dependency and tool caches
 node_modules/
 jspm_packages/
-
-# Optional npm cache directory
-.npm
+.npm/
+.biome/
 
 # Optional REPL history
 .node_repl_history
 
-# Output of 'npm pack'
+# Output of package archives
 *.tgz
 
-# Yarn Integrity file
+# Yarn integrity
 .yarn-integrity
-
-# dotenv environment variables file
-.env
 
 # IDE files
 .vscode/
@@ -63,9 +61,9 @@ jspm_packages/
 ehthumbs.db
 Thumbs.db
 
-# Uploads directory (if storing files locally)
+# Local uploads
 uploads/
 
-# Test files with sensitive data
+# Legacy ad-hoc test files with sensitive data
 test-*.js
 *-test.js
