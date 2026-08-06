@@ -16,29 +16,15 @@ interface PublicErrorBody {
   readonly details: unknown;
 }
 
-interface ErrorEnvelope {
-  readonly success: false;
-  readonly error: PublicErrorBody & {
-    readonly requestId: string;
-  };
-}
-
-interface LegacyErrorEnvelope {
-  readonly success: false;
-  readonly message: string;
-  readonly error?: string;
-}
-
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isLegacyErrorEnvelope(value: unknown): value is LegacyErrorEnvelope {
+function isLegacyEnvelope(value: unknown): value is Readonly<Record<string, unknown>> {
   return (
     isRecord(value) &&
     value.success === false &&
-    typeof value.message === 'string' &&
-    (value.error === undefined || typeof value.error === 'string')
+    (typeof value.message === 'string' || typeof value.error === 'string')
   );
 }
 
@@ -61,18 +47,14 @@ function resolvePublicError(exception: unknown, status: number): PublicErrorBody
   }
 
   if (!isRecord(response)) {
-    return {
-      code: 'HTTP_ERROR',
-      message: exception.message,
-      details: null,
-    };
+    return { code: 'HTTP_ERROR', message: exception.message, details: null };
   }
 
-  const messageValue = response.message;
-  const message = Array.isArray(messageValue)
-    ? messageValue.filter((item): item is string => typeof item === 'string').join(', ')
-    : typeof messageValue === 'string'
-      ? messageValue
+  const value = response.message;
+  const message = Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string').join(', ')
+    : typeof value === 'string'
+      ? value
       : exception.message;
 
   return {
@@ -102,30 +84,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : undefined;
 
-    if (isLegacyErrorEnvelope(exceptionResponse)) {
-      if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
-        this.logger.error('HTTP request failed', {
-          requestId,
-          method: request.method,
-          path: request.originalUrl,
-          status,
-          exception,
-        });
-      }
-
-      this.httpAdapterHost.httpAdapter.reply(response, exceptionResponse, status);
-      return;
-    }
-
-    const publicError = resolvePublicError(exception, status);
-    const envelope: ErrorEnvelope = {
-      success: false,
-      error: {
-        ...publicError,
-        requestId,
-      },
-    };
-
     if (status >= HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error('HTTP request failed', {
         requestId,
@@ -136,6 +94,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
       });
     }
 
-    this.httpAdapterHost.httpAdapter.reply(response, envelope, status);
+    if (isLegacyEnvelope(exceptionResponse)) {
+      this.httpAdapterHost.httpAdapter.reply(response, exceptionResponse, status);
+      return;
+    }
+
+    const publicError = resolvePublicError(exception, status);
+    this.httpAdapterHost.httpAdapter.reply(
+      response,
+      {
+        success: false,
+        error: { ...publicError, requestId },
+      },
+      status,
+    );
   }
 }

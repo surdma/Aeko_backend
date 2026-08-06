@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ApiRateLimitModule } from '../common/api-rate-limit.module.js';
-import { LoggingModule } from '../common/logging.module.js';
-import { PrismaModule } from '../prisma/prisma.module.js';
+import { ApiRateLimitModule } from '../../common/api-rate-limit.module.js';
+import { LoggingModule } from '../../common/logging.module.js';
+import { PrismaModule } from '../../infrastructure/prisma/prisma.module.js';
+import { PrismaWaitlistRepository } from '../../infrastructure/prisma/repositories/prisma-waitlist.repository.js';
 import { JoinWaitlistPipe } from './join-waitlist.pipe.js';
-import { PrismaWaitlistRepository } from './prisma-waitlist.repository.js';
 import { WaitlistController } from './waitlist.controller.js';
 import { WAITLIST_REPOSITORY } from './waitlist.repository.js';
 import { WaitlistService } from './waitlist.service.js';
@@ -14,10 +14,7 @@ import { WaitlistService } from './waitlist.service.js';
   providers: [
     JoinWaitlistPipe,
     WaitlistService,
-    {
-      provide: WAITLIST_REPOSITORY,
-      useClass: PrismaWaitlistRepository,
-    },
+    { provide: WAITLIST_REPOSITORY, useClass: PrismaWaitlistRepository },
   ],
 })
 export class WaitlistModule {}
