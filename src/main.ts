@@ -1,22 +1,20 @@
 import 'reflect-metadata';
 import { type INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { type NestExpressApplication } from '@nestjs/platform-express';
 import { pathToFileURL } from 'node:url';
-import type { Express } from 'express';
-import { json, urlencoded } from 'express';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { SanitizedLogger } from './common/sanitized-logger.js';
 import { APP_CONFIGURATION, type AppConfiguration } from './config/configuration.js';
 
 export async function createApp(): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
     logger: false,
   });
   const configuration = app.get<AppConfiguration>(APP_CONFIGURATION);
   const logger = app.get(SanitizedLogger);
-  const expressApplication = app.getHttpAdapter().getInstance<Express>();
 
   app.useLogger(logger);
   app.useGlobalFilters(app.get(HttpExceptionFilter));
@@ -24,13 +22,15 @@ export async function createApp(): Promise<INestApplication> {
     credentials: true,
     origin: [...configuration.http.corsOrigins],
   });
-  app.use(json({ limit: configuration.http.bodyLimit }));
-  app.use(urlencoded({
+  app.useBodyParser('json', {
+    limit: configuration.http.bodyLimit,
+  });
+  app.useBodyParser('urlencoded', {
     extended: true,
     limit: configuration.http.bodyLimit,
-  }));
+  });
+  app.set('trust proxy', configuration.http.trustProxy);
   app.enableShutdownHooks();
-  expressApplication.set('trust proxy', configuration.http.trustProxy);
 
   return app;
 }

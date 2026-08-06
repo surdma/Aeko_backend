@@ -31,7 +31,15 @@ available only through `legacy:start` and `legacy:dev` for parity work. Rollback
 slice is stopping the candidate Nest deployment; no product write ownership or database schema has
 moved.
 
+## Verification state
+
+A pull-request quality workflow installs with Node 24 and pnpm 10, refreshes the lockfile in the
+runner, and runs strict type checking, Biome, Vitest, the SWC production build, and Prisma schema
+validation. The generated lockfile is uploaded as an artifact so it can be reviewed and committed.
+Until that workflow passes and the generated lockfile is committed, this foundation is implemented
+but not reviewer-approved.
+
 ## Next gate
 
-Run the full Node 24/pnpm quality gate, complete the audited capability inventory and parity harness,
-then produce the domain programme before migrating the first product route.
+Complete the audited capability inventory and parity harness, then produce the domain programme
+before migrating the first product route.
