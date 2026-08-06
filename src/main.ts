@@ -14,10 +14,10 @@ export async function createApp(): Promise<INestApplication> {
     logger: false,
   });
   const configuration = app.get<AppConfiguration>(APP_CONFIGURATION);
-  const logger = app.get(SanitizedLogger);
+  const logger = app.get<SanitizedLogger>(SanitizedLogger);
 
   app.useLogger(logger);
-  app.useGlobalFilters(app.get(HttpExceptionFilter));
+  app.useGlobalFilters(app.get<HttpExceptionFilter>(HttpExceptionFilter));
   app.enableCors({
     credentials: true,
     origin: [...configuration.http.corsOrigins],

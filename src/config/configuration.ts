@@ -48,6 +48,14 @@ export class ConfigurationValidationError extends Error {
   }
 }
 
+function normalizeTrustProxy(value: number): 0 | 1 {
+  if (value === 0 || value === 1) {
+    return value;
+  }
+
+  throw new ConfigurationValidationError(['TRUST_PROXY must be 0 or 1']);
+}
+
 function normalizeOrigins(value: string): readonly string[] {
   const origins = value
     .split(',')
@@ -80,7 +88,7 @@ export function loadConfiguration(
     http: {
       bodyLimit: parsed.data.HTTP_BODY_LIMIT,
       corsOrigins: normalizeOrigins(parsed.data.CORS_ORIGINS),
-      trustProxy: parsed.data.TRUST_PROXY,
+      trustProxy: normalizeTrustProxy(parsed.data.TRUST_PROXY),
     },
     logging: {
       level: parsed.data.LOG_LEVEL,
