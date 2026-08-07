@@ -22,6 +22,8 @@ import { RegistrationService } from '../../src/modules/auth/registration.service
 import { SessionAuthenticationController } from '../../src/modules/auth/session-authentication.controller.js';
 import { SessionAuthenticationService } from '../../src/modules/auth/session-authentication.service.js';
 
+const legacyAuthBasePath = '/api/v0/auth';
+
 const userView = {
   id: 'user-1',
   name: 'Ada User',
@@ -91,7 +93,7 @@ class AllowJwtGuard implements CanActivate {
 })
 class TestAppModule {}
 
-describe('authentication HTTP contract', () => {
+describe('v0 authentication HTTP contract', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -108,11 +110,18 @@ describe('authentication HTTP contract', () => {
 
   afterEach(async () => app.close());
 
+  it('does not reserve the canonical Better Auth route family', async () => {
+    await request(app.getHttpServer()).post('/api/auth/signup').send({}).expect(404);
+  });
+
   it('preserves signup validation and success responses', async () => {
-    await request(app.getHttpServer()).post('/api/auth/signup').send({}).expect(400, {
-      success: false,
-      message: 'All fields are required',
-    });
+    await request(app.getHttpServer())
+      .post(`${legacyAuthBasePath}/signup`)
+      .send({})
+      .expect(400, {
+        success: false,
+        message: 'All fields are required',
+      });
 
     registration.signup.mockResolvedValue({
       kind: 'created',
@@ -121,7 +130,7 @@ describe('authentication HTTP contract', () => {
       verificationCode: '1234',
     });
     await request(app.getHttpServer())
-      .post('/api/auth/signup')
+      .post(`${legacyAuthBasePath}/signup`)
       .send({
         name: 'Ada User',
         username: 'ada',
@@ -145,7 +154,7 @@ describe('authentication HTTP contract', () => {
     });
 
     await request(app.getHttpServer())
-      .post('/api/auth/signup')
+      .post(`${legacyAuthBasePath}/signup`)
       .send({
         name: 'Ada User',
         username: 'ada',
@@ -169,7 +178,7 @@ describe('authentication HTTP contract', () => {
     });
 
     await request(app.getHttpServer())
-      .post('/api/auth/login')
+      .post(`${legacyAuthBasePath}/login`)
       .send({ email: 'ada@example.com', password: 'password' })
       .expect(200, {
         success: false,
@@ -181,7 +190,7 @@ describe('authentication HTTP contract', () => {
 
   it('keeps password-recovery error keys and anti-enumeration response', async () => {
     await request(app.getHttpServer())
-      .post('/api/auth/forgot-password')
+      .post(`${legacyAuthBasePath}/forgot-password`)
       .send({})
       .expect(400, {
         success: false,
@@ -190,7 +199,7 @@ describe('authentication HTTP contract', () => {
 
     recovery.forgotPassword.mockResolvedValue({ kind: 'accepted' });
     await request(app.getHttpServer())
-      .post('/api/auth/forgot-password')
+      .post(`${legacyAuthBasePath}/forgot-password`)
       .send({ email: 'unknown@example.com' })
       .expect(200, {
         success: true,
@@ -200,12 +209,14 @@ describe('authentication HTTP contract', () => {
   });
 
   it('returns the legacy Google fallback before inspecting the request body', async () => {
-    await request(app.getHttpServer()).get('/api/auth/google').expect(503, {
-      success: false,
-      message: 'Google OAuth is not configured on this server',
-    });
     await request(app.getHttpServer())
-      .post('/api/auth/google/mobile')
+      .get(`${legacyAuthBasePath}/google`)
+      .expect(503, {
+        success: false,
+        message: 'Google OAuth is not configured on this server',
+      });
+    await request(app.getHttpServer())
+      .post(`${legacyAuthBasePath}/google/mobile`)
       .send({})
       .expect(503, {
         success: false,
@@ -225,7 +236,7 @@ describe('authentication HTTP contract', () => {
     });
 
     const response = await request(app.getHttpServer())
-      .get('/api/auth/google/callback?code=google-code')
+      .get(`${legacyAuthBasePath}/google/callback?code=google-code`)
       .expect(302);
 
     expect(response.headers.location).toBe('aeko://(home)?token=jwt-token');
@@ -237,12 +248,12 @@ describe('authentication HTTP contract', () => {
     sessions.currentUser.mockResolvedValue({ kind: 'found', user: userView });
 
     await request(app.getHttpServer())
-      .get('/api/auth/me')
+      .get(`${legacyAuthBasePath}/me`)
       .set('Authorization', 'Bearer test-token')
       .expect(200, { success: true, user: userView });
 
     const response = await request(app.getHttpServer())
-      .post('/api/auth/logout')
+      .post(`${legacyAuthBasePath}/logout`)
       .expect(200, { success: true, message: 'Logged out successfully' });
     expect(response.headers['set-cookie']?.[0]).toContain('token=;');
   });

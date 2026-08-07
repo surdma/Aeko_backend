@@ -4,644 +4,817 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Ad {
-  @@map("ads")
-  id String @id @default(uuid())
-  title String
-  description String
-  mediaType String
-  mediaUrl String?
-  mediaUrls String[]
+  id             String   @id @default(uuid())
+  title          String
+  description    String
+  mediaType      String
+  mediaUrl       String?
+  mediaUrls      String[]
   targetAudience Json?
-  budget Json
-  pricing Json
-  campaign Json
-  advertiserId String
-  Status String @default("draft")
-  callToAction Json?
-  analytics Json?
-  review Json?
-  placement Json?
-  frequency Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+  budget         Json
+  pricing        Json
+  campaign       Json
+  advertiserId   String
+  Status         String   @default("draft")
+  callToAction   Json?
+  analytics      Json?
+  review         Json?
+  placement      Json?
+  frequency      Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [advertiserId], references: [id], onDelete: Cascade)
+
+  @@map("ads")
 }
 
 model Bookmark {
-  @@map("bookmarks")
-  id String @id @default(uuid())
+  id      String   @id @default(uuid())
   savedAt DateTime @default(now())
-  userId String
-  postId String
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  String
+  postId  String
+  post    Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@map("bookmarks")
 }
 
 model BotConversation {
+  id             String   @id @default(uuid())
+  userId         String
+  userMessage    String
+  botResponse    String
+  personality    String   @default("friendly")
+  sentiment      String   @default("neutral")
+  sentimentScore Float    @default(0)
+  aiProvider     String   @default("openai")
+  tokens         Int      @default(0)
+  confidence     Float    @default(0.9)
+  responseTime   Float    @default(0)
+  isModerated    Boolean  @default(false)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("bot_conversations")
-  id String @id @default(uuid())
-  userId String
-  userMessage String
-  botResponse String
-  personality String @default("friendly")
-  sentiment String @default("neutral")
-  sentimentScore Float @default(0)
-  aiProvider String @default("openai")
-  tokens Int @default(0)
-  confidence Float @default(0.9)
-  responseTime Float @default(0)
-  isModerated Boolean @default(false)
-  metadata Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model BotSettings {
-  @@map("bot_settings")
-  id String @id @default(uuid())
-  userId String @unique
-  botEnabled Boolean @default(false)
-  botPersonality String @default("friendly")
-  aiProvider String @default("openai")
-  model String @default("gpt-4-turbo-preview")
-  maxTokens Int @default(500)
-  contextLength Int @default(10)
-  temperature Float @default(0.7)
-  features Json?
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  botEnabled         Boolean  @default(false)
+  botPersonality     String   @default("friendly")
+  aiProvider         String   @default("openai")
+  model              String   @default("gpt-4-turbo-preview")
+  maxTokens          Int      @default(500)
+  contextLength      Int      @default(10)
+  temperature        Float    @default(0.7)
+  features           Json?
   customInstructions String?
-  responseStyle Json?
-  restrictions Json?
-  analytics Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responseStyle      Json?
+  restrictions       Json?
+  analytics          Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("bot_settings")
 }
 
 model Challenge {
-  @@map("challenges")
-  id String @id @default(uuid())
-  creatorId String
-  videoUrl String
+  id           String    @id @default(uuid())
+  creatorId    String
+  videoUrl     String
   participants Json?
-  createdAt DateTime @default(now())
-  endReason String?
-  endedAt DateTime?
-  status String @default("active")
-  updatedAt DateTime @updatedAt
-  votes Json?
-  winner String?
-  user User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  createdAt    DateTime  @default(now())
+  endReason    String?
+  endedAt      DateTime?
+  status       String    @default("active")
+  updatedAt    DateTime  @updatedAt
+  votes        Json?
+  winner       String?
+  user         User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@map("challenges")
 }
 
 model ChatMember {
-  @@map("chat_members")
-  id String @id @default(uuid())
-  chatId String
-  userId String
+  id       String   @id @default(uuid())
+  chatId   String
+  userId   String
   joinedAt DateTime @default(now())
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chat     Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([chatId, userId])
+  @@map("chat_members")
 }
 
 model Chat {
-  @@map("chats")
-  id String @id @default(uuid())
-  isGroup Boolean @default(false)
-  groupName String?
-  groupIcon String?
-  inviteCode String? @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  communityId String? @unique
-  groupAdminId String?
-  isCommunityChat Boolean @default(false)
-  lastMessageId String?
-  members ChatMember[]
-  communities Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  users User? @relation(fields: [groupAdminId], references: [id], onDelete: SetNull)
-  lastMessage EnhancedMessage? @relation("chats_lastMessageIdToenhanced_messages", fields: [lastMessageId], references: [id])
+  id               String            @id @default(uuid())
+  isGroup          Boolean           @default(false)
+  groupName        String?
+  groupIcon        String?
+  inviteCode       String?           @unique
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  communityId      String?           @unique
+  groupAdminId     String?
+  isCommunityChat  Boolean           @default(false)
+  lastMessageId    String?
+  members          ChatMember[]
+  communities      Community?        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  users            User?             @relation(fields: [groupAdminId], references: [id], onDelete: SetNull)
+  lastMessage      EnhancedMessage?  @relation("chats_lastMessageIdToenhanced_messages", fields: [lastMessageId], references: [id])
   enhancedMessages EnhancedMessage[] @relation("enhanced_messages_chatIdTochats")
-  live_streams LiveStream?
-  messages Message[]
+  live_streams     LiveStream?
+  messages         Message[]
+
+  @@map("chats")
 }
 
 model Comment {
+  id        String    @id @default(uuid())
+  text      String
+  userId    String
+  postId    String
+  likes     Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+
   @@map("comments")
-  id String @id @default(uuid())
-  text String
-  userId String
-  postId String
-  likes Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parentId String?
-  parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies Comment[] @relation("CommentReplies")
 }
 
 model Community {
-  @@map("communities")
-  id String @id @default(uuid())
-  name String
-  description String?
-  profile Json?
-  settings Json?
-  ownerId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  memberCount Int @default(0)
-  members Json?
-  isActive Boolean @default(true)
-  isPrivate Boolean @default(false)
-  tags String[]
-  chats Chat?
-  users User? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  id                  String              @id @default(uuid())
+  name                String
+  description         String?
+  profile             Json?
+  settings            Json?
+  ownerId             String?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  memberCount         Int                 @default(0)
+  members             Json?
+  isActive            Boolean             @default(true)
+  isPrivate           Boolean             @default(false)
+  tags                String[]
+  chats               Chat?
+  users               User?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   community_followers CommunityFollower[]
-  community_members CommunityMember[]
-  posts Post[]
-  transactions Transaction[]
+  community_members   CommunityMember[]
+  posts               Post[]
+  transactions        Transaction[]
+
+  @@map("communities")
 }
 
 model CommunityFollower {
-  @@map("community_followers")
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
   communityId String
-  userId String
-  followedAt DateTime @default(now())
-  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  followedAt  DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, userId])
+  @@map("community_followers")
 }
 
 model CommunityMember {
-  @@map("community_members")
-  id String @id @default(uuid())
+  id          String    @id @default(uuid())
   communityId String
-  userId String
-  role String @default("member")
-  status String @default("active")
-  joinedAt DateTime @default(now())
-  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  role        String    @default("member")
+  status      String    @default("active")
+  joinedAt    DateTime  @default(now())
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([communityId, userId])
+  @@map("community_members")
 }
 
 model Debate {
-  @@map("debates")
-  id String @id @default(uuid())
-  topic String
+  id           String    @id @default(uuid())
+  topic        String
   participants Json?
-  scores Json?
-  votes Json?
-  createdAt DateTime @default(now())
-  creatorId String
-  endReason String?
-  endedAt DateTime?
-  status String @default("active")
-  updatedAt DateTime @updatedAt
-  winner String?
-  user User @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  scores       Json?
+  votes        Json?
+  createdAt    DateTime  @default(now())
+  creatorId    String
+  endReason    String?
+  endedAt      DateTime?
+  status       String    @default("active")
+  updatedAt    DateTime  @updatedAt
+  winner       String?
+  user         User      @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@map("debates")
 }
 
 model EnhancedMessage {
+  id               String            @id @default(uuid())
+  senderId         String
+  receiverId       String?
+  chatId           String
+  groupId          String?
+  messageType      String            @default("text")
+  content          String?
+  voiceMessage     Json?
+  attachments      Json?
+  emojis           String[]
+  reactions        Json?
+  isBot            Boolean           @default(false)
+  botPersonality   String?
+  aiProvider       String?
+  confidence       Float?
+  status           String            @default("sending")
+  readBy           Json?
+  replyToId        String?
+  forwarded        Boolean           @default(false)
+  edited           Boolean           @default(false)
+  editedAt         DateTime?
+  deleted          Boolean           @default(false)
+  deletedAt        DateTime?
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  chatsLastMessage Chat[]            @relation("chats_lastMessageIdToenhanced_messages")
+  chat             Chat              @relation("enhanced_messages_chatIdTochats", fields: [chatId], references: [id], onDelete: Cascade)
+  receiver         User?             @relation("enhanced_messages_receiverIdTousers", fields: [receiverId], references: [id], onDelete: Cascade)
+  replyTo          EnhancedMessage?  @relation("enhanced_messagesToenhanced_messages", fields: [replyToId], references: [id])
+  replies          EnhancedMessage[] @relation("enhanced_messagesToenhanced_messages")
+  sender           User              @relation("enhanced_messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
+
   @@map("enhanced_messages")
-  id String @id @default(uuid())
-  senderId String
-  receiverId String?
-  chatId String
-  groupId String?
-  messageType String @default("text")
-  content String?
-  voiceMessage Json?
-  attachments Json?
-  emojis String[]
-  reactions Json?
-  isBot Boolean @default(false)
-  botPersonality String?
-  aiProvider String?
-  confidence Float?
-  status String @default("sending")
-  readBy Json?
-  replyToId String?
-  forwarded Boolean @default(false)
-  edited Boolean @default(false)
-  editedAt DateTime?
-  deleted Boolean @default(false)
-  deletedAt DateTime?
-  metadata Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  chatsLastMessage Chat[] @relation("chats_lastMessageIdToenhanced_messages")
-  chat Chat @relation("enhanced_messages_chatIdTochats", fields: [chatId], references: [id], onDelete: Cascade)
-  receiver User? @relation("enhanced_messages_receiverIdTousers", fields: [receiverId], references: [id], onDelete: Cascade)
-  replyTo EnhancedMessage? @relation("enhanced_messagesToenhanced_messages", fields: [replyToId], references: [id])
-  replies EnhancedMessage[] @relation("enhanced_messagesToenhanced_messages")
-  sender User @relation("enhanced_messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 model Interest {
- @@map("interests")
-  id String @id @default(uuid())
-  name String @unique
+  id          String   @id @default(uuid())
+  name        String   @unique
   displayName String
   description String?
-  icon String?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("interests")
 }
 
 model LiveStream {
- @@map("live_streams")
-  id String @id @default(uuid())
-  title String
-  description String?
-  thumbnail String?
-  hostId String
-  hostName String
+  id                 String           @id @default(uuid())
+  title              String
+  description        String?
+  thumbnail          String?
+  hostId             String
+  hostName           String
   hostProfilePicture String?
-  status String @default("scheduled")
-  streamType String @default("public")
-  category String @default("other")
-  streamKey String @unique
-  rtmpUrl String?
-  hlsUrl String?
-  webrtcUrl String?
-  roomId String @unique
-  quality Json?
-  features Json?
-  scheduledFor DateTime?
-  startedAt DateTime?
-  endedAt DateTime?
-  duration Float @default(0)
-  currentViewers Int @default(0)
-  peakViewers Int @default(0)
-  totalViews Int @default(0)
-  uniqueViewers Json?
-  reactions Json?
-  likes Int @default(0)
-  likedBy Json?
-  monetization Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  chatId String? @unique
-  metadata Json?
-  tags String[]
-  chats Chat? @relation(fields: [chatId], references: [id])
-  user User @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  gifts LiveStreamGift[]
+  status             String           @default("scheduled")
+  streamType         String           @default("public")
+  category           String           @default("other")
+  streamKey          String           @unique
+  rtmpUrl            String?
+  hlsUrl             String?
+  webrtcUrl          String?
+  roomId             String           @unique
+  quality            Json?
+  features           Json?
+  scheduledFor       DateTime?
+  startedAt          DateTime?
+  endedAt            DateTime?
+  duration           Float            @default(0)
+  currentViewers     Int              @default(0)
+  peakViewers        Int              @default(0)
+  totalViews         Int              @default(0)
+  uniqueViewers      Json?
+  reactions          Json?
+  likes              Int              @default(0)
+  likedBy            Json?
+  monetization       Json?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  chatId             String?          @unique
+  metadata           Json?
+  tags               String[]
+  chats              Chat?            @relation(fields: [chatId], references: [id])
+  user               User             @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  gifts              LiveStreamGift[]
+
+  @@map("live_streams")
 }
 
 model Message {
+  id                              String   @id @default(uuid())
+  message                         String
+  read                            Boolean  @default(false)
+  deleted                         Boolean  @default(false)
+  attachments                     String[]
+  senderId                        String
+  receiverId                      String
+  chatId                          String?
+  createdAt                       DateTime @default(now())
+  updatedAt                       DateTime @updatedAt
+  chat                            Chat?    @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  users_messages_receiverIdTouser User     @relation("messages_receiverIdTousers", fields: [receiverId], references: [id], onDelete: Cascade)
+  users_messages_senderIdTouser   User     @relation("messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
+
   @@map("messages")
-  id String @id @default(uuid())
-  message String
-  read Boolean @default(false)
-  deleted Boolean @default(false)
-  attachments String[]
-  senderId String
-  receiverId String
-  chatId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  chat Chat? @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  users_messages_receiverIdTouser User @relation("messages_receiverIdTousers", fields: [receiverId], references: [id], onDelete: Cascade)
-  users_messages_senderIdTouser User @relation("messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  @@map("notifications")
-  id String @id @default(uuid())
+  id          String   @id @default(uuid())
   recipientId String
-  senderId String?
-  type String // FOLLOW, LIKE, COMMENT, REPLY, MENTION, SYSTEM, ADMIN
-  title String?
-  message String?
-  entityId String? // ID of the related entity (post, comment, user, etc.)
-  entityType String? // POST, COMMENT, USER, AD, etc.
-  read Boolean @default(false)
-  metadata Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  recipient User @relation("receivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
-  sender User? @relation("sentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+  senderId    String?
+  type        String // FOLLOW, LIKE, COMMENT, REPLY, MENTION, SYSTEM, ADMIN
+  title       String?
+  message     String?
+  entityId    String? // ID of the related entity (post, comment, user, etc.)
+  entityType  String? // POST, COMMENT, USER, AD, etc.
+  read        Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  recipient User  @relation("receivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User? @relation("sentNotifications", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
 }
 
 model Post {
+  id                                 String     @id @default(uuid())
+  text                               String?
+  type                               String
+  userId                             String
+  views                              Int        @default(0)
+  privacy                            Json?
+  engagement                         Json?
+  createdAt                          DateTime   @default(now())
+  updatedAt                          DateTime   @updatedAt
+  ad                                 Json?
+  likes                              Json?
+  originalPostId                     String?
+  communityId                        String?
+  isCommunityPost                    Boolean    @default(false)
+  originalOwnerId                    String?
+  ownershipChain                     Json?
+  status                             String     @default("active")
+  transferHistory                    Json?
+  media                              Json?
+  contentUri                         String?
+  isAnchored                         Boolean    @default(false)
+  onChainSignature                   String?
+  nftTokenId                         String?
+  bookmarks                          Bookmark[]
+  comments                           Comment[]
+  communities                        Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
+  users_posts_originalOwnerIdTousers User?      @relation("posts_originalOwnerIdTousers", fields: [originalOwnerId], references: [id], onDelete: SetNull)
+  posts                              Post?      @relation("postsToposts", fields: [originalPostId], references: [id])
+  other_posts                        Post[]     @relation("postsToposts")
+  users_posts_userIdTouser           User       @relation("posts_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
+  statuses                           Status[]
+
   @@map("posts")
-  id String @id @default(uuid())
-  text String?
-  type String
-  userId String
-  views Int @default(0)
-  privacy Json?
-  engagement Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ad Json?
-  likes Json?
-  originalPostId String?
-  communityId String?
-  isCommunityPost Boolean @default(false)
-  originalOwnerId String?
-  ownershipChain Json?
-  status String @default("active")
-  transferHistory Json?
-  media Json?
-  contentUri String?
-  isAnchored Boolean @default(false)
-  onChainSignature String?
-  nftTokenId String?
-  bookmarks Bookmark[]
-  comments Comment[]
-  communities Community? @relation(fields: [communityId], references: [id], onDelete: SetNull)
-  users_posts_originalOwnerIdTousers User? @relation("posts_originalOwnerIdTousers", fields: [originalOwnerId], references: [id], onDelete: SetNull)
-  posts Post? @relation("postsToposts", fields: [originalPostId], references: [id])
-  other_posts Post[] @relation("postsToposts")
-  users_posts_userIdTouser User @relation("posts_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
-  statuses Status[]
 }
 
 model SecurityEvent {
+  id                                        String   @id @default(uuid())
+  userId                                    String
+  eventType                                 String
+  targetUserId                              String?
+  metadata                                  Json?
+  ipAddress                                 String
+  userAgent                                 String
+  timestamp                                 DateTime @default(now())
+  success                                   Boolean  @default(true)
+  errorMessage                              String?
+  createdAt                                 DateTime @default(now())
+  updatedAt                                 DateTime @updatedAt
+  users_security_events_targetUserIdTousers User?    @relation("security_events_targetUserIdTousers", fields: [targetUserId], references: [id], onDelete: SetNull)
+  users_security_events_userIdTouser        User     @relation("security_events_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("security_events")
-  id String @id @default(uuid())
-  userId String
-  eventType String
-  targetUserId String?
-  metadata Json?
-  ipAddress String
-  userAgent String
-  timestamp DateTime @default(now())
-  success Boolean @default(true)
-  errorMessage String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users_security_events_targetUserIdTousers User? @relation("security_events_targetUserIdTousers", fields: [targetUserId], references: [id], onDelete: SetNull)
-  users_security_events_userIdTouser User @relation("security_events_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Space {
-  @@map("spaces")
-  id String @id @default(uuid())
-  hostId String
-  title String
+  id           String   @id @default(uuid())
+  hostId       String
+  title        String
   participants Json?
-  isLive Boolean @default(true)
-  highlights Json?
-  createdAt DateTime @default(now())
-  user User @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  isLive       Boolean  @default(true)
+  highlights   Json?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@map("spaces")
 }
 
 model Status {
-  @@map("status")
-  id String @id @default(uuid())
-  userId String
-  type String
-  content String
-  caption String?
+  id              String   @id @default(uuid())
+  userId          String
+  type            String
+  content         String
+  caption         String?
   backgroundColor String?
-  font String?
-  reactions Json?
-  sharedPostId String?
+  font            String?
+  reactions       Json?
+  sharedPostId    String?
   originalContent Json?
-  shareMetadata Json?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts Post? @relation(fields: [sharedPostId], references: [id], onDelete: SetNull)
-  users User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shareMetadata   Json?
+  expiresAt       DateTime
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  posts           Post?    @relation(fields: [sharedPostId], references: [id], onDelete: SetNull)
+  users           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("status")
 }
 
 model VerificationSettings {
+  id                 String   @id @default(uuid())
+  minFollowers       Int      @default(1000)
+  minPosts           Int      @default(10)
+  requiresProfilePic Boolean  @default(true)
+  requiresCoverPic   Boolean  @default(true)
+  requiresBio        Boolean  @default(true)
+  autoApprove        Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
+
   @@map("verification_settings")
-  id String @id @default(uuid())
-  minFollowers Int @default(1000)
-  minPosts Int @default(10)
-  requiresProfilePic Boolean @default(true)
-  requiresCoverPic Boolean @default(true)
-  requiresBio Boolean @default(true)
-  autoApprove Boolean @default(true)
-  updatedAt DateTime @updatedAt
-  updatedBy String?
 }
 
 model Transaction {
-  @@map("transactions")
-  id String @id @default(uuid())
-  amount Float
-  currency String @default("USD")
-  paymentMethod String
-  status String @default("pending")
-  paymentReference String
-  userId String
-  communityId String?
-  planId String?
-  metadata Json?
-  providerResponse Json?
-  failureReason String?
-  retryCount Int @default(0)
-  verifiedAt DateTime?
-  isWithdrawn Boolean @default(false)
+  id                String            @id @default(uuid())
+  amount            Float
+  currency          String            @default("USD")
+  paymentMethod     String
+  status            String            @default("pending")
+  paymentReference  String
+  userId            String
+  communityId       String?
+  planId            String?
+  metadata          Json?
+  providerResponse  Json?
+  failureReason     String?
+  retryCount        Int               @default(0)
+  verifiedAt        DateTime?
+  isWithdrawn       Boolean           @default(false)
   withdrawalRequest Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  community Community? @relation(fields: [communityId], references: [id])
-  subscriptionPlan SubscriptionPlan? @relation(fields: [planId], references: [id])
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  community         Community?        @relation(fields: [communityId], references: [id])
+  subscriptionPlan  SubscriptionPlan? @relation(fields: [planId], references: [id])
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
 }
 
 model SubscriptionPlan {
-  @@map("subscription_plans")
-  id String @id @default(uuid())
-  name String @unique
-  price Float
-  currency String @default("USD")
-  duration String @default("monthly") // monthly, yearly
-  features Json // List of features enabled
-  limits Json? // Limits like number of communities
+  id             String        @id @default(uuid())
+  name           String        @unique
+  price          Float
+  currency       String        @default("USD")
+  duration       String        @default("monthly") // monthly, yearly
+  features       Json // List of features enabled
+  limits         Json? // Limits like number of communities
   targetAudience String?
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  users User[]
-  transactions Transaction[]
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  users          User[]
+  transactions   Transaction[]
+
+  @@map("subscription_plans")
 }
 
 model User {
- @@map("users")
-  id String @id @default(uuid())
-  username String @unique
-  email String @unique
-  password String
-  name String
-  avatar String?
-  profilePicture String?
-  coverPicture String?
-  bio String?
-  blueTick Boolean @default(false)
-  goldenTick Boolean @default(false)
-  subscriptionStatus String @default("inactive")
-  subscriptionExpiry DateTime?
-  subscriptionPlanId String?
-  subscriptionPlan SubscriptionPlan? @relation(fields: [subscriptionPlanId], references: [id])
-  banned Boolean @default(false)
-  isAdmin Boolean @default(false)
-  botEnabled Boolean @default(false)
-  botPersonality String @default("friendly")
-  botPreferences Json?
-  botAnalytics Json?
-  emailVerification Json?
-  profileCompletion Json?
-  privacy Json?
-  notificationSettings Json?
-  pushToken String?
-  twoFactorAuth Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  lastLoginAt DateTime?
-  oauthId String?
-  oauthProvider String?
-  walletAddress String? @unique
-  blockedUsers Json?
-  communities Json?
-  followRequests Json?
-  followers Json?
-  following Json?
-  interests Json?
-  ads Ad[]
-  bookmarks Bookmark[]
-  bot_conversations BotConversation[]
-  bot_settings BotSettings?
-  challenges Challenge[]
-  chat_members ChatMember[]
-  chats Chat[]
-  comments Comment[]
-  communityMemberships Community[]
-  community_followers CommunityFollower[]
-  community_members CommunityMember[]
-  debates Debate[]
-  enhanced_messages_enhanced_messages_receiverIdTousers EnhancedMessage[] @relation("enhanced_messages_receiverIdTousers")
-  enhanced_messages_enhanced_messages_senderIdTousers EnhancedMessage[] @relation("enhanced_messages_senderIdTousers")
-  live_streams LiveStream[]
-  messages_messages_receiverIdTousers Message[] @relation("messages_receiverIdTousers")
-  messages_messages_senderIdTousers Message[] @relation("messages_senderIdTousers")
-  posts_posts_originalOwnerIdTousers Post[] @relation("posts_originalOwnerIdTousers")
-  posts_posts_userIdTousers Post[] @relation("posts_userIdTousers")
-  security_events_security_events_targetUserIdTousers SecurityEvent[] @relation("security_events_targetUserIdTousers")
-  security_events_security_events_userIdTousers SecurityEvent[] @relation("security_events_userIdTousers")
-  receivedNotifications Notification[] @relation("receivedNotifications")
-  sentNotifications Notification[] @relation("sentNotifications")
-  spaces Space[]
-  status Status[]
-  transactions Transaction[]
-  reporterReports Report[] @relation("reporterReports")
-  reportedReports Report[] @relation("reportedReports")
-  supportTickets SupportTicket[]
-  supportMessages SupportMessage[]
-  location String?
-  warningCount Int @default(0)
-  notInterested Json?
-  coinBalance Float @default(0)
-  coinTransactions CoinTransaction[]
-  sentGifts LiveStreamGift[] @relation("sentGifts")
+  id                                                    String              @id @default(uuid())
+  username                                              String              @unique
+  email                                                 String              @unique
+  password                                              String
+  name                                                  String
+  avatar                                                String?
+  profilePicture                                        String?
+  coverPicture                                          String?
+  bio                                                   String?
+  blueTick                                              Boolean             @default(false)
+  goldenTick                                            Boolean             @default(false)
+  subscriptionStatus                                    String              @default("inactive")
+  subscriptionExpiry                                    DateTime?
+  subscriptionPlanId                                    String?
+  subscriptionPlan                                      SubscriptionPlan?   @relation(fields: [subscriptionPlanId], references: [id])
+  banned                                                Boolean             @default(false)
+  isAdmin                                               Boolean             @default(false)
+  botEnabled                                            Boolean             @default(false)
+  botPersonality                                        String              @default("friendly")
+  botPreferences                                        Json?
+  botAnalytics                                          Json?
+  emailVerification                                     Json?
+  profileCompletion                                     Json?
+  privacy                                               Json?
+  notificationSettings                                  Json?
+  pushToken                                             String?
+  twoFactorAuth                                         Json?
+  createdAt                                             DateTime            @default(now())
+  updatedAt                                             DateTime            @updatedAt
+  lastLoginAt                                           DateTime?
+  oauthId                                               String?
+  oauthProvider                                         String?
+  walletAddress                                         String?             @unique
+  blockedUsers                                          Json?
+  communities                                           Json?
+  followRequests                                        Json?
+  followers                                             Json?
+  following                                             Json?
+  interests                                             Json?
+  ads                                                   Ad[]
+  bookmarks                                             Bookmark[]
+  bot_conversations                                     BotConversation[]
+  bot_settings                                          BotSettings?
+  challenges                                            Challenge[]
+  chat_members                                          ChatMember[]
+  chats                                                 Chat[]
+  comments                                              Comment[]
+  communityMemberships                                  Community[]
+  community_followers                                   CommunityFollower[]
+  community_members                                     CommunityMember[]
+  debates                                               Debate[]
+  enhanced_messages_enhanced_messages_receiverIdTousers EnhancedMessage[]   @relation("enhanced_messages_receiverIdTousers")
+  enhanced_messages_enhanced_messages_senderIdTousers   EnhancedMessage[]   @relation("enhanced_messages_senderIdTousers")
+  live_streams                                          LiveStream[]
+  messages_messages_receiverIdTousers                   Message[]           @relation("messages_receiverIdTousers")
+  messages_messages_senderIdTousers                     Message[]           @relation("messages_senderIdTousers")
+  posts_posts_originalOwnerIdTousers                    Post[]              @relation("posts_originalOwnerIdTousers")
+  posts_posts_userIdTousers                             Post[]              @relation("posts_userIdTousers")
+  security_events_security_events_targetUserIdTousers   SecurityEvent[]     @relation("security_events_targetUserIdTousers")
+  security_events_security_events_userIdTousers         SecurityEvent[]     @relation("security_events_userIdTousers")
+  receivedNotifications                                 Notification[]      @relation("receivedNotifications")
+  sentNotifications                                     Notification[]      @relation("sentNotifications")
+  spaces                                                Space[]
+  status                                                Status[]
+  transactions                                          Transaction[]
+  reporterReports                                       Report[]            @relation("reporterReports")
+  reportedReports                                       Report[]            @relation("reportedReports")
+  supportTickets                                        SupportTicket[]
+  supportMessages                                       SupportMessage[]
+  location                                              String?
+  warningCount                                          Int                 @default(0)
+  notInterested                                         Json?
+  coinBalance                                           Float               @default(0)
+  coinTransactions                                      CoinTransaction[]
+  sentGifts                                             LiveStreamGift[]    @relation("sentGifts")
+
+  @@map("users")
 }
 
 model Report {
-  @@map("reports")
-  id String @id @default(uuid())
+  id         String   @id @default(uuid())
   reporterId String
   reportedId String?
-  entityId String?
+  entityId   String?
   entityType String // USER, POST, COMMENT
-  reason String
-  status String @default("pending")
+  reason     String
+  status     String   @default("pending")
   adminNotes String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  reporter User @relation("reporterReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  reporter User  @relation("reporterReports", fields: [reporterId], references: [id], onDelete: Cascade)
   reported User? @relation("reportedReports", fields: [reportedId], references: [id], onDelete: SetNull)
+
+  @@map("reports")
 }
 
 model SupportTicket {
-  @@map("support_tickets")
-  id String @id @default(uuid())
-  userId String
-  subject String
+  id          String   @id @default(uuid())
+  userId      String
+  subject     String
   description String
-  category String // billing, technical, account, other
-  priority String @default("medium") // low, medium, high
-  status String @default("open") // open, in_progress, resolved, closed
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  category    String // billing, technical, account, other
+  priority    String   @default("medium") // low, medium, high
+  status      String   @default("open") // open, in_progress, resolved, closed
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages SupportMessage[]
+
+  @@map("support_tickets")
 }
 
 model SupportMessage {
-  @@map("support_messages")
-  id String @id @default(uuid())
-  ticketId String
-  senderId String
-  message String
+  id          String   @id @default(uuid())
+  ticketId    String
+  senderId    String
+  message     String
   attachments String[]
-  createdAt DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  sender User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("support_messages")
 }
 
 model WaitlistEntry {
-  @@map("waitlist_entries")
-  id String @id @default(uuid())
-  name String
-  email String @unique
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
   createdAt DateTime @default(now())
+
+  @@map("waitlist_entries")
 }
 
 model CoinTransaction {
-  @@map("coin_transactions")
-  id String @id @default(uuid())
-  userId String
-  type String // purchase | gift_sent | gift_received | refund | bonus
-  amount Float // positive = credit, negative = debit
+  id           String   @id @default(uuid())
+  userId       String
+  type         String // purchase | gift_sent | gift_received | refund | bonus
+  amount       Float // positive = credit, negative = debit
   balanceAfter Float
-  description String?
-  metadata Json? // gift details, payment reference, etc.
-  createdAt DateTime @default(now())
+  description  String?
+  metadata     Json? // gift details, payment reference, etc.
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("coin_transactions")
 }
 
 model LiveStreamGift {
-  @@map("livestream_gifts")
-  id String @id @default(uuid())
-  streamId String
-  senderId String
-  hostId String
-  giftId String // catalog item id (e.g. "rose", "crown")
-  giftName String
-  coinCost Int
-  quantity Int @default(1)
+  id         String   @id @default(uuid())
+  streamId   String
+  senderId   String
+  hostId     String
+  giftId     String // catalog item id (e.g. "rose", "crown")
+  giftName   String
+  coinCost   Int
+  quantity   Int      @default(1)
   totalCoins Int // coinCost * quantity
-  message String?
-  createdAt DateTime @default(now())
+  message    String?
+  createdAt  DateTime @default(now())
 
   stream LiveStream @relation(fields: [streamId], references: [id], onDelete: Cascade)
-  sender User @relation("sentGifts", fields: [senderId], references: [id], onDelete: Cascade)
+  sender User       @relation("sentGifts", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("livestream_gifts")
 }
+
+// BEGIN BETTER AUTH V1 SCHEMA
+
+enum AuthMigrationStatus {
+  PENDING
+  MIGRATED
+  CONFLICT
+  FAILED
+}
+
+model AuthUser {
+  id               String             @id
+  name             String
+  email            String
+  emailVerified    Boolean            @default(false)
+  image            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  username         String?
+  displayUsername  String?
+  twoFactorEnabled Boolean?           @default(false)
+  sessions         AuthSession[]
+  accounts         AuthAccount[]
+  twofactors       AuthTwoFactor[]
+  passkeys         AuthPasskey[]
+  profile          Profile?
+  migrationLink    AuthMigrationLink?
+
+  @@unique([email])
+  @@unique([username])
+  @@map("user")
+}
+
+model AuthSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model AuthAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  AuthUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model AuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model AuthTwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    AuthUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean?  @default(true)
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
+  @@map("twoFactor")
+}
+
+model AuthPasskey {
+  id           String    @id
+  name         String?
+  publicKey    String
+  userId       String
+  user         AuthUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime?
+  aaguid       String?
+
+  @@index([userId])
+  @@index([credentialID])
+  @@map("passkey")
+}
+
+model Profile {
+  userId            String   @id
+  bio               String?  @db.Text
+  profilePicture    String?
+  coverPhoto        String?
+  location          String?
+  blueTick          Boolean  @default(false)
+  profileCompletion Json     @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model AuthMigrationLink {
+  id           String              @id @default(cuid())
+  legacyUserId String              @unique
+  authUserId   String              @unique
+  status       AuthMigrationStatus @default(PENDING)
+  details      Json?
+  migratedAt   DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  authUser     AuthUser            @relation(fields: [authUserId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("auth_migration_links")
+}
+
+// END BETTER AUTH V1 SCHEMA

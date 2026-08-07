@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SanitizedLogger } from '../../src/common/sanitized-logger.js';
+import { NotificationEventsService } from '../../src/modules/notifications/notification-events.service.js';
 import type {
   NotificationRecord,
   NotificationsRepository,
@@ -41,7 +42,11 @@ describe('NotificationsService', () => {
     vi.clearAllMocks();
     const logger = new SanitizedLogger();
     vi.spyOn(logger, 'error').mockImplementation(() => undefined);
-    service = new NotificationsService(repository, logger);
+    service = new NotificationsService(
+      repository,
+      new NotificationEventsService(),
+      logger,
+    );
   });
 
   it('returns the exact legacy defaults when settings are falsy', async () => {
@@ -124,6 +129,7 @@ describe('NotificationsService', () => {
       ...notification,
       read: true,
     });
+    vi.mocked(repository.countUnread).mockResolvedValue(0);
 
     await expect(
       service.markRead(notification.recipientId, notification.id),

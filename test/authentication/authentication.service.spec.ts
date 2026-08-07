@@ -65,6 +65,19 @@ const configuration: AppConfiguration = {
       failureRedirect: 'aeko://auth/failed',
     },
   },
+  betterAuth: {
+    secret: 'test-better-auth-secret-with-at-least-32-characters',
+    url: 'http://127.0.0.1:9876',
+    trustedOrigins: ['http://localhost:3000'],
+    google: { configured: false, clientId: null, clientSecret: null },
+    passkey: {
+      rpId: 'localhost',
+      rpName: 'Aeko',
+      origin: 'http://localhost:9876',
+    },
+    expoScheme: 'aeko',
+    resend: { configured: false, apiKey: null, from: null },
+  },
   email: { zeptoMailApiUrl: null, zeptoMailApiKey: null, senderName: 'Aeko' },
 };
 

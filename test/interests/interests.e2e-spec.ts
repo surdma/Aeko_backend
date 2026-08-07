@@ -9,7 +9,7 @@ import { LoggingModule } from '../../src/common/logging.module.js';
 import { RequestIdMiddleware } from '../../src/common/request-id.middleware.js';
 import { AppConfigurationModule } from '../../src/config/configuration.js';
 import { PrismaService } from '../../src/infrastructure/prisma/prisma.service.js';
-import { AuthModule } from '../../src/modules/auth/auth.module.js';
+import { AuthV0Module } from '../../src/modules/auth/auth.module.js';
 import {
   AUTH_REPOSITORY,
   type AuthRepository,
@@ -85,7 +85,7 @@ const testEnvironment = {
   imports: [
     AppConfigurationModule.forRoot(testEnvironment),
     LoggingModule,
-    AuthModule,
+    AuthV0Module,
     InterestsModule,
   ],
   providers: [HttpExceptionFilter],
