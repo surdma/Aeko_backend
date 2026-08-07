@@ -42,88 +42,44 @@ jobs:
       - name: Install dependencies from the committed lockfile
         run: pnpm install --frozen-lockfile
 
-      - name: Rewrite verifier to consume the email outbox directly
+      - name: Replace verification database lookup with outbox reader
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path('scripts/verify-nest-runtime.mts')
           text = path.read_text()
-          marker = "function array(value: JsonObject, key: string, label: string): readonly unknown[] {"
-          helper = r'''interface AuthEmailOutboxMessage {
-            readonly to: string;
-            readonly subject: string;
-            readonly text: string;
-          }
+          import_line = "import { waitForVerificationUrl } from './runtime-auth-email-outbox.mjs';\n"
+          if import_line not in text:
+              anchor = "import ts from 'typescript';\n"
+              if anchor not in text:
+                  raise SystemExit('TypeScript import anchor not found')
+              text = text.replace(anchor, anchor + import_line, 1)
 
-          function authEmailOutboxMessage(value: unknown): AuthEmailOutboxMessage | null {
-            if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
-            const to = Reflect.get(value, 'to');
-            const subject = Reflect.get(value, 'subject');
-            const text = Reflect.get(value, 'text');
-            if (typeof to !== 'string' || typeof subject !== 'string' || typeof text !== 'string') {
-              return null;
-            }
-            return { to, subject, text };
-          }
-
-          async function waitForVerificationUrl(email: string): Promise<URL> {
-            const outboxPath = process.env.AUTH_EMAIL_OUTBOX_PATH;
-            if (outboxPath === undefined) {
-              throw new Error('AUTH_EMAIL_OUTBOX_PATH must be configured for runtime verification');
-            }
-
-            for (let attempt = 0; attempt < 60; attempt += 1) {
-              try {
-                const lines = (await readFile(outboxPath, 'utf8'))
-                  .split('\n')
-                  .filter((line) => line.length > 0)
-                  .reverse();
-                for (const line of lines) {
-                  const message = authEmailOutboxMessage(JSON.parse(line) as unknown);
-                  if (
-                    message?.to !== email ||
-                    message.subject !== 'Verify your Aeko email'
-                  ) {
-                    continue;
-                  }
-                  const urlText = /https?:\/\/\S+/u.exec(message.text)?.[0];
-                  if (urlText !== undefined) return new URL(urlText);
-                }
-              } catch (error: unknown) {
-                if (Reflect.get(Object(error), 'code') !== 'ENOENT') throw error;
-              }
-              await new Promise((done) => setTimeout(done, 100));
-            }
-
-            throw new Error('Better Auth verification email did not reach the disposable outbox');
-          }
-
-          '''
-          if 'async function waitForVerificationUrl' not in text:
-              if marker not in text:
-                  raise SystemExit('Verifier insertion marker not found')
-              text = text.replace(marker, helper + marker, 1)
-
-          old = r'''  const verification = await prisma.authVerification.findFirst({
-            where: { identifier: { contains: email } },
-            orderBy: { createdAt: 'desc' },
-          });
-          assert.ok(verification !== null, 'Better Auth did not persist an email verification token');
-          await expectStatusIn(
-            'GET',
-            `/api/auth/verify-email?token=${encodeURIComponent(verification.value)}&callbackURL=%2F`,
-            [200, 302],
-          );'''
-          new = r'''  const verificationUrl = await waitForVerificationUrl(email);
+          pattern = re.compile(
+              r"  const verification = await prisma\.authVerification\.findFirst\(\{"
+              r"\s+where: \{ identifier: \{ contains: email \} \},"
+              r"\s+orderBy: \{ createdAt: 'desc' \},"
+              r"\s+\}\);"
+              r"\s+assert\.ok\(verification !== null, 'Better Auth did not persist an email verification token'\);"
+              r"\s+await expectStatusIn\("
+              r"\s+'GET',"
+              r"\s+`/api/auth/verify-email\?token=\$\{encodeURIComponent\(verification\.value\)\}&callbackURL=%2F`,"
+              r"\s+\[200, 302\],"
+              r"\s+\);",
+              re.MULTILINE,
+          )
+          replacement = """  const verificationUrl = await waitForVerificationUrl(email);
           await expectStatusIn(
             'GET',
             `${verificationUrl.pathname}${verificationUrl.search}`,
             [200, 302],
-          );'''
-          if old not in text:
-              raise SystemExit('Verification query block not found')
-          path.write_text(text.replace(old, new, 1))
+          );"""
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one verification lookup block, replaced {count}')
+          path.write_text(text)
           PY
 
       - name: Run the full quality gate
