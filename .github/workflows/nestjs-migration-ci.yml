@@ -38,6 +38,17 @@ jobs:
       - name: Install dependencies from the committed lockfile
         run: pnpm install --frozen-lockfile
 
+      - name: Generate Better Auth Prisma schema
+        run: pnpm dlx auth@1.6.25 generate --config scripts/better-auth-schema.config.mts --output better-auth.generated.prisma --yes
+
+      - name: Upload Better Auth Prisma schema
+        uses: actions/upload-artifact@v4
+        with:
+          name: better-auth-prisma-schema
+          path: better-auth.generated.prisma
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Run the full quality gate
         run: pnpm quality
 
