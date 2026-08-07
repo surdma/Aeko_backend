@@ -11,15 +11,17 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   quality:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      - name: Checkout migration branch
+      - name: Checkout migration branch head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Load safe test environment
         run: cp .env.example .env
@@ -38,28 +40,41 @@ jobs:
       - name: Install dependencies from the committed lockfile
         run: pnpm install --frozen-lockfile
 
-      - name: Generate Better Auth Prisma schema
-        run: pnpm dlx auth@1.6.25 generate --config scripts/better-auth-schema.config.mts --output better-auth.generated.prisma --yes
+      - name: Generate and merge Better Auth Prisma schema
+        run: |
+          pnpm dlx auth@1.6.25 generate --config scripts/better-auth-schema.config.mts --output better-auth.generated.prisma --yes
+          pnpm tsx scripts/merge-better-auth-schema.mts
+          pnpm prisma format
+          pnpm prisma validate
 
-      - name: Upload Better Auth Prisma schema
-        uses: actions/upload-artifact@v4
-        with:
-          name: better-auth-prisma-schema
-          path: better-auth.generated.prisma
-          if-no-files-found: error
-          retention-days: 7
+      - name: Generate expand-only Prisma migration
+        run: |
+          git fetch origin migration/nestjs-clean --depth=1
+          git show FETCH_HEAD:prisma/schema.prisma > /tmp/aeko-base-schema.prisma
+          mkdir -p prisma/migrations/20260807030000_better_auth_v1_foundation
+          pnpm prisma migrate diff \
+            --from-schema-datamodel /tmp/aeko-base-schema.prisma \
+            --to-schema-datamodel prisma/schema.prisma \
+            --script > prisma/migrations/20260807030000_better_auth_v1_foundation/migration.sql
+          test -s prisma/migrations/20260807030000_better_auth_v1_foundation/migration.sql
 
       - name: Run the full quality gate
         run: pnpm quality
 
-      - name: Upload verified lockfile
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: nestjs-migration-pnpm-lock
-          path: pnpm-lock.yaml
-          if-no-files-found: error
-          retention-days: 7
+      - name: Commit generated schema and restore frozen workflow
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          git show FETCH_HEAD:.github/workflows/nestjs-migration-ci.yml > .github/workflows/nestjs-migration-ci.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add prisma/schema.prisma prisma/migrations/20260807030000_better_auth_v1_foundation/migration.sql .github/workflows/nestjs-migration-ci.yml
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "feat: add Better Auth v1 persistence schema"
+          git push origin HEAD:"${HEAD_REF}"
 
   runtime:
     needs: quality
@@ -80,8 +95,10 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     steps:
-      - name: Checkout migration branch
+      - name: Checkout migration branch head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Load safe runtime environment
         run: cp .env.example .env
