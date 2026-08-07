@@ -21,7 +21,7 @@ import { legacyAuthFailure, logoutCookieOptions } from './authentication-http.js
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { SessionAuthenticationService } from './session-authentication.service.js';
 
-@Controller('api/auth')
+@Controller('api/v0/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class AuthenticatedAccountController {
