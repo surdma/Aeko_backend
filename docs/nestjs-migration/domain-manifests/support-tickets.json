@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "domain": "support-tickets",
+  "baseCommit": "3cb694fe3d0fb662bcd4b0c3d4addcd5faab2342",
+  "dependsOn": ["auth", "prisma", "logging", "api-rate-limit"],
+  "currentOwner": "Express",
+  "candidateOwner": "NestJS",
+  "cutoverState": "express-owner",
+  "rollbackState": "legacy-available",
+  "architecture": {
+    "module": "src/modules/support",
+    "persistencePort": "src/modules/support/support.repository.ts",
+    "prismaAdapter": "src/infrastructure/prisma/repositories/prisma-support.repository.ts",
+    "accessControl": "src/modules/auth"
+  },
+  "capabilities": [
+    { "method": "POST", "path": "/api/support/tickets", "auth": "jwt" },
+    { "method": "GET", "path": "/api/support/tickets", "auth": "jwt" },
+    { "method": "GET", "path": "/api/support/tickets/:id", "auth": "jwt+owner-or-admin" },
+    { "method": "POST", "path": "/api/support/tickets/:id/messages", "auth": "jwt+owner-or-admin" },
+    { "method": "PATCH", "path": "/api/support/tickets/:id/status", "auth": "jwt+owner-or-admin-policy" },
+    { "method": "GET", "path": "/api/support/admin/tickets", "auth": "jwt+admin" },
+    { "method": "PATCH", "path": "/api/support/admin/tickets/:id/priority", "auth": "jwt+admin" }
+  ],
+  "databaseEffects": [
+    "SupportTicket create/read/update",
+    "SupportMessage create",
+    "SupportTicket message count",
+    "Transactional message creation and status transition"
+  ],
+  "intentionalCorrections": [
+    "Unexpected database errors no longer expose raw error.message values.",
+    "Malformed bodies and pagination values return stable 400 responses.",
+    "Message creation and its sender-dependent status transition are atomic."
+  ]
+}

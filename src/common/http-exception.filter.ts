@@ -21,11 +21,17 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 function isLegacyEnvelope(value: unknown): value is Readonly<Record<string, unknown>> {
-  return (
-    isRecord(value) &&
+  if (!isRecord(value)) return false;
+
+  if (
     value.success === false &&
     (typeof value.message === 'string' || typeof value.error === 'string')
-  );
+  ) {
+    return true;
+  }
+
+  const keys = Object.keys(value);
+  return keys.length === 1 && typeof value.error === 'string';
 }
 
 function resolvePublicError(exception: unknown, status: number): PublicErrorBody {
@@ -40,7 +46,10 @@ function resolvePublicError(exception: unknown, status: number): PublicErrorBody
   const response = exception.getResponse();
   if (typeof response === 'string') {
     return {
-      code: status === HttpStatus.INTERNAL_SERVER_ERROR ? 'INTERNAL_SERVER_ERROR' : 'HTTP_ERROR',
+      code:
+        status === HttpStatus.INTERNAL_SERVER_ERROR
+          ? 'INTERNAL_SERVER_ERROR'
+          : 'HTTP_ERROR',
       message: response,
       details: null,
     };
@@ -52,7 +61,9 @@ function resolvePublicError(exception: unknown, status: number): PublicErrorBody
 
   const value = response.message;
   const message = Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string').join(', ')
+    ? value
+        .filter((item): item is string => typeof item === 'string')
+        .join(', ')
     : typeof value === 'string'
       ? value
       : exception.message;
