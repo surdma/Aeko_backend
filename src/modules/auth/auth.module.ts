@@ -84,4 +84,4 @@ import { SessionAuthenticationService } from './session-authentication.service.j
     TotpVerificationService,
   ],
 })
-export class AuthModule {}
+export class AuthV0Module {}
