@@ -91,7 +91,7 @@ export interface AppConfiguration {
     };
     readonly expoScheme: string;
     readonly resend: OptionalEmailProviderConfiguration;
-    readonly emailOutboxPath: string | null;
+    readonly emailOutboxPath?: string | null;
   };
   readonly email: {
     readonly zeptoMailApiUrl: string | null;
