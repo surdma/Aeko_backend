@@ -28,7 +28,7 @@ export class ResendAuthV1EmailSender implements AuthV1EmailSender {
   public async send(message: AuthV1EmailMessage): Promise<void> {
     const resend = this.configuration.betterAuth.resend;
     if (this.client === null || !resend.configured) {
-      const outboxPath = this.configuration.betterAuth.emailOutboxPath;
+      const outboxPath = this.configuration.betterAuth.emailOutboxPath ?? null;
       if (outboxPath !== null) {
         await appendFile(outboxPath, `${JSON.stringify(message)}\n`, 'utf8');
         return;
