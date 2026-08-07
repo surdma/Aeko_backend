@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
+import type { IncomingHttpHeaders } from 'node:http';
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
 import { Inject, Injectable } from '@nestjs/common';
 import bcrypt from 'bcryptjs';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { toNodeHandler } from 'better-auth/node';
+import { fromNodeHeaders, toNodeHandler } from 'better-auth/node';
 import { bearer, twoFactor, username } from 'better-auth/plugins';
 import type { RequestHandler } from 'express';
 import { SanitizedLogger } from '../../common/sanitized-logger.js';
@@ -191,5 +192,11 @@ export class BetterAuthV1Service {
 
   public getSession(headers: Headers): Promise<AuthV1Session | null> {
     return this.readSession(headers);
+  }
+
+  public getSessionFromNodeHeaders(
+    headers: IncomingHttpHeaders,
+  ): Promise<AuthV1Session | null> {
+    return this.readSession(fromNodeHeaders(headers));
   }
 }
