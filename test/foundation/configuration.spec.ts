@@ -30,11 +30,17 @@ describe('loadConfiguration', () => {
       PORT: '4000',
       CORS_ORIGINS: 'https://aeko.social, https://admin.aeko.social ',
       TRUST_PROXY: '1',
+      GOOGLE_CLIENT_ID: '',
+      GOOGLE_CLIENT_SECRET: '',
+      ZEPTOMAIL_API_KEY: '',
     });
 
     expect(configuration.app.port).toBe(4000);
     expect(configuration.http.trustProxy).toBe(1);
     expect(configuration.auth.jwtSecret).toBe(validEnvironment.JWT_SECRET);
+    expect(configuration.auth.google.clientId).toBeNull();
+    expect(configuration.auth.google.clientSecret).toBeNull();
+    expect(configuration.email.zeptoMailApiKey).toBeNull();
     expect(configuration.http.corsOrigins).toEqual([
       'https://aeko.social',
       'https://admin.aeko.social',

@@ -7,7 +7,7 @@ import {
   parsePrismaSchema,
   type CapabilityInventory,
   type CapabilityItem,
-} from '../../scripts/migration/inventory-legacy.mjs';
+} from '../../scripts/migration/inventory-capabilities.mjs';
 
 const expectRequiredMetadata = (capability: CapabilityItem): void => {
   expect(capability).toEqual(
@@ -23,9 +23,9 @@ const expectRequiredMetadata = (capability: CapabilityItem): void => {
       reviewVerdict: 'pending',
       cutoverState: 'express-owner',
       rollbackState: 'legacy-available',
-    })
+    }),
   );
-  expect(capability.id).toMatch(/^[a-z-]+:[a-f0-9]{12}$/);
+  expect(capability.id).toMatch(/^[a-z-]+:[a-f0-9]{12}$/u);
   expect(capability.parityCases.length).toBeGreaterThan(0);
 };
 
@@ -50,21 +50,61 @@ describe('legacy capability inventory extraction', () => {
             options: { actions: { banUser: { actionType: 'record' } } }
           }]
         });
-      `
+      `,
     );
 
     expect(capabilities).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'middleware', evidence: expect.objectContaining({ path: '/api' }) }),
-        expect.objectContaining({ kind: 'http-route', evidence: expect.objectContaining({ method: 'POST', path: '/posts/:id' }) }),
-        expect.objectContaining({ kind: 'socket-event', evidence: expect.objectContaining({ direction: 'on', event: 'join-room' }) }),
-        expect.objectContaining({ kind: 'socket-event', evidence: expect.objectContaining({ direction: 'emit', event: 'post-created' }) }),
-        expect.objectContaining({ kind: 'scheduled-job', evidence: expect.objectContaining({ registration: 'static-import', module: './jobs/notifications.js' }) }),
-        expect.objectContaining({ kind: 'scheduled-job', evidence: expect.objectContaining({ registration: 'dynamic-import', module: './jobs/expireSubscriptions.js' }) }),
-        expect.objectContaining({ kind: 'scheduled-job', evidence: expect.objectContaining({ registration: 'cron', trigger: '0 * * * *' }) }),
-        expect.objectContaining({ kind: 'admin-resource', evidence: expect.objectContaining({ itemType: 'resource', resource: 'User' }) }),
-        expect.objectContaining({ kind: 'admin-resource', evidence: expect.objectContaining({ itemType: 'action', resource: 'User', action: 'banUser' }) }),
-      ])
+        expect.objectContaining({
+          kind: 'middleware',
+          evidence: expect.objectContaining({ path: '/api' }),
+        }),
+        expect.objectContaining({
+          kind: 'http-route',
+          evidence: expect.objectContaining({ method: 'POST', path: '/posts/:id' }),
+        }),
+        expect.objectContaining({
+          kind: 'socket-event',
+          evidence: expect.objectContaining({ direction: 'on', event: 'join-room' }),
+        }),
+        expect.objectContaining({
+          kind: 'socket-event',
+          evidence: expect.objectContaining({ direction: 'emit', event: 'post-created' }),
+        }),
+        expect.objectContaining({
+          kind: 'scheduled-job',
+          evidence: expect.objectContaining({
+            registration: 'static-import',
+            module: './jobs/notifications.js',
+          }),
+        }),
+        expect.objectContaining({
+          kind: 'scheduled-job',
+          evidence: expect.objectContaining({
+            registration: 'dynamic-import',
+            module: './jobs/expireSubscriptions.js',
+          }),
+        }),
+        expect.objectContaining({
+          kind: 'scheduled-job',
+          evidence: expect.objectContaining({
+            registration: 'cron',
+            trigger: '0 * * * *',
+          }),
+        }),
+        expect.objectContaining({
+          kind: 'admin-resource',
+          evidence: expect.objectContaining({ itemType: 'resource', resource: 'User' }),
+        }),
+        expect.objectContaining({
+          kind: 'admin-resource',
+          evidence: expect.objectContaining({
+            itemType: 'action',
+            resource: 'User',
+            action: 'banUser',
+          }),
+        }),
+      ]),
     );
     capabilities.forEach(expectRequiredMetadata);
   });
@@ -77,16 +117,28 @@ describe('legacy capability inventory extraction', () => {
         router.get(routePath, handler);
         socket.on(eventName, handler);
         cron.schedule(scheduleExpression, job);
-      `
+      `,
     );
 
     expect(capabilities.filter(({ kind }) => kind === 'unknown')).toHaveLength(4);
     expect(capabilities).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'unknown', risk: 'unknown', evidence: expect.objectContaining({ registrationKind: 'http-route' }) }),
-        expect.objectContaining({ kind: 'unknown', risk: 'unknown', evidence: expect.objectContaining({ registrationKind: 'socket-event' }) }),
-        expect.objectContaining({ kind: 'unknown', risk: 'unknown', evidence: expect.objectContaining({ registrationKind: 'scheduled-job' }) }),
-      ])
+        expect.objectContaining({
+          kind: 'unknown',
+          risk: 'unknown',
+          evidence: expect.objectContaining({ registrationKind: 'http-route' }),
+        }),
+        expect.objectContaining({
+          kind: 'unknown',
+          risk: 'unknown',
+          evidence: expect.objectContaining({ registrationKind: 'socket-event' }),
+        }),
+        expect.objectContaining({
+          kind: 'unknown',
+          risk: 'unknown',
+          evidence: expect.objectContaining({ registrationKind: 'scheduled-job' }),
+        }),
+      ]),
     );
     capabilities.forEach(expectRequiredMetadata);
   });
@@ -99,16 +151,34 @@ describe('legacy capability inventory extraction', () => {
         import cloudinary from 'cloudinary';
         const apiKey = process.env.STRIPE_SECRET_KEY;
         const result = await prisma.$queryRaw\`SELECT 1\`;
-      `
+      `,
     );
 
     expect(capabilities).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'provider', evidence: expect.objectContaining({ provider: 'stripe', module: 'stripe' }) }),
-        expect.objectContaining({ kind: 'provider', evidence: expect.objectContaining({ provider: 'cloudinary', module: 'cloudinary' }) }),
-        expect.objectContaining({ kind: 'operation', evidence: { category: 'environment-variable', name: 'STRIPE_SECRET_KEY' } }),
-        expect.objectContaining({ kind: 'persistence', evidence: expect.objectContaining({ operation: '$queryRaw' }) }),
-      ])
+        expect.objectContaining({
+          kind: 'provider',
+          evidence: expect.objectContaining({ provider: 'stripe', module: 'stripe' }),
+        }),
+        expect.objectContaining({
+          kind: 'provider',
+          evidence: expect.objectContaining({
+            provider: 'cloudinary',
+            module: 'cloudinary',
+          }),
+        }),
+        expect.objectContaining({
+          kind: 'operation',
+          evidence: {
+            category: 'environment-variable',
+            name: 'STRIPE_SECRET_KEY',
+          },
+        }),
+        expect.objectContaining({
+          kind: 'persistence',
+          evidence: expect.objectContaining({ operation: '$queryRaw' }),
+        }),
+      ]),
     );
     expect(JSON.stringify(capabilities)).not.toContain('SELECT 1');
     capabilities.forEach(expectRequiredMetadata);
@@ -122,23 +192,35 @@ describe('legacy capability inventory extraction', () => {
         datasource db { provider = "postgresql" url = env("DATABASE_URL") }
         model User { id String @id }
         model Transaction { id String @id }
-      `
+      `,
     );
     const deploymentCapabilities = parseJsonCapabilities(
       'railway.json',
-      JSON.stringify({ deploy: { startCommand: 'node server.js', healthcheckPath: '/health' } })
+      JSON.stringify({
+        deploy: { startCommand: 'node server.js', healthcheckPath: '/health' },
+      }),
     );
 
     expect(prismaCapabilities).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ kind: 'persistence', evidence: { asset: 'prisma-model', model: 'User' } }),
-        expect.objectContaining({ kind: 'persistence', evidence: { asset: 'prisma-model', model: 'Transaction' } }),
-      ])
+        expect.objectContaining({
+          kind: 'persistence',
+          evidence: { asset: 'prisma-model', model: 'User' },
+        }),
+        expect.objectContaining({
+          kind: 'persistence',
+          evidence: { asset: 'prisma-model', model: 'Transaction' },
+        }),
+      ]),
     );
     expect(deploymentCapabilities).toEqual([
       expect.objectContaining({
         kind: 'operation',
-        evidence: expect.objectContaining({ asset: 'deployment-json', startCommand: 'node server.js', healthcheckPath: '/health' }),
+        evidence: expect.objectContaining({
+          asset: 'deployment-json',
+          startCommand: 'node server.js',
+          healthcheckPath: '/health',
+        }),
       }),
     ]);
     [...prismaCapabilities, ...deploymentCapabilities].forEach(expectRequiredMetadata);
@@ -146,15 +228,20 @@ describe('legacy capability inventory extraction', () => {
 
   it('keeps identifiers stable for the same source evidence', () => {
     const source = `router.get('/health', handler);`;
-    expect(extractSourceCapabilities('routes/health.js', source).map(({ id }) => id)).toEqual(
-      extractSourceCapabilities('routes/health.js', source).map(({ id }) => id)
+    expect(
+      extractSourceCapabilities('routes/health.js', source).map(({ id }) => id),
+    ).toEqual(
+      extractSourceCapabilities('routes/health.js', source).map(({ id }) => id),
     );
   });
 });
 
 describe('inventory audit and Markdown', () => {
   it('reports required-category coverage and blocks unresolved capabilities', () => {
-    const fixture = (kind: CapabilityItem['kind'], sourceFile: string): CapabilityItem => ({
+    const fixture = (
+      kind: CapabilityItem['kind'],
+      sourceFile: string,
+    ): CapabilityItem => ({
       id: `${kind}:000000000000`,
       kind,
       sourceFile,

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "domain": "authentication",
+  "baseBranch": "migration/nestjs-clean",
+  "baseCommit": "314dc5a203ddffe0ae0a1d5d83d34d2127a47d48",
+  "currentOwner": "Express",
+  "candidateOwner": "NestJS",
+  "cutoverState": "express-owner",
+  "rollbackState": "legacy-available",
+  "architecture": {
+    "module": "src/modules/auth",
+    "persistencePort": "src/modules/auth/authentication.repository.ts",
+    "prismaAdapter": "src/infrastructure/prisma/repositories/prisma-authentication.repository.ts",
+    "passwordAdapter": "src/infrastructure/auth/bcrypt-password-hasher.ts",
+    "googleAdapter": "src/infrastructure/auth/google-identity-provider.service.ts",
+    "emailAdapter": "src/infrastructure/email/zeptomail-auth-email.service.ts",
+    "useCases": [
+      "src/modules/auth/registration.service.ts",
+      "src/modules/auth/session-authentication.service.ts",
+      "src/modules/auth/google-authentication.service.ts",
+      "src/modules/auth/password-recovery.service.ts"
+    ]
+  },
+  "capabilities": [
+    { "method": "GET", "path": "/api/auth/google", "auth": "public" },
+    { "method": "GET", "path": "/api/auth/google/callback", "auth": "google-oauth" },
+    { "method": "POST", "path": "/api/auth/google/mobile", "auth": "google-id-token" },
+    { "method": "POST", "path": "/api/auth/signup", "auth": "public" },
+    { "method": "POST", "path": "/api/auth/verify-email", "auth": "public" },
+    { "method": "POST", "path": "/api/auth/resend-verification", "auth": "public" },
+    { "method": "POST", "path": "/api/auth/login", "auth": "credentials+optional-2fa" },
+    { "method": "GET", "path": "/api/auth/profile-completion", "auth": "jwt" },
+    { "method": "GET", "path": "/api/auth/me", "auth": "jwt" },
+    { "method": "POST", "path": "/api/auth/logout", "auth": "public" },
+    { "method": "POST", "path": "/api/auth/forgot-password", "auth": "public" },
+    { "method": "POST", "path": "/api/auth/reset-password", "auth": "reset-jwt" }
+  ],
+  "intentionalCorrections": [
+    "Unexpected errors no longer disclose raw error.message values.",
+    "OAuth-created accounts store a random bcrypt hash instead of the raw Google subject.",
+    "Mobile Google email identity is accepted only from the verified token payload.",
+    "Malformed request bodies return stable user-friendly 400 responses.",
+    "Email and OAuth provider failures are logged without tokens, passwords or verification codes."
+  ],
+  "deferred": [
+    "Production route cutover",
+    "Express auth router removal",
+    "Passport and jsonwebtoken dependency removal after cutover"
+  ]
+}

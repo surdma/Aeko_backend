@@ -1,6 +1,11 @@
 import { Global, Module, type DynamicModule } from '@nestjs/common';
 import { z } from 'zod';
 
+const optionalString = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim().length === 0 ? undefined : value),
+  z.string().min(1).optional(),
+);
+
 const environmentSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().min(1).default('0.0.0.0'),
@@ -12,12 +17,20 @@ const environmentSchema = z.object({
       (value) => value.startsWith('postgresql://') || value.startsWith('postgres://'),
       'DATABASE_URL must use the PostgreSQL protocol',
     ),
+  FRONTEND_URL: z.string().url().default('http://localhost:3000'),
   CORS_ORIGINS: z.string().default('http://localhost:3000'),
   HTTP_BODY_LIMIT: z.string().min(1).default('10mb'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(1).default(1),
   LOG_LEVEL: z.enum(['debug', 'log', 'warn', 'error', 'fatal']).default('log'),
   JWT_SECRET: z.string().min(16),
   TWO_FACTOR_SECRET_KEY: z.string().min(32),
+  GOOGLE_CLIENT_ID: optionalString,
+  GOOGLE_CLIENT_SECRET: optionalString,
+  GOOGLE_CALLBACK_URL: optionalString,
+  OAUTH_FAILURE_REDIRECT: z.string().min(1).default('aeko://auth/failed'),
+  ZEPTOMAIL_API_URL: optionalString,
+  ZEPTOMAIL_API_KEY: optionalString,
+  EMAIL_SENDER_NAME: z.string().min(1).default('Aeko'),
 });
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;
@@ -28,20 +41,28 @@ export interface AppConfiguration {
     readonly host: string;
     readonly port: number;
   };
-  readonly database: {
-    readonly url: string;
-  };
+  readonly database: { readonly url: string };
   readonly http: {
     readonly bodyLimit: string;
     readonly corsOrigins: readonly string[];
     readonly trustProxy: 0 | 1;
   };
-  readonly logging: {
-    readonly level: RuntimeEnvironment['LOG_LEVEL'];
-  };
+  readonly logging: { readonly level: RuntimeEnvironment['LOG_LEVEL'] };
   readonly auth: {
     readonly jwtSecret: string;
     readonly twoFactorSecretKey: string;
+    readonly frontendUrl: string;
+    readonly google: {
+      readonly clientId: string | null;
+      readonly clientSecret: string | null;
+      readonly callbackUrl: string | null;
+      readonly failureRedirect: string;
+    };
+  };
+  readonly email: {
+    readonly zeptoMailApiUrl: string | null;
+    readonly zeptoMailApiKey: string | null;
+    readonly senderName: string;
   };
 }
 
@@ -68,6 +89,10 @@ function normalizeOrigins(value: string): readonly string[] {
   );
 }
 
+function optional(value: string | undefined): string | null {
+  return value ?? null;
+}
+
 export function loadConfiguration(
   environment: Readonly<Record<string, string | undefined>>,
 ): AppConfiguration {
@@ -80,6 +105,12 @@ export function loadConfiguration(
     );
   }
 
+  const google = Object.freeze({
+    clientId: optional(parsed.data.GOOGLE_CLIENT_ID),
+    clientSecret: optional(parsed.data.GOOGLE_CLIENT_SECRET),
+    callbackUrl: optional(parsed.data.GOOGLE_CALLBACK_URL),
+    failureRedirect: parsed.data.OAUTH_FAILURE_REDIRECT,
+  });
   const configuration: AppConfiguration = {
     app: {
       environment: parsed.data.NODE_ENV,
@@ -96,6 +127,13 @@ export function loadConfiguration(
     auth: {
       jwtSecret: parsed.data.JWT_SECRET,
       twoFactorSecretKey: parsed.data.TWO_FACTOR_SECRET_KEY,
+      frontendUrl: parsed.data.FRONTEND_URL,
+      google,
+    },
+    email: {
+      zeptoMailApiUrl: optional(parsed.data.ZEPTOMAIL_API_URL),
+      zeptoMailApiKey: optional(parsed.data.ZEPTOMAIL_API_KEY),
+      senderName: parsed.data.EMAIL_SENDER_NAME,
     },
   };
 
@@ -106,6 +144,7 @@ export function loadConfiguration(
     http: Object.freeze(configuration.http),
     logging: Object.freeze(configuration.logging),
     auth: Object.freeze(configuration.auth),
+    email: Object.freeze(configuration.email),
   });
 }
 

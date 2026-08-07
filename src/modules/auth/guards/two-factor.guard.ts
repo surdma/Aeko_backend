@@ -1,9 +1,17 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, UnauthorizedException, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+  type CanActivate,
+  type ExecutionContext,
+} from '@nestjs/common';
 import type { AuthenticatedRequest } from '../../../common/types/authenticated-request.js';
 import { TotpVerificationService } from '../../../infrastructure/auth/totp-verification.service.js';
 
 function firstHeader(value: string | readonly string[] | undefined): string | undefined {
-  return Array.isArray(value) ? value[0] : value;
+  if (typeof value === 'string' || value === undefined) return value;
+  return value[0];
 }
 
 @Injectable()
@@ -21,7 +29,11 @@ export class TwoFactorGuard implements CanActivate {
       request.user.id,
       firstHeader(request.headers['x-2fa-token']),
       {
-        ipAddress: request.ip || forwarded?.split(',')[0]?.trim() || request.socket.remoteAddress || 'unknown',
+        ipAddress:
+          request.ip ||
+          forwarded?.split(',')[0]?.trim() ||
+          request.socket.remoteAddress ||
+          'unknown',
         userAgent: request.get('User-Agent') || 'unknown',
       },
     );
