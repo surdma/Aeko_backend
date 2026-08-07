@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { appendFile } from 'node:fs/promises';
 import { Inject, Injectable } from '@nestjs/common';
 import { Resend } from 'resend';
@@ -7,7 +6,6 @@ import {
   APP_CONFIGURATION,
   type AppConfiguration,
 } from '../../config/configuration.js';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service.js';
 import type {
   AuthV1EmailMessage,
   AuthV1EmailSender,
@@ -21,7 +19,6 @@ export class ResendAuthV1EmailSender implements AuthV1EmailSender {
     @Inject(APP_CONFIGURATION)
     private readonly configuration: AppConfiguration,
     private readonly logger: SanitizedLogger,
-    private readonly prisma: PrismaService,
   ) {
     this.client = configuration.betterAuth.resend.configured
       ? new Resend(configuration.betterAuth.resend.apiKey)
@@ -34,7 +31,6 @@ export class ResendAuthV1EmailSender implements AuthV1EmailSender {
       const outboxPath = this.configuration.betterAuth.emailOutboxPath ?? null;
       if (outboxPath !== null) {
         await appendFile(outboxPath, `${JSON.stringify(message)}\n`, 'utf8');
-        await this.exposeVerificationTokenForDisposableRuntime(message);
         return;
       }
       this.logger.warn('Better Auth email skipped because Resend is not configured', {
@@ -63,28 +59,5 @@ export class ResendAuthV1EmailSender implements AuthV1EmailSender {
       });
       throw new Error('Better Auth email delivery failed');
     }
-  }
-
-  private async exposeVerificationTokenForDisposableRuntime(
-    message: AuthV1EmailMessage,
-  ): Promise<void> {
-    if (message.subject !== 'Verify your Aeko email') return;
-    const urlText = /https?:\/\/\S+/u.exec(message.text)?.[0];
-    if (urlText === undefined) {
-      throw new Error('Better Auth verification email did not contain a URL');
-    }
-    const token = new URL(urlText).searchParams.get('token');
-    if (token === null || token.length === 0) {
-      throw new Error('Better Auth verification email did not contain a token');
-    }
-
-    await this.prisma.authVerification.create({
-      data: {
-        id: randomUUID(),
-        identifier: `runtime-outbox:${message.to}`,
-        value: token,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1_000),
-      },
-    });
   }
 }
