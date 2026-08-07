@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { LoggingModule } from './common/logging.module.js';
 import { RequestIdMiddleware } from './common/request-id.middleware.js';
