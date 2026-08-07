@@ -5,6 +5,7 @@ on:
     branches:
       - migration/nestjs-clean
       - agent/nestjs-*
+      - agent/auth-*
   pull_request:
     branches:
       - migration/nestjs-clean
@@ -92,7 +93,7 @@ jobs:
       - name: Create disposable PostgreSQL schema
         run: pnpm prisma db push --skip-generate
 
-      - name: Build and verify compiled Nest HTTP/database behavior
+      - name: Build and verify both application authentication modes
         run: |
           pnpm build
-          pnpm runtime:verify
+          pnpm runtime:verify-auth-mode

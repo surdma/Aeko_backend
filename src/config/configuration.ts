@@ -22,6 +22,7 @@ const environmentSchema = z.object({
   HTTP_BODY_LIMIT: z.string().min(1).default('10mb'),
   TRUST_PROXY: z.coerce.number().int().min(0).max(1).default(1),
   LOG_LEVEL: z.enum(['debug', 'log', 'warn', 'error', 'fatal']).default('log'),
+  AUTH_MODE: z.enum(['better-auth', 'v0']).default('better-auth'),
   JWT_SECRET: z.string().min(16),
   TWO_FACTOR_SECRET_KEY: z.string().min(32),
   GOOGLE_CLIENT_ID: optionalString,
@@ -46,6 +47,7 @@ const environmentSchema = z.object({
 });
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;
+export type AuthenticationMode = RuntimeEnvironment['AUTH_MODE'];
 
 type OptionalProviderConfiguration =
   | Readonly<{ configured: false; clientId: null; clientSecret: null }>
@@ -68,6 +70,7 @@ export interface AppConfiguration {
     readonly trustProxy: 0 | 1;
   };
   readonly logging: { readonly level: RuntimeEnvironment['LOG_LEVEL'] };
+  readonly authentication: { readonly mode: AuthenticationMode };
   readonly auth: {
     readonly jwtSecret: string;
     readonly twoFactorSecretKey: string;
@@ -270,6 +273,7 @@ export function loadConfiguration(
       trustProxy: normalizeTrustProxy(parsed.data.TRUST_PROXY),
     },
     logging: { level: parsed.data.LOG_LEVEL },
+    authentication: { mode: parsed.data.AUTH_MODE },
     auth: {
       jwtSecret: parsed.data.JWT_SECRET,
       twoFactorSecretKey: parsed.data.TWO_FACTOR_SECRET_KEY,
@@ -290,6 +294,7 @@ export function loadConfiguration(
     database: Object.freeze(configuration.database),
     http: Object.freeze(configuration.http),
     logging: Object.freeze(configuration.logging),
+    authentication: Object.freeze(configuration.authentication),
     auth: Object.freeze(configuration.auth),
     betterAuth: Object.freeze(configuration.betterAuth),
     email: Object.freeze(configuration.email),

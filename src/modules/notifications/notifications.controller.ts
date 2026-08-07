@@ -14,10 +14,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard, minutes } from '@nestjs/throttler';
+import type { AppAuthenticatedUser } from '../../common/authentication/app-authenticated-user.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import type { AuthenticatedUser } from '../auth/auth.types.js';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import {
   listNotificationsQuerySchema,
   type ListNotificationsQuery,
@@ -39,7 +38,7 @@ type NotificationListResponse = Readonly<{
 }>;
 
 @Controller('api/notifications')
-@UseGuards(ThrottlerGuard, JwtAuthGuard)
+@UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 @Throttle({ default: { limit: 100, ttl: minutes(15) } })
 export class NotificationsController {
@@ -47,7 +46,7 @@ export class NotificationsController {
 
   @Get('settings')
   public async getSettings(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
   ): Promise<unknown> {
     const result = await this.service.getSettings(user.id);
     if (result.kind === 'unexpected') return this.serverError();
@@ -56,7 +55,7 @@ export class NotificationsController {
 
   @Put('settings')
   public async updateSettings(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Body() settings: unknown,
   ): Promise<unknown> {
     const result = await this.service.updateSettings(user.id, settings);
@@ -66,7 +65,7 @@ export class NotificationsController {
 
   @Put('push-token')
   public async updatePushToken(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Body() body: unknown,
   ): Promise<Readonly<{ message: string }>> {
     const result = await this.service.updatePushToken(user.id, body);
@@ -79,7 +78,7 @@ export class NotificationsController {
 
   @Get()
   public async listNotifications(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Query(
       new NotificationsQueryPipe(
         listNotificationsQuerySchema,
@@ -103,7 +102,7 @@ export class NotificationsController {
 
   @Get('unread-count')
   public async getUnreadCount(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
   ): Promise<Readonly<{ count: number }>> {
     const result = await this.service.getUnreadCount(user.id);
     if (result.kind === 'unexpected') return this.serverError();
@@ -112,7 +111,7 @@ export class NotificationsController {
 
   @Put('read-all')
   public async markAllRead(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
   ): Promise<Readonly<{ message: string }>> {
     const result = await this.service.markAllRead(user.id);
     if (result.kind === 'unexpected') return this.serverError();
@@ -121,7 +120,7 @@ export class NotificationsController {
 
   @Put(':id/read')
   public async markRead(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Param('id') notificationId: string,
   ): Promise<NotificationRecord> {
     const result = await this.service.markRead(user.id, notificationId);
@@ -133,7 +132,7 @@ export class NotificationsController {
 
   @Delete(':id')
   public async deleteNotification(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Param('id') notificationId: string,
   ): Promise<Readonly<{ message: string }>> {
     const result = await this.service.deleteNotification(

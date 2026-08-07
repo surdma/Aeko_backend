@@ -1,8 +1,8 @@
 import type { Request } from 'express';
-import type { AuthenticatedUser } from '../../modules/auth/auth.types.js';
+import type { AppAuthenticatedUser } from '../authentication/app-authenticated-user.js';
 
 export interface AuthenticatedRequest extends Request {
-  user?: AuthenticatedUser;
+  user?: AppAuthenticatedUser;
   userId?: string;
   twoFactorVerified?: boolean;
 }

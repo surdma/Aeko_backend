@@ -24,6 +24,19 @@ describe('loadConfiguration', () => {
     ).toThrow('DATABASE_URL must use the PostgreSQL protocol');
   });
 
+  it('defaults application authentication to Better Auth', () => {
+    expect(loadConfiguration(validEnvironment).authentication.mode).toBe(
+      'better-auth',
+    );
+  });
+
+  it('allows the legacy v0 authority to be selected explicitly', () => {
+    expect(
+      loadConfiguration({ ...validEnvironment, AUTH_MODE: 'v0' }).authentication
+        .mode,
+    ).toBe('v0');
+  });
+
   it('normalizes typed defaults, auth values and CORS origins', () => {
     const configuration = loadConfiguration({
       ...validEnvironment,

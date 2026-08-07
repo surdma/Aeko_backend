@@ -15,10 +15,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard, minutes } from '@nestjs/throttler';
+import type { AppAuthenticatedUser } from '../../common/authentication/app-authenticated-user.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import type { AuthenticatedUser } from '../auth/auth.types.js';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { SupportAdminAccessGuard } from './support-admin-access.guard.js';
 import type {
   AdminSupportTicketRecord,
@@ -70,7 +69,7 @@ type AdminTicketListResponse = Readonly<{
 }>;
 
 @Controller('api/support')
-@UseGuards(ThrottlerGuard, JwtAuthGuard)
+@UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 @Throttle({ default: { limit: 100, ttl: minutes(15) } })
 export class SupportController {
@@ -79,7 +78,7 @@ export class SupportController {
   @Post('tickets')
   @HttpCode(HttpStatus.CREATED)
   public async createTicket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Body(
       new SupportValidationPipe(
         createSupportTicketSchema,
@@ -95,7 +94,7 @@ export class SupportController {
 
   @Get('tickets')
   public async listUserTickets(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
   ): Promise<TicketListResponse> {
     const result = await this.service.listUserTickets(user.id);
     if (result.kind === 'unexpected') return this.serverError();
@@ -104,7 +103,7 @@ export class SupportController {
 
   @Get('tickets/:id')
   public async getTicket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Param('id') ticketId: string,
   ): Promise<TicketDetailsResponse> {
     const result = await this.service.getTicket(user, ticketId);
@@ -121,7 +120,7 @@ export class SupportController {
   @Post('tickets/:id/messages')
   @HttpCode(HttpStatus.CREATED)
   public async addMessage(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Param('id') ticketId: string,
     @Body(
       new SupportValidationPipe(
@@ -144,7 +143,7 @@ export class SupportController {
 
   @Patch('tickets/:id/status')
   public async updateStatus(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() user: AppAuthenticatedUser,
     @Param('id') ticketId: string,
     @Body(
       new SupportValidationPipe(
