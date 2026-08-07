@@ -16,6 +16,13 @@ const legacyAuthBasePath = '/api/v0/auth';
 
 type JsonObject = Readonly<Record<string, unknown>>;
 
+interface HttpOptions {
+  readonly body?: unknown;
+  readonly token?: string;
+  readonly cookie?: string;
+  readonly headers?: Readonly<Record<string, string>>;
+}
+
 interface HttpResult {
   readonly status: number;
   readonly body: unknown;
@@ -25,6 +32,18 @@ interface HttpResult {
 interface RuntimeIdentity {
   readonly userId: string;
   readonly token: string;
+}
+
+interface CanonicalIdentity {
+  readonly userId: string;
+  readonly bearerToken: string;
+  readonly legacyToken: string;
+}
+
+interface SseEvent {
+  readonly id: string | null;
+  readonly type: string | null;
+  readonly data: unknown;
 }
 
 function object(value: unknown, label: string): JsonObject {
@@ -157,11 +176,12 @@ async function verifyModuleGraphs(): Promise<void> {
 async function call(
   method: string,
   path: string,
-  options: Readonly<{ body?: unknown; token?: string }> = {},
+  options: HttpOptions = {},
 ): Promise<HttpResult> {
-  const headers = new Headers({ accept: 'application/json' });
+  const headers = new Headers({ accept: 'application/json', ...options.headers });
   if (options.body !== undefined) headers.set('content-type', 'application/json');
   if (options.token !== undefined) headers.set('authorization', `Bearer ${options.token}`);
+  if (options.cookie !== undefined) headers.set('cookie', options.cookie);
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers,
@@ -184,11 +204,26 @@ async function expect(
   method: string,
   path: string,
   status: number,
-  options: Readonly<{ body?: unknown; token?: string }> = {},
+  options: HttpOptions = {},
 ): Promise<HttpResult> {
   const result = await call(method, path, options);
   assert.equal(result.status, status, `${method} ${path}: ${JSON.stringify(result.body)}`);
   process.stdout.write(`${method} ${path}: HTTP ${status}\n`);
+  return result;
+}
+
+async function expectStatusIn(
+  method: string,
+  path: string,
+  statuses: readonly number[],
+  options: HttpOptions = {},
+): Promise<HttpResult> {
+  const result = await call(method, path, options);
+  assert.ok(
+    statuses.includes(result.status),
+    `${method} ${path}: expected ${statuses.join('/')}, got ${result.status}: ${JSON.stringify(result.body)}`,
+  );
+  process.stdout.write(`${method} ${path}: HTTP ${result.status}\n`);
   return result;
 }
 
@@ -225,39 +260,44 @@ async function verifyHealthAndWaitlist(suffix: string): Promise<void> {
 
   const waitlist = { name: 'Runtime User', email: `waitlist-${suffix}@example.com` };
   await expect('POST', '/api/waitlist', 400, { body: { email: waitlist.email } });
-  assert.equal(object((await expect('POST', '/api/waitlist', 201, { body: waitlist })).body, 'waitlist').success, true);
+  assert.equal(
+    object((await expect('POST', '/api/waitlist', 201, { body: waitlist })).body, 'waitlist').success,
+    true,
+  );
   await expect('POST', '/api/waitlist', 409, { body: waitlist });
 }
 
-async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<RuntimeIdentity> {
-  await expect('POST', '/api/auth/signup', 404, { body: {} });
+async function verifyLegacyAuthentication(
+  suffix: string,
+  jwtSecret: string,
+): Promise<RuntimeIdentity> {
   await expect('GET', `${legacyAuthBasePath}/google`, 503);
   await expect('GET', `${legacyAuthBasePath}/google/callback`, 503);
   await expect('POST', `${legacyAuthBasePath}/google/mobile`, 503, {
     body: { idToken: 'unused-without-provider-configuration' },
   });
 
-  const email = `runtime-${suffix}@example.com`;
+  const email = `runtime-v0-${suffix}@example.com`;
   const oldPassword = 'runtime-password';
   const newPassword = 'runtime-password-updated';
   const signup = object(
     (
       await expect('POST', `${legacyAuthBasePath}/signup`, 201, {
-        body: { name: 'Runtime User', username: `runtime_${suffix}`, email, password: oldPassword },
+        body: { name: 'Runtime V0 User', username: `runtime_v0_${suffix}`, email, password: oldPassword },
       })
     ).body,
-    'signup',
+    'v0 signup',
   );
   assert.equal(signup.emailSent, false);
-  const userId = string(signup, 'userId', 'signup');
+  const userId = string(signup, 'userId', 'v0 signup');
 
   const verified = object(
     (
       await expect('POST', `${legacyAuthBasePath}/verify-email`, 200, {
-        body: { userId, verificationCode: string(signup, 'verificationCode', 'signup') },
+        body: { userId, verificationCode: string(signup, 'verificationCode', 'v0 signup') },
       })
     ).body,
-    'verify email',
+    'v0 verify email',
   );
   await expect('POST', `${legacyAuthBasePath}/resend-verification`, 400, { body: { userId } });
 
@@ -267,18 +307,18 @@ async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<
         body: { email, password: oldPassword },
       })
     ).body,
-    'login',
+    'v0 login',
   );
-  const loginToken = string(login, 'token', 'login');
+  const loginToken = string(login, 'token', 'v0 login');
   assert.equal(
     object(
       (await expect('GET', `${legacyAuthBasePath}/me`, 200, { token: loginToken })).body,
-      'me',
+      'v0 me',
     ).success,
     true,
   );
   await expect('GET', `${legacyAuthBasePath}/profile-completion`, 200, {
-    token: string(verified, 'token', 'verify email'),
+    token: string(verified, 'token', 'v0 verify email'),
   });
   await expect('POST', `${legacyAuthBasePath}/forgot-password`, 200, { body: { email } });
 
@@ -296,16 +336,105 @@ async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<
           body: { email, password: newPassword },
         })
       ).body,
-      'login after reset',
+      'v0 login after reset',
     ),
     'token',
-    'login after reset',
+    'v0 login after reset',
   );
   assert.match(
     (await expect('POST', `${legacyAuthBasePath}/logout`, 200)).headers.get('set-cookie') ?? '',
     /token=/u,
   );
   return { userId, token };
+}
+
+async function verifyBetterAuth(
+  prisma: PrismaClient,
+  suffix: string,
+  jwtSecret: string,
+): Promise<CanonicalIdentity> {
+  await expect('GET', '/api/auth/ok', 200);
+  const email = `runtime-v1-${suffix}@example.com`;
+  const username = `runtime_v1_${suffix}`.slice(0, 30);
+  const password = 'runtime-password-v1';
+
+  const signup = await expect('POST', '/api/auth/sign-up/email', 200, {
+    body: {
+      name: 'Runtime V1 User',
+      email,
+      password,
+      username,
+      displayUsername: 'Runtime V1 User',
+    },
+  });
+  const signupBody = object(signup.body, 'Better Auth signup');
+  const signupUser = object(signupBody.user, 'Better Auth signup user');
+  const userId = string(signupUser, 'id', 'Better Auth signup user');
+
+  const [authUser, account, profile, projection, migration] = await Promise.all([
+    prisma.authUser.findUnique({ where: { id: userId } }),
+    prisma.authAccount.findFirst({ where: { userId, providerId: 'credential' } }),
+    prisma.profile.findUnique({ where: { userId } }),
+    prisma.user.findUnique({ where: { id: userId } }),
+    prisma.authMigrationLink.findUnique({ where: { authUserId: userId } }),
+  ]);
+  assert.equal(authUser?.email, email);
+  assert.equal(authUser?.username, username);
+  assert.equal(account?.accountId, userId);
+  assert.ok(typeof account?.password === 'string' && account.password.length > 20);
+  assert.equal(profile?.userId, userId);
+  assert.equal(projection?.email, email);
+  assert.equal(migration?.legacyUserId, userId);
+  assert.equal(migration?.status, 'MIGRATED');
+
+  await expect('POST', '/api/auth/sign-in/email', 403, {
+    body: { email, password },
+  });
+  const verification = await prisma.authVerification.findFirst({
+    where: { identifier: { contains: email } },
+    orderBy: { createdAt: 'desc' },
+  });
+  assert.ok(verification !== null, 'Better Auth did not persist an email verification token');
+  await expectStatusIn(
+    'GET',
+    `/api/auth/verify-email?token=${encodeURIComponent(verification.value)}&callbackURL=%2F`,
+    [200, 302],
+  );
+  assert.equal(
+    (await prisma.authUser.findUnique({ where: { id: userId } }))?.emailVerified,
+    true,
+  );
+
+  const emailLogin = await expect('POST', '/api/auth/sign-in/email', 200, {
+    body: { email, password },
+  });
+  const bearerToken = emailLogin.headers.get('set-auth-token');
+  assert.ok(bearerToken !== null && bearerToken.length > 20, 'Bearer token header is missing');
+
+  const session = object(
+    (await expect('GET', '/api/auth/get-session', 200, { token: bearerToken })).body,
+    'Better Auth session',
+  );
+  assert.equal(string(object(session.user, 'session user'), 'id', 'session user'), userId);
+
+  const usernameLogin = await expect('POST', '/api/auth/sign-in/username', 200, {
+    body: { username, password },
+  });
+  assert.ok((usernameLogin.headers.get('set-auth-token') ?? '').length > 20);
+
+  const passkeys = await expect('GET', '/api/auth/passkey/list-user-passkeys', 200, {
+    token: bearerToken,
+  });
+  assert.deepEqual(passkeys.body, []);
+  await expectStatusIn('POST', '/api/auth/sign-in/social', [400, 404], {
+    body: { provider: 'google', callbackURL: '/' },
+  });
+
+  const legacyToken = await new JwtService({ secret: jwtSecret }).signAsync(
+    { userId },
+    { expiresIn: 3_600 },
+  );
+  return { userId, bearerToken, legacyToken };
 }
 
 async function verifyInterests(token: string, suffix: string): Promise<string> {
@@ -368,7 +497,7 @@ async function verifySupport(token: string): Promise<void> {
   });
 }
 
-async function verifyNotifications(
+async function verifyLegacyNotifications(
   prisma: PrismaClient,
   identity: RuntimeIdentity,
   suffix: string,
@@ -419,6 +548,98 @@ async function verifyNotifications(
   await expect('DELETE', `/api/notifications/${notification.id}`, 200, { token: identity.token });
 }
 
+function parseSseFrame(frame: string): SseEvent {
+  let id: string | null = null;
+  let type: string | null = null;
+  const dataLines: string[] = [];
+  for (const line of frame.split('\n')) {
+    if (line.startsWith('id:')) id = line.slice(3).trim();
+    else if (line.startsWith('event:')) type = line.slice(6).trim();
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim());
+  }
+  const text = dataLines.join('\n');
+  let data: unknown = text;
+  if (text.length > 0) {
+    try {
+      data = JSON.parse(text) as unknown;
+    } catch {
+      data = text;
+    }
+  }
+  return { id, type, data };
+}
+
+function createSseReader(reader: ReadableStreamDefaultReader<Uint8Array>) {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  return async (): Promise<SseEvent> => {
+    while (true) {
+      const boundary = buffer.indexOf('\n\n');
+      if (boundary >= 0) {
+        const frame = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+        return parseSseFrame(frame);
+      }
+      const next = await reader.read();
+      if (next.done) throw new Error('Notification SSE stream closed unexpectedly');
+      buffer += decoder.decode(next.value, { stream: true }).replaceAll('\r\n', '\n');
+    }
+  };
+}
+
+async function verifyNotificationSse(
+  prisma: PrismaClient,
+  identity: CanonicalIdentity,
+): Promise<void> {
+  const abort = new AbortController();
+  const response = await fetch(`${baseUrl}/api/notifications/stream`, {
+    headers: { Authorization: `Bearer ${identity.bearerToken}` },
+    signal: abort.signal,
+  });
+  assert.equal(response.status, 200, `SSE returned HTTP ${response.status}`);
+  assert.match(response.headers.get('content-type') ?? '', /^text\/event-stream/u);
+  assert.ok(response.body !== null, 'SSE response has no body');
+  const reader = response.body.getReader();
+  const nextEvent = createSseReader(reader);
+
+  try {
+    const connected = await nextEvent();
+    assert.equal(connected.type, 'connected');
+    assert.equal(object(connected.data, 'connected event').userId, identity.userId);
+
+    const notification = await prisma.notification.create({
+      data: {
+        recipientId: identity.userId,
+        senderId: identity.userId,
+        type: 'SYSTEM',
+        title: 'Canonical runtime notification',
+        message: 'Verify Better Auth SSE delivery',
+      },
+    });
+    await expect('PUT', `/api/notifications/${notification.id}/read`, 200, {
+      token: identity.legacyToken,
+    });
+
+    let readEvent: SseEvent | null = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const event = await nextEvent();
+      if (event.type === 'notification.read') {
+        readEvent = event;
+        break;
+      }
+    }
+    assert.ok(readEvent !== null, 'SSE did not deliver notification.read');
+    assert.equal(
+      object(readEvent.data, 'notification.read event').notificationId,
+      notification.id,
+    );
+  } finally {
+    abort.abort();
+    await reader.cancel().catch(() => undefined);
+  }
+  process.stdout.write('GET /api/notifications/stream: authenticated SSE event delivered\n');
+}
+
 async function verifyRuntime(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   const jwtSecret = process.env.JWT_SECRET;
@@ -441,13 +662,18 @@ async function verifyRuntime(): Promise<void> {
     await waitForServer(child);
     const suffix = `${Date.now()}`;
     await verifyHealthAndWaitlist(suffix);
-    const identity = await verifyAuthentication(suffix, jwtSecret);
-    await prisma.user.update({ where: { id: identity.userId }, data: { isAdmin: true } });
-    const interestId = await verifyInterests(identity.token, suffix);
-    await verifySupport(identity.token);
-    await verifyNotifications(prisma, identity, suffix);
-    await expect('DELETE', `/api/interests/${interestId}`, 200, { token: identity.token });
-    process.stdout.write('compiled Nest runtime and migrated HTTP/database scenarios passed\n');
+    const legacyIdentity = await verifyLegacyAuthentication(suffix, jwtSecret);
+    const canonicalIdentity = await verifyBetterAuth(prisma, suffix, jwtSecret);
+    await prisma.user.update({ where: { id: legacyIdentity.userId }, data: { isAdmin: true } });
+    const interestId = await verifyInterests(legacyIdentity.token, suffix);
+    await verifySupport(legacyIdentity.token);
+    await verifyLegacyNotifications(prisma, legacyIdentity, suffix);
+    await verifyNotificationSse(prisma, canonicalIdentity);
+    await expect('DELETE', `/api/interests/${interestId}`, 200, { token: legacyIdentity.token });
+    await expect('POST', '/api/auth/sign-out', 200, { token: canonicalIdentity.bearerToken });
+    process.stdout.write(
+      'compiled Nest runtime, Better Auth v1, v0 compatibility and notification SSE passed\n',
+    );
   } finally {
     await stop(child);
     await prisma.$disconnect();
