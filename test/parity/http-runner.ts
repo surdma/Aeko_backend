@@ -63,11 +63,14 @@ export async function observeHttp(
   baseUrl: string,
   parityCase: HttpParityCase,
 ): Promise<RuntimeObservation> {
-  const response = await fetch(new URL(parityCase.path, baseUrl), {
+  const requestInit: RequestInit = {
     method: parityCase.method,
     headers: { 'content-type': 'application/json', ...parityCase.headers },
-    body: parityCase.body === undefined ? undefined : JSON.stringify(parityCase.body),
-  });
+    ...(parityCase.body === undefined
+      ? {}
+      : { body: JSON.stringify(parityCase.body) }),
+  };
+  const response = await fetch(new URL(parityCase.path, baseUrl), requestInit);
   const contentType = response.headers.get('content-type') ?? '';
 
   return {
