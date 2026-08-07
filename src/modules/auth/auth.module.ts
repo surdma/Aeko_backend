@@ -19,7 +19,6 @@ import { AUTH_EMAIL_DELIVERY } from './auth-email-delivery.port.js';
 import { AUTH_REPOSITORY } from './auth.repository.js';
 import { AuthService } from './auth.service.js';
 import { AUTHENTICATION_REPOSITORY } from './authentication.repository.js';
-import { AuthenticationService } from './authentication.service.js';
 import { GoogleAuthenticationService } from './google-authentication.service.js';
 import { GOOGLE_IDENTITY_PROVIDER } from './google-identity-provider.port.js';
 import { AdminGuard } from './guards/admin.guard.js';
@@ -57,7 +56,6 @@ import { SessionAuthenticationService } from './session-authentication.service.j
   ],
   providers: [
     AuthService,
-    AuthenticationService,
     RegistrationService,
     SessionAuthenticationService,
     GoogleAuthenticationService,
@@ -67,11 +65,23 @@ import { SessionAuthenticationService } from './session-authentication.service.j
     TwoFactorGuard,
     TotpVerificationService,
     { provide: AUTH_REPOSITORY, useClass: PrismaAuthRepository },
-    { provide: AUTHENTICATION_REPOSITORY, useClass: PrismaAuthenticationRepository },
+    {
+      provide: AUTHENTICATION_REPOSITORY,
+      useClass: PrismaAuthenticationRepository,
+    },
     { provide: PASSWORD_HASHER, useClass: BcryptPasswordHasher },
-    { provide: GOOGLE_IDENTITY_PROVIDER, useClass: GoogleIdentityProviderService },
+    {
+      provide: GOOGLE_IDENTITY_PROVIDER,
+      useClass: GoogleIdentityProviderService,
+    },
     { provide: AUTH_EMAIL_DELIVERY, useClass: ZeptoMailAuthEmailService },
   ],
-  exports: [AuthService, JwtAuthGuard, AdminGuard, TwoFactorGuard],
+  exports: [
+    AuthService,
+    JwtAuthGuard,
+    AdminGuard,
+    TwoFactorGuard,
+    TotpVerificationService,
+  ],
 })
 export class AuthModule {}

@@ -11,16 +11,16 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Request } from 'express';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import { AuthenticationService } from './authentication.service.js';
 import { legacyAuthFailure, securityRequestContext } from './authentication-http.js';
 import { LegacyAuthBodyPipe } from './legacy-auth-body.pipe.js';
 import { loginSchema, type LoginInput } from './authentication.schemas.js';
+import { SessionAuthenticationService } from './session-authentication.service.js';
 
 @Controller('api/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class SessionAuthenticationController {
-  public constructor(private readonly authentication: AuthenticationService) {}
+  public constructor(private readonly sessions: SessionAuthenticationService) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -34,7 +34,7 @@ export class SessionAuthenticationController {
     input: LoginInput,
     @Req() request: Request,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.login(input, securityRequestContext(request));
+    const result = await this.sessions.login(input, securityRequestContext(request));
     switch (result.kind) {
       case 'authenticated':
         return {

@@ -20,6 +20,8 @@
     "test:authentication": "vitest run test/authentication",
     "test:interests": "vitest run test/interests",
     "test:support": "vitest run test/support",
+    "test:notifications": "vitest run test/notifications",
+    "runtime:verify": "tsx scripts/verify-nest-runtime.mts",
     "quality": "pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm prisma validate",
     "inventory:legacy": "tsx scripts/migration/inventory-resolved-capabilities.mts",
     "inventory:legacy:raw": "tsx scripts/migration/inventory-capabilities.mts",

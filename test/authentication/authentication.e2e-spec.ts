@@ -10,13 +10,17 @@ import request from 'supertest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiRateLimitModule } from '../../src/common/api-rate-limit.module.js';
 import type { AuthenticatedRequest } from '../../src/common/types/authenticated-request.js';
+import { APP_CONFIGURATION } from '../../src/config/configuration.js';
 import { AuthenticatedAccountController } from '../../src/modules/auth/authenticated-account.controller.js';
-import { AuthenticationService } from '../../src/modules/auth/authentication.service.js';
 import { JwtAuthGuard } from '../../src/modules/auth/guards/jwt-auth.guard.js';
 import { GoogleAuthenticationController } from '../../src/modules/auth/google-authentication.controller.js';
+import { GoogleAuthenticationService } from '../../src/modules/auth/google-authentication.service.js';
 import { PasswordRecoveryController } from '../../src/modules/auth/password-recovery.controller.js';
+import { PasswordRecoveryService } from '../../src/modules/auth/password-recovery.service.js';
 import { RegistrationController } from '../../src/modules/auth/registration.controller.js';
+import { RegistrationService } from '../../src/modules/auth/registration.service.js';
 import { SessionAuthenticationController } from '../../src/modules/auth/session-authentication.controller.js';
+import { SessionAuthenticationService } from '../../src/modules/auth/session-authentication.service.js';
 
 const userView = {
   id: 'user-1',
@@ -30,35 +34,34 @@ const userView = {
   profileCompletion: {},
 } as const;
 
-const authentication = {
-  isGoogleConfigured: vi.fn(() => false),
-  googleAuthorizationUrl: vi.fn<() => string | null>(() => null),
-  googleFailureUrl: vi.fn(() => 'aeko://auth/failed'),
-  googleFailureRedirect: vi.fn(
-    () => 'aeko://auth/failed?error=oauth_failed&message=Authentication%20failed',
-  ),
-  tokenCookieOptions: vi.fn(() => ({
-    httpOnly: true as const,
-    secure: false,
-    sameSite: 'lax' as const,
-    maxAge: 604_800_000,
-  })),
-  logoutCookieOptions: vi.fn(() => ({
-    httpOnly: true as const,
-    secure: false,
-    sameSite: 'lax' as const,
-  })),
-  authenticateGoogleCallback: vi.fn<AuthenticationService['authenticateGoogleCallback']>(),
-  authenticateGoogleMobile: vi.fn<AuthenticationService['authenticateGoogleMobile']>(),
-  signup: vi.fn<AuthenticationService['signup']>(),
-  verifyEmail: vi.fn<AuthenticationService['verifyEmail']>(),
-  resendVerification: vi.fn<AuthenticationService['resendVerification']>(),
-  login: vi.fn<AuthenticationService['login']>(),
-  profileCompletion: vi.fn<AuthenticationService['profileCompletion']>(),
-  currentUser: vi.fn<AuthenticationService['currentUser']>(),
-  forgotPassword: vi.fn<AuthenticationService['forgotPassword']>(),
-  resetPassword: vi.fn<AuthenticationService['resetPassword']>(),
+const registration = {
+  signup: vi.fn<RegistrationService['signup']>(),
+  verifyEmail: vi.fn<RegistrationService['verifyEmail']>(),
+  resendVerification: vi.fn<RegistrationService['resendVerification']>(),
 };
+
+const sessions = {
+  login: vi.fn<SessionAuthenticationService['login']>(),
+  profileCompletion: vi.fn<SessionAuthenticationService['profileCompletion']>(),
+  currentUser: vi.fn<SessionAuthenticationService['currentUser']>(),
+};
+
+const googleAuthentication = {
+  isConfigured: vi.fn(() => false),
+  authorizationUrl: vi.fn<() => string | null>(() => null),
+  callback: vi.fn<GoogleAuthenticationService['callback']>(),
+  mobile: vi.fn<GoogleAuthenticationService['mobile']>(),
+};
+
+const recovery = {
+  forgotPassword: vi.fn<PasswordRecoveryService['forgotPassword']>(),
+  resetPassword: vi.fn<PasswordRecoveryService['resetPassword']>(),
+};
+
+const testConfiguration = {
+  app: { environment: 'test' },
+  auth: { google: { failureRedirect: 'aeko://auth/failed' } },
+} as const;
 
 class AllowJwtGuard implements CanActivate {
   public canActivate(context: ExecutionContext): boolean {
@@ -78,7 +81,11 @@ class AllowJwtGuard implements CanActivate {
     PasswordRecoveryController,
   ],
   providers: [
-    { provide: AuthenticationService, useValue: authentication },
+    { provide: APP_CONFIGURATION, useValue: testConfiguration },
+    { provide: RegistrationService, useValue: registration },
+    { provide: SessionAuthenticationService, useValue: sessions },
+    { provide: GoogleAuthenticationService, useValue: googleAuthentication },
+    { provide: PasswordRecoveryService, useValue: recovery },
     { provide: JwtAuthGuard, useClass: AllowJwtGuard },
   ],
 })
@@ -89,23 +96,8 @@ describe('authentication HTTP contract', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    authentication.isGoogleConfigured.mockReturnValue(false);
-    authentication.googleAuthorizationUrl.mockReturnValue(null);
-    authentication.googleFailureUrl.mockReturnValue('aeko://auth/failed');
-    authentication.googleFailureRedirect.mockReturnValue(
-      'aeko://auth/failed?error=oauth_failed&message=Authentication%20failed',
-    );
-    authentication.tokenCookieOptions.mockReturnValue({
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      maxAge: 604_800_000,
-    });
-    authentication.logoutCookieOptions.mockReturnValue({
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-    });
+    googleAuthentication.isConfigured.mockReturnValue(false);
+    googleAuthentication.authorizationUrl.mockReturnValue(null);
 
     const moduleReference = await Test.createTestingModule({
       imports: [TestAppModule],
@@ -122,7 +114,7 @@ describe('authentication HTTP contract', () => {
       message: 'All fields are required',
     });
 
-    authentication.signup.mockResolvedValue({
+    registration.signup.mockResolvedValue({
       kind: 'created',
       userId: 'user-1',
       emailSent: true,
@@ -145,7 +137,7 @@ describe('authentication HTTP contract', () => {
   });
 
   it('preserves the verification-code fallback when email delivery is unavailable', async () => {
-    authentication.signup.mockResolvedValue({
+    registration.signup.mockResolvedValue({
       kind: 'created',
       userId: 'user-1',
       emailSent: false,
@@ -171,7 +163,7 @@ describe('authentication HTTP contract', () => {
   });
 
   it('returns HTTP 200 when valid credentials still require 2FA', async () => {
-    authentication.login.mockResolvedValue({
+    sessions.login.mockResolvedValue({
       kind: 'two-factor-required',
       userId: 'user-1',
     });
@@ -196,13 +188,14 @@ describe('authentication HTTP contract', () => {
         error: 'Email is required',
       });
 
-    authentication.forgotPassword.mockResolvedValue({ kind: 'accepted' });
+    recovery.forgotPassword.mockResolvedValue({ kind: 'accepted' });
     await request(app.getHttpServer())
       .post('/api/auth/forgot-password')
       .send({ email: 'unknown@example.com' })
       .expect(200, {
         success: true,
-        message: 'If an account with that email exists, a password reset link has been sent.',
+        message:
+          'If an account with that email exists, a password reset link has been sent.',
       });
   });
 
@@ -221,9 +214,11 @@ describe('authentication HTTP contract', () => {
   });
 
   it('sets the OAuth cookie and deep-link redirect through the Nest controller', async () => {
-    authentication.isGoogleConfigured.mockReturnValue(true);
-    authentication.googleAuthorizationUrl.mockReturnValue('https://accounts.google.com/auth');
-    authentication.authenticateGoogleCallback.mockResolvedValue({
+    googleAuthentication.isConfigured.mockReturnValue(true);
+    googleAuthentication.authorizationUrl.mockReturnValue(
+      'https://accounts.google.com/auth',
+    );
+    googleAuthentication.callback.mockResolvedValue({
       kind: 'authenticated',
       token: 'jwt-token',
       user: userView,
@@ -239,7 +234,7 @@ describe('authentication HTTP contract', () => {
   });
 
   it('returns the authenticated account projection and clears the token cookie', async () => {
-    authentication.currentUser.mockResolvedValue({ kind: 'found', user: userView });
+    sessions.currentUser.mockResolvedValue({ kind: 'found', user: userView });
 
     await request(app.getHttpServer())
       .get('/api/auth/me')
