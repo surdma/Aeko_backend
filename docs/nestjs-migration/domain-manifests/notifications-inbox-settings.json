@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "domain": "notifications-inbox-settings",
+  "baseCommit": "ca751cc7c57a2b0b3133cbcc25965bd205ff11bc",
+  "currentOwner": "Express",
+  "candidateOwner": "NestJS",
+  "cutoverState": "express-owner",
+  "rollbackState": "legacy-available",
+  "architecture": {
+    "module": "src/modules/notifications",
+    "persistencePort": "src/modules/notifications/notifications.repository.ts",
+    "prismaAdapter": "src/infrastructure/prisma/repositories/prisma-notifications.repository.ts",
+    "accessControl": "src/modules/auth"
+  },
+  "capabilities": [
+    {
+      "method": "GET",
+      "path": "/api/notifications/settings",
+      "auth": "jwt"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/settings",
+      "auth": "jwt"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/push-token",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications",
+      "auth": "jwt"
+    },
+    {
+      "method": "GET",
+      "path": "/api/notifications/unread-count",
+      "auth": "jwt"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/:id/read",
+      "auth": "jwt+owner"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/notifications/read-all",
+      "auth": "jwt"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/notifications/:id",
+      "auth": "jwt+owner"
+    }
+  ],
+  "deferredProducers": [
+    "Report warning and ban notifications",
+    "Post, comment, follow and mention notification creation",
+    "Livestream and other domain notification creation",
+    "Push delivery provider integration"
+  ]
+}
