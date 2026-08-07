@@ -1,3 +1,4 @@
+import { appendFile } from 'node:fs/promises';
 import { Inject, Injectable } from '@nestjs/common';
 import { Resend } from 'resend';
 import { SanitizedLogger } from '../../common/sanitized-logger.js';
@@ -27,6 +28,11 @@ export class ResendAuthV1EmailSender implements AuthV1EmailSender {
   public async send(message: AuthV1EmailMessage): Promise<void> {
     const resend = this.configuration.betterAuth.resend;
     if (this.client === null || !resend.configured) {
+      const outboxPath = this.configuration.betterAuth.emailOutboxPath;
+      if (outboxPath !== null) {
+        await appendFile(outboxPath, `${JSON.stringify(message)}\n`, 'utf8');
+        return;
+      }
       this.logger.warn('Better Auth email skipped because Resend is not configured', {
         purpose: message.subject,
       });
