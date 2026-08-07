@@ -2,7 +2,6 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import { toNodeHandler } from 'better-auth/node';
 import type { Express } from 'express';
 import { AppModule } from './app.module.js';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
@@ -11,10 +10,7 @@ import {
   APP_CONFIGURATION,
   type AppConfiguration,
 } from './config/configuration.js';
-import {
-  type AekoBetterAuth,
-  BETTER_AUTH_V1,
-} from './modules/auth-v1/better-auth.factory.js';
+import { BetterAuthV1Service } from './modules/auth-v1/better-auth-v1.service.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -25,7 +21,7 @@ async function bootstrap(): Promise<void> {
   });
   const configuration = app.get<AppConfiguration>(APP_CONFIGURATION);
   const logger = app.get<SanitizedLogger>(SanitizedLogger);
-  const auth = app.get<AekoBetterAuth>(BETTER_AUTH_V1);
+  const auth = app.get(BetterAuthV1Service);
 
   app.useLogger(logger);
   app.useGlobalFilters(app.get<HttpExceptionFilter>(HttpExceptionFilter));
@@ -35,7 +31,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const express: Express = app.getHttpAdapter().getInstance();
-  express.all('/api/auth/*', toNodeHandler(auth));
+  express.all('/api/auth/*', auth.nodeHandler);
 
   app.useBodyParser('json', { limit: configuration.http.bodyLimit });
   app.useBodyParser('urlencoded', {
