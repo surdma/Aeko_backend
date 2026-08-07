@@ -31,3 +31,4 @@ globalThis.fetch = async (
 };
 
 await import('./verify-nest-runtime.mjs');
+await import('./verify-v0-auth-migration-runtime.mjs');
