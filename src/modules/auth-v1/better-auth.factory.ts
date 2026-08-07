@@ -14,6 +14,7 @@ import type {
 } from './auth-v1-email-sender.port.js';
 
 export const BETTER_AUTH_V1 = Symbol('BETTER_AUTH_V1');
+export type AekoBetterAuth = ReturnType<typeof betterAuth>;
 
 function messageKey(purpose: string, ownerId: string, secretValue: string): string {
   const digest = createHash('sha256').update(secretValue).digest('hex').slice(0, 32);
@@ -38,7 +39,7 @@ export function createAekoBetterAuth(
   prisma: PrismaService,
   emailSender: AuthV1EmailSender,
   logger: SanitizedLogger,
-) {
+): AekoBetterAuth {
   const google = configuration.betterAuth.google;
   const socialProviders = google.configured
     ? {
@@ -137,5 +138,3 @@ export function createAekoBetterAuth(
     ],
   });
 }
-
-export type AekoBetterAuth = ReturnType<typeof createAekoBetterAuth>;
