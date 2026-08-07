@@ -19,7 +19,7 @@ import {
 } from './authentication.schemas.js';
 import { PasswordRecoveryService } from './password-recovery.service.js';
 
-@Controller('api/auth')
+@Controller('api/v0/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class PasswordRecoveryController {
