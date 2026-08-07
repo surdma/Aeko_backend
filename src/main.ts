@@ -34,7 +34,7 @@ async function bootstrap(): Promise<void> {
     origin: [...configuration.http.corsOrigins],
   });
 
-  const express = app.getHttpAdapter().getInstance<Express>();
+  const express: Express = app.getHttpAdapter().getInstance();
   express.all('/api/auth/*', toNodeHandler(auth));
 
   app.useBodyParser('json', { limit: configuration.http.bodyLimit });
