@@ -16,7 +16,7 @@ import { LegacyAuthBodyPipe } from './legacy-auth-body.pipe.js';
 import { loginSchema, type LoginInput } from './authentication.schemas.js';
 import { SessionAuthenticationService } from './session-authentication.service.js';
 
-@Controller('api/auth')
+@Controller('api/v0/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class SessionAuthenticationController {
