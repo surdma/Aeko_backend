@@ -29,7 +29,7 @@ import {
 import { mobileGoogleSchema } from './authentication.schemas.js';
 import { GoogleAuthenticationService } from './google-authentication.service.js';
 
-@Controller('api/auth')
+@Controller('api/v0/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class GoogleAuthenticationController {
