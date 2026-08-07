@@ -12,6 +12,7 @@ const root = fileURLToPath(new URL('..', import.meta.url));
 const sourceRoot = resolve(root, 'src');
 const distRoot = resolve(root, 'dist');
 const baseUrl = `http://127.0.0.1:${process.env.PORT ?? '9876'}`;
+const legacyAuthBasePath = '/api/v0/auth';
 
 type JsonObject = Readonly<Record<string, unknown>>;
 
@@ -229,9 +230,10 @@ async function verifyHealthAndWaitlist(suffix: string): Promise<void> {
 }
 
 async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<RuntimeIdentity> {
-  await expect('GET', '/api/auth/google', 503);
-  await expect('GET', '/api/auth/google/callback', 503);
-  await expect('POST', '/api/auth/google/mobile', 503, {
+  await expect('POST', '/api/auth/signup', 404, { body: {} });
+  await expect('GET', `${legacyAuthBasePath}/google`, 503);
+  await expect('GET', `${legacyAuthBasePath}/google/callback`, 503);
+  await expect('POST', `${legacyAuthBasePath}/google/mobile`, 503, {
     body: { idToken: 'unused-without-provider-configuration' },
   });
 
@@ -240,7 +242,7 @@ async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<
   const newPassword = 'runtime-password-updated';
   const signup = object(
     (
-      await expect('POST', '/api/auth/signup', 201, {
+      await expect('POST', `${legacyAuthBasePath}/signup`, 201, {
         body: { name: 'Runtime User', username: `runtime_${suffix}`, email, password: oldPassword },
       })
     ).body,
@@ -251,41 +253,58 @@ async function verifyAuthentication(suffix: string, jwtSecret: string): Promise<
 
   const verified = object(
     (
-      await expect('POST', '/api/auth/verify-email', 200, {
+      await expect('POST', `${legacyAuthBasePath}/verify-email`, 200, {
         body: { userId, verificationCode: string(signup, 'verificationCode', 'signup') },
       })
     ).body,
     'verify email',
   );
-  await expect('POST', '/api/auth/resend-verification', 400, { body: { userId } });
+  await expect('POST', `${legacyAuthBasePath}/resend-verification`, 400, { body: { userId } });
 
   const login = object(
-    (await expect('POST', '/api/auth/login', 200, { body: { email, password: oldPassword } })).body,
+    (
+      await expect('POST', `${legacyAuthBasePath}/login`, 200, {
+        body: { email, password: oldPassword },
+      })
+    ).body,
     'login',
   );
   const loginToken = string(login, 'token', 'login');
-  assert.equal(object((await expect('GET', '/api/auth/me', 200, { token: loginToken })).body, 'me').success, true);
-  await expect('GET', '/api/auth/profile-completion', 200, {
+  assert.equal(
+    object(
+      (await expect('GET', `${legacyAuthBasePath}/me`, 200, { token: loginToken })).body,
+      'me',
+    ).success,
+    true,
+  );
+  await expect('GET', `${legacyAuthBasePath}/profile-completion`, 200, {
     token: string(verified, 'token', 'verify email'),
   });
-  await expect('POST', '/api/auth/forgot-password', 200, { body: { email } });
+  await expect('POST', `${legacyAuthBasePath}/forgot-password`, 200, { body: { email } });
 
   const resetToken = await new JwtService({ secret: jwtSecret }).signAsync(
     { userId },
     { expiresIn: 3_600 },
   );
-  await expect('POST', '/api/auth/reset-password', 200, {
+  await expect('POST', `${legacyAuthBasePath}/reset-password`, 200, {
     body: { token: resetToken, newPassword },
   });
   const token = string(
     object(
-      (await expect('POST', '/api/auth/login', 200, { body: { email, password: newPassword } })).body,
+      (
+        await expect('POST', `${legacyAuthBasePath}/login`, 200, {
+          body: { email, password: newPassword },
+        })
+      ).body,
       'login after reset',
     ),
     'token',
     'login after reset',
   );
-  assert.match((await expect('POST', '/api/auth/logout', 200)).headers.get('set-cookie') ?? '', /token=/u);
+  assert.match(
+    (await expect('POST', `${legacyAuthBasePath}/logout`, 200)).headers.get('set-cookie') ?? '',
+    /token=/u,
+  );
   return { userId, token };
 }
 
