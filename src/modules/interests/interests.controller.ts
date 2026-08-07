@@ -15,11 +15,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Throttle, ThrottlerGuard, minutes } from '@nestjs/throttler';
+import {
+  RequireAdmin,
+  RequireTwoFactor,
+} from '../../common/authentication/app-auth-policy.decorator.js';
+import { PublicRoute } from '../../common/authentication/public-route.decorator.js';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
 import { ZodBodyPipe } from '../../common/pipes/zod-body.pipe.js';
-import { AdminGuard } from '../auth/guards/admin.guard.js';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
-import { TwoFactorGuard } from '../auth/guards/two-factor.guard.js';
 import {
   createInterestSchema,
   type CreateInterestBody,
@@ -43,6 +45,7 @@ export class InterestsController {
   public constructor(private readonly service: InterestsService) {}
 
   @Get()
+  @PublicRoute()
   public async list(): Promise<Readonly<{ success: true; data: unknown }>> {
     const result = await this.service.listActive();
     if (result.kind === 'unexpected') {
@@ -54,7 +57,8 @@ export class InterestsController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, AdminGuard, TwoFactorGuard)
+  @RequireAdmin()
+  @RequireTwoFactor()
   @HttpCode(HttpStatus.CREATED)
   public async create(
     @Body(
@@ -69,7 +73,8 @@ export class InterestsController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard, TwoFactorGuard)
+  @RequireAdmin()
+  @RequireTwoFactor()
   public async update(
     @Param('id') id: string,
     @Body(new ZodBodyPipe(updateInterestSchema, 'Invalid interest update'))
@@ -79,7 +84,8 @@ export class InterestsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, AdminGuard, TwoFactorGuard)
+  @RequireAdmin()
+  @RequireTwoFactor()
   public async remove(
     @Param('id') id: string,
   ): Promise<Readonly<{ success: true; message: string }>> {

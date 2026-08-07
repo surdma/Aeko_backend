@@ -9,13 +9,13 @@ import type {
   SecurityRequestContext,
 } from '../../src/modules/auth/auth.repository.js';
 import type { AuthenticationRepository } from '../../src/modules/auth/authentication.repository.js';
+import type { AuthenticationAccount } from '../../src/modules/auth/authentication.types.js';
 import { GoogleAuthenticationService } from '../../src/modules/auth/google-authentication.service.js';
 import type { GoogleIdentityProvider } from '../../src/modules/auth/google-identity-provider.port.js';
+import type { PasswordHasher } from '../../src/modules/auth/password-hasher.port.js';
 import { PasswordRecoveryService } from '../../src/modules/auth/password-recovery.service.js';
 import { RegistrationService } from '../../src/modules/auth/registration.service.js';
 import { SessionAuthenticationService } from '../../src/modules/auth/session-authentication.service.js';
-import type { AuthenticationAccount } from '../../src/modules/auth/authentication.types.js';
-import type { PasswordHasher } from '../../src/modules/auth/password-hasher.port.js';
 
 const account: AuthenticationAccount = {
   id: 'user-1',
@@ -54,6 +54,7 @@ const configuration: AppConfiguration = {
     trustProxy: 1,
   },
   logging: { level: 'error' },
+  authentication: { mode: 'better-auth' },
   auth: {
     jwtSecret: 'test-jwt-secret-with-at-least-32-characters',
     twoFactorSecretKey: 'test-two-factor-secret-key-32chars',
@@ -78,7 +79,11 @@ const configuration: AppConfiguration = {
     expoScheme: 'aeko',
     resend: { configured: false, apiKey: null, from: null },
   },
-  email: { zeptoMailApiUrl: null, zeptoMailApiKey: null, senderName: 'Aeko' },
+  email: {
+    zeptoMailApiUrl: null,
+    zeptoMailApiKey: null,
+    senderName: 'Aeko',
+  },
 };
 
 const requestContext: SecurityRequestContext = {
@@ -127,7 +132,8 @@ describe('authentication use cases', () => {
     passwordHasher = {
       hash: vi.fn(async () => 'new-hash'),
       compare: vi.fn(
-        async (value, hash) => value === 'password' && hash === 'hashed-password',
+        async (value, hash) =>
+          value === 'password' && hash === 'hashed-password',
       ),
     };
     emailDelivery = {
@@ -244,7 +250,10 @@ describe('authentication use cases', () => {
       requestContext,
     );
 
-    expect(result).toEqual({ kind: 'two-factor-required', userId: account.id });
+    expect(result).toEqual({
+      kind: 'two-factor-required',
+      userId: account.id,
+    });
   });
 
   it('consumes one matching backup code and returns the normal login view', async () => {
@@ -263,7 +272,11 @@ describe('authentication use cases', () => {
     );
 
     const result = await sessions.login(
-      { email: account.email, password: 'password', backupCode: 'BACKUP01' },
+      {
+        email: account.email,
+        password: 'password',
+        backupCode: 'BACKUP01',
+      },
       requestContext,
     );
 
@@ -307,7 +320,9 @@ describe('authentication use cases', () => {
     };
     const identityProvider: GoogleIdentityProvider = {
       isConfigured: vi.fn(() => true),
-      createAuthorizationUrl: vi.fn(() => 'https://accounts.google.com/auth'),
+      createAuthorizationUrl: vi.fn(
+        () => 'https://accounts.google.com/auth',
+      ),
       exchangeAuthorizationCode: vi.fn(async () => ({
         providerId: 'google-subject',
         email: 'verified@example.com',
@@ -339,7 +354,10 @@ describe('authentication use cases', () => {
 
     const result = await google.mobile({
       idToken: 'verified-token',
-      user: { email: 'untrusted@example.com', name: 'Untrusted Name' },
+      user: {
+        email: 'untrusted@example.com',
+        name: 'Untrusted Name',
+      },
     });
 
     expect(result.kind).toBe('authenticated');
