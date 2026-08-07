@@ -16,7 +16,9 @@ globalThis.fetch = async (
 
   const headers = new Headers(input instanceof Request ? input.headers : undefined);
   const overrideHeaders = new Headers(init?.headers);
-  overrideHeaders.forEach((value, key) => headers.set(key, value));
+  overrideHeaders.forEach((value, key) => {
+    headers.set(key, value);
+  });
   if (!headers.has('origin')) headers.set('origin', trustedOrigin);
 
   return nativeFetch(input, { ...init, headers });
