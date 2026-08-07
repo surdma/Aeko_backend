@@ -50,6 +50,19 @@ function normalizedProvider(value: string | null): string | null {
   return provider === 'google' ? 'google' : null;
 }
 
+async function alreadyMigrated(
+  prisma: PrismaClient,
+  userId: string,
+): Promise<boolean> {
+  const link = await prisma.authMigrationLink.findUnique({
+    where: { legacyUserId: userId },
+    select: { authUserId: true, status: true },
+  });
+  return (
+    link?.authUserId === userId && link.status === AuthMigrationStatus.MIGRATED
+  );
+}
+
 function conflictDetails(
   user: User,
   existing: Readonly<{ id: string; email: string; username: string | null }>,
@@ -119,7 +132,11 @@ async function ensureAccounts(
 
   const providerId = normalizedProvider(user.oauthProvider);
   const providerAccountId = user.oauthId?.trim();
-  if (providerId === null || providerAccountId === undefined || providerAccountId.length === 0) {
+  if (
+    providerId === null ||
+    providerAccountId === undefined ||
+    providerAccountId.length === 0
+  ) {
     return;
   }
 
@@ -139,7 +156,12 @@ async function ensureAccounts(
   }
 }
 
-async function applyUser(prisma: PrismaClient, user: User): Promise<'migrated' | 'existing' | 'conflict'> {
+async function applyUser(
+  prisma: PrismaClient,
+  user: User,
+): Promise<'migrated' | 'existing' | 'conflict'> {
+  if (await alreadyMigrated(prisma, user.id)) return 'existing';
+
   const existing = await prisma.authUser.findFirst({
     where: {
       OR: [{ id: user.id }, { email: user.email }, { username: user.username }],
@@ -215,8 +237,10 @@ async function applyUser(prisma: PrismaClient, user: User): Promise<'migrated' |
         details: {
           source: 'v0-users',
           credentialHashPreserved: true,
-          googleAccountImported: normalizedProvider(user.oauthProvider) === 'google' &&
-            typeof user.oauthId === 'string' && user.oauthId.trim().length > 0,
+          googleAccountImported:
+            normalizedProvider(user.oauthProvider) === 'google' &&
+            typeof user.oauthId === 'string' &&
+            user.oauthId.trim().length > 0,
         },
       },
       update: {
@@ -226,8 +250,10 @@ async function applyUser(prisma: PrismaClient, user: User): Promise<'migrated' |
         details: {
           source: 'v0-users',
           credentialHashPreserved: true,
-          googleAccountImported: normalizedProvider(user.oauthProvider) === 'google' &&
-            typeof user.oauthId === 'string' && user.oauthId.trim().length > 0,
+          googleAccountImported:
+            normalizedProvider(user.oauthProvider) === 'google' &&
+            typeof user.oauthId === 'string' &&
+            user.oauthId.trim().length > 0,
         },
       },
     });
@@ -260,9 +286,18 @@ export async function migrateV0Users(
     for (const user of batch) {
       summary.scanned += 1;
       try {
+        if (await alreadyMigrated(prisma, user.id)) {
+          summary.alreadyMigrated += 1;
+          continue;
+        }
+
         const existing = await prisma.authUser.findFirst({
           where: {
-            OR: [{ id: user.id }, { email: user.email }, { username: user.username }],
+            OR: [
+              { id: user.id },
+              { email: user.email },
+              { username: user.username },
+            ],
           },
           select: { id: true, email: true, username: true },
         });
@@ -284,7 +319,11 @@ export async function migrateV0Users(
       } catch (error: unknown) {
         summary.failed += 1;
         process.stderr.write(
-          `${JSON.stringify({ event: 'v0-auth-migration-failed', userId: user.id, error: error instanceof Error ? error.message : 'Unknown error' })}\n`,
+          `${JSON.stringify({
+            event: 'v0-auth-migration-failed',
+            userId: user.id,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          })}\n`,
         );
       }
     }
@@ -297,7 +336,9 @@ export async function migrateV0Users(
 
 function modeFromArguments(arguments_: readonly string[]): MigrationMode {
   if (arguments_.includes('--apply')) return 'apply';
-  if (arguments_.includes('--dry-run') || arguments_.length === 0) return 'dry-run';
+  if (arguments_.includes('--dry-run') || arguments_.length === 0) {
+    return 'dry-run';
+  }
   throw new Error('Use --dry-run or --apply');
 }
 
