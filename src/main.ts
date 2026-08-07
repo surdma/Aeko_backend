@@ -12,6 +12,8 @@ import {
 } from './config/configuration.js';
 import { BetterAuthV1Service } from './modules/auth-v1/better-auth-v1.service.js';
 
+const betterAuthPath = /^\/api\/auth(?:\/.*)?$/u;
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     abortOnError: false,
@@ -31,7 +33,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const express: Express = app.getHttpAdapter().getInstance();
-  express.all('/api/auth/*', auth.nodeHandler);
+  express.all(betterAuthPath, auth.nodeHandler);
 
   app.useBodyParser('json', { limit: configuration.http.bodyLimit });
   app.useBodyParser('urlencoded', {
