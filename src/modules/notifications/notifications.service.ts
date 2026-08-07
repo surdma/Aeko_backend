@@ -1,6 +1,10 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { SanitizedLogger } from '../../common/sanitized-logger.js';
-import type { NotificationsRepository } from './notifications.repository.js';
+import { NotificationEventsService } from './notification-events.service.js';
+import type {
+  NotificationRecord,
+  NotificationsRepository,
+} from './notifications.repository.js';
 import { NOTIFICATIONS_REPOSITORY } from './notifications.repository.js';
 import type {
   NotificationMessageResult,
@@ -18,6 +22,7 @@ export class NotificationsService {
   public constructor(
     @Inject(NOTIFICATIONS_REPOSITORY)
     private readonly repository: NotificationsRepository,
+    private readonly events: NotificationEventsService,
     private readonly logger: SanitizedLogger,
   ) {}
 
@@ -45,10 +50,9 @@ export class NotificationsService {
     settings: unknown,
   ): Promise<NotificationSettingsResult> {
     try {
-      return {
-        kind: 'success',
-        settings: await this.repository.updateUserSettings(userId, settings),
-      };
+      const stored = await this.repository.updateUserSettings(userId, settings);
+      this.events.publish(userId, 'settings.updated', { settings: stored });
+      return { kind: 'success', settings: stored };
     } catch (error: unknown) {
       return this.unexpectedSettings('update notification settings', error);
     }
@@ -130,10 +134,13 @@ export class NotificationsService {
       if (notification === null) return { kind: 'not-found' };
       if (notification.recipientId !== userId) return { kind: 'forbidden' };
 
-      return {
-        kind: 'success',
-        notification: await this.repository.markRead(notificationId),
-      };
+      const updated = await this.repository.markRead(notificationId);
+      this.events.publish(userId, 'notification.read', {
+        notificationId: updated.id,
+        read: updated.read,
+      });
+      await this.publishUnreadCount(userId);
+      return { kind: 'success', notification: updated };
     } catch (error: unknown) {
       this.logger.error('Failed to mark notification as read', { error });
       return { kind: 'unexpected' };
@@ -143,6 +150,8 @@ export class NotificationsService {
   public async markAllRead(userId: string): Promise<NotificationMessageResult> {
     try {
       await this.repository.markAllRead(userId);
+      this.events.publish(userId, 'notification.read-all', {});
+      this.events.publish(userId, 'unread-count.changed', { count: 0 });
       return { kind: 'success' };
     } catch (error: unknown) {
       this.logger.error('Failed to mark all notifications as read', { error });
@@ -160,10 +169,28 @@ export class NotificationsService {
       if (notification.recipientId !== userId) return { kind: 'forbidden' };
 
       await this.repository.deleteById(notificationId);
+      this.events.publish(userId, 'notification.deleted', { notificationId });
+      await this.publishUnreadCount(userId);
       return { kind: 'success' };
     } catch (error: unknown) {
       this.logger.error('Failed to delete notification', { error });
       return { kind: 'unexpected' };
+    }
+  }
+
+  public publishCreated(notification: NotificationRecord): void {
+    this.events.publish(notification.recipientId, 'notification.created', {
+      notification,
+    });
+  }
+
+  private async publishUnreadCount(userId: string): Promise<void> {
+    try {
+      this.events.publish(userId, 'unread-count.changed', {
+        count: await this.repository.countUnread(userId),
+      });
+    } catch (error: unknown) {
+      this.logger.warn('Failed to publish unread notification count', { error });
     }
   }
 
