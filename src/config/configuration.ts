@@ -42,6 +42,7 @@ const environmentSchema = z.object({
   BETTER_AUTH_EXPO_SCHEME: z.string().min(1).default('aeko'),
   RESEND_API_KEY: optionalString,
   RESEND_FROM: optionalString,
+  AUTH_EMAIL_OUTBOX_PATH: optionalString,
 });
 
 export type RuntimeEnvironment = z.infer<typeof environmentSchema>;
@@ -90,6 +91,7 @@ export interface AppConfiguration {
     };
     readonly expoScheme: string;
     readonly resend: OptionalEmailProviderConfiguration;
+    readonly emailOutboxPath: string | null;
   };
   readonly email: {
     readonly zeptoMailApiUrl: string | null;
@@ -175,6 +177,19 @@ function emailProvider(
   return Object.freeze({ configured: true, apiKey, from });
 }
 
+function nonProductionOutbox(
+  path: string | undefined,
+  environment: RuntimeEnvironment['NODE_ENV'],
+): string | null {
+  if (path === undefined) return null;
+  if (environment === 'production') {
+    throw new ConfigurationValidationError([
+      'AUTH_EMAIL_OUTBOX_PATH is not allowed in production',
+    ]);
+  }
+  return path;
+}
+
 function parseUrl(value: string, name: string): URL {
   try {
     return new URL(value);
@@ -235,6 +250,10 @@ export function loadConfiguration(
     resend: emailProvider(
       parsed.data.RESEND_API_KEY,
       parsed.data.RESEND_FROM,
+      parsed.data.NODE_ENV,
+    ),
+    emailOutboxPath: nonProductionOutbox(
+      parsed.data.AUTH_EMAIL_OUTBOX_PATH,
       parsed.data.NODE_ENV,
     ),
   };
