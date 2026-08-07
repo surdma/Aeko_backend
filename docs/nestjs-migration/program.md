@@ -2,7 +2,7 @@
 
 ## Current state
 
-The clean NestJS/SWC operational foundation, dual-runtime parity tooling and the waitlist, interests, authentication and support-ticket candidates are integrated on `migration/nestjs-clean`. Express remains the production owner until each complete route family passes black-box and durable side-effect parity and receives an explicit cutover.
+The clean NestJS/SWC operational foundation, dual-runtime parity tooling and the waitlist, interests, authentication, support-ticket and notification inbox/settings candidates are integrated on `migration/nestjs-clean`. Express remains the production owner until each complete route family passes black-box and durable side-effect parity and receives an explicit cutover.
 
 ## Delivery sequence
 
@@ -13,19 +13,21 @@ The clean NestJS/SWC operational foundation, dual-runtime parity tooling and the
 | 2 | Auth, users, profiles, privacy and security | Auth, users and security modules | Legacy engineer and reviewer | Complete authentication and support-ticket route families implemented; users, profiles and remaining security routes are planned |
 | 3 | Content and communities | Content, social and community modules | Blockchain engineer where anchoring crosses domains | Planned |
 | 4 | Media and external providers | Media and provider modules | Privacy and disclosure review | Planned |
-| 5 | Chat, livestream and Socket.IO | Messaging and live modules | Realtime parity review | Notification inbox/settings candidate pending integration; realtime producers remain planned |
+| 5 | Chat, livestream and Socket.IO | Messaging and live modules | Realtime parity review | Notification inbox/settings API implemented; producer and realtime notification flows remain planned |
 | 6 | Payments, plans and webhooks | Billing and payments modules | Payment/replay review | Planned |
 | 7 | AdminJS and operational actions | Admin and operations modules | Admin authorization review | Planned |
 | 8 | Wallets, NFTs, marketplace, rewards and staking | AEKO domain modules | Blockchain engineer mandatory | Planned |
 | 9 | Remaining jobs, cutovers and Express removal | Owning domains | Independent release review | Planned |
 
-## Integrated programme-2 candidates
+## Integrated candidates
 
 The complete `/api/auth/**` family covers credential registration, email verification and resend, password login with optional 2FA, Google web/mobile OAuth, authenticated account reads, logout and password recovery.
 
 The complete `/api/support/**` family covers ticket creation and listing, ticket details, replies, owner/admin status transitions, administrator filtering and administrator priority changes. Reply creation and its sender-dependent status transition are handled atomically.
 
-Both candidates retain their legacy public contracts and typed Prisma effects. Express remains authoritative until their disposable-data parity and route cutover gates pass.
+The complete mounted `/api/notifications/**` inbox/settings family covers settings reads and replacement, push-token registration, inbox pagination/filtering, unread counts, read transitions and deletion. Notification producers in reports, posts, comments, follows, livestreams and push providers remain Express-owned until those bounded domains migrate.
+
+All candidates retain their legacy public contracts and typed Prisma effects. Express remains authoritative until their disposable-data parity and route cutover gates pass.
 
 ## Ownership rules
 
