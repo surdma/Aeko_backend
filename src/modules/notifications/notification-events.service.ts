@@ -1,7 +1,8 @@
 import {
+  HttpException,
+  HttpStatus,
   Injectable,
   type MessageEvent,
-  TooManyRequestsException,
 } from '@nestjs/common';
 import {
   finalize,
@@ -41,13 +42,19 @@ export class NotificationEventsService {
   ): Observable<MessageEvent> {
     const existing = this.channels.get(userId);
     if ((existing?.connections ?? 0) >= 5 || this.totalConnections >= 500) {
-      throw new TooManyRequestsException({
-        success: false,
-        error: 'Too many notification stream connections',
-      });
+      throw new HttpException(
+        {
+          success: false,
+          error: 'Too many notification stream connections',
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
     }
 
-    const channel = existing ?? { subject: new Subject<MessageEvent>(), connections: 0 };
+    const channel = existing ?? {
+      subject: new Subject<MessageEvent>(),
+      connections: 0,
+    };
     if (existing === undefined) this.channels.set(userId, channel);
     channel.connections += 1;
     this.totalConnections += 1;
