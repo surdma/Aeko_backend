@@ -3,6 +3,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   Res,
   UseFilters,
@@ -12,22 +13,30 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { CurrentUserId } from '../../common/decorators/current-user-id.decorator.js';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import { AuthenticationService } from './authentication.service.js';
-import { legacyAuthFailure } from './authentication-http.js';
+import {
+  APP_CONFIGURATION,
+  type AppConfiguration,
+} from '../../config/configuration.js';
+import { legacyAuthFailure, logoutCookieOptions } from './authentication-http.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+import { SessionAuthenticationService } from './session-authentication.service.js';
 
 @Controller('api/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class AuthenticatedAccountController {
-  public constructor(private readonly authentication: AuthenticationService) {}
+  public constructor(
+    private readonly sessions: SessionAuthenticationService,
+    @Inject(APP_CONFIGURATION)
+    private readonly configuration: AppConfiguration,
+  ) {}
 
   @Get('profile-completion')
   @UseGuards(JwtAuthGuard)
   public async profileCompletion(
     @CurrentUserId() userId: string,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.profileCompletion(userId);
+    const result = await this.sessions.profileCompletion(userId);
     switch (result.kind) {
       case 'found':
         return { success: true, profileCompletion: result.profileCompletion };
@@ -49,7 +58,7 @@ export class AuthenticatedAccountController {
   public async me(
     @CurrentUserId() userId: string,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.currentUser(userId);
+    const result = await this.sessions.currentUser(userId);
     switch (result.kind) {
       case 'found':
         return { success: true, user: result.user };
@@ -71,7 +80,10 @@ export class AuthenticatedAccountController {
   public logout(
     @Res({ passthrough: true }) response: Response,
   ): Readonly<Record<string, unknown>> {
-    response.clearCookie('token', this.authentication.logoutCookieOptions());
+    response.clearCookie(
+      'token',
+      logoutCookieOptions(this.configuration.app.environment === 'production'),
+    );
     return { success: true, message: 'Logged out successfully' };
   }
 }

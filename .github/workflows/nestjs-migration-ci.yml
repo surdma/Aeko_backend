@@ -49,3 +49,50 @@ jobs:
           path: pnpm-lock.yaml
           if-no-files-found: error
           retention-days: 7
+
+  runtime:
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: aeko
+          POSTGRES_PASSWORD: aeko
+          POSTGRES_DB: aeko
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aeko -d aeko"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout migration branch
+        uses: actions/checkout@v4
+
+      - name: Load safe runtime environment
+        run: cp .env.example .env
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.1
+
+      - name: Activate pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.33.2 --activate
+          pnpm --version
+
+      - name: Install dependencies from the committed lockfile
+        run: pnpm install --frozen-lockfile
+
+      - name: Create disposable PostgreSQL schema
+        run: pnpm prisma db push --skip-generate
+
+      - name: Build and verify compiled Nest HTTP/database behavior
+        run: |
+          pnpm build
+          pnpm runtime:verify

@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import { AuthenticationService } from './authentication.service.js';
 import { legacyAuthFailure } from './authentication-http.js';
 import { LegacyAuthBodyPipe } from './legacy-auth-body.pipe.js';
 import {
@@ -20,12 +19,13 @@ import {
   type SignupInput,
   type VerifyEmailInput,
 } from './authentication.schemas.js';
+import { RegistrationService } from './registration.service.js';
 
 @Controller('api/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class RegistrationController {
-  public constructor(private readonly authentication: AuthenticationService) {}
+  public constructor(private readonly registration: RegistrationService) {}
 
   @Post('signup')
   public async signup(
@@ -44,7 +44,7 @@ export class RegistrationController {
       });
     }
 
-    const result = await this.authentication.signup(input);
+    const result = await this.registration.signup(input);
     switch (result.kind) {
       case 'created':
         return {
@@ -85,7 +85,7 @@ export class RegistrationController {
     )
     input: VerifyEmailInput,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.verifyEmail(input);
+    const result = await this.registration.verifyEmail(input);
     switch (result.kind) {
       case 'verified':
         return {
@@ -144,7 +144,7 @@ export class RegistrationController {
     )
     input: ResendVerificationInput,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.resendVerification(input.userId);
+    const result = await this.registration.resendVerification(input.userId);
     switch (result.kind) {
       case 'sent':
         return {

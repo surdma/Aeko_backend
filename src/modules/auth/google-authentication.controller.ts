@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Post,
   Query,
   Redirect,
@@ -15,20 +16,33 @@ import {
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import { AuthenticationService } from './authentication.service.js';
-import { GOOGLE_NOT_CONFIGURED, legacyAuthFailure } from './authentication-http.js';
+import {
+  APP_CONFIGURATION,
+  type AppConfiguration,
+} from '../../config/configuration.js';
+import {
+  GOOGLE_NOT_CONFIGURED,
+  googleFailureRedirect,
+  legacyAuthFailure,
+  tokenCookieOptions,
+} from './authentication-http.js';
 import { mobileGoogleSchema } from './authentication.schemas.js';
+import { GoogleAuthenticationService } from './google-authentication.service.js';
 
 @Controller('api/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class GoogleAuthenticationController {
-  public constructor(private readonly authentication: AuthenticationService) {}
+  public constructor(
+    private readonly googleAuthentication: GoogleAuthenticationService,
+    @Inject(APP_CONFIGURATION)
+    private readonly configuration: AppConfiguration,
+  ) {}
 
   @Get('google')
   @Redirect()
   public google(): HttpRedirectResponse {
-    const url = this.authentication.googleAuthorizationUrl();
+    const url = this.googleAuthentication.authorizationUrl();
     if (url === null) {
       legacyAuthFailure(HttpStatus.SERVICE_UNAVAILABLE, GOOGLE_NOT_CONFIGURED);
     }
@@ -41,31 +55,30 @@ export class GoogleAuthenticationController {
     @Query('code') code: string | undefined,
     @Res({ passthrough: true }) response: Response,
   ): Promise<HttpRedirectResponse> {
-    if (!this.authentication.isGoogleConfigured()) {
+    const failureUrl = this.configuration.auth.google.failureRedirect;
+    if (!this.googleAuthentication.isConfigured()) {
       legacyAuthFailure(HttpStatus.SERVICE_UNAVAILABLE, GOOGLE_NOT_CONFIGURED);
     }
     if (code === undefined || code.length === 0) {
-      return {
-        url: this.authentication.googleFailureUrl(),
-        statusCode: HttpStatus.FOUND,
-      };
+      return { url: failureUrl, statusCode: HttpStatus.FOUND };
     }
 
-    const result = await this.authentication.authenticateGoogleCallback(code);
+    const result = await this.googleAuthentication.callback(code);
     if (result.kind === 'invalid-token' || result.kind === 'not-configured') {
-      return {
-        url: this.authentication.googleFailureUrl(),
-        statusCode: HttpStatus.FOUND,
-      };
+      return { url: failureUrl, statusCode: HttpStatus.FOUND };
     }
     if (result.kind === 'unexpected') {
       return {
-        url: this.authentication.googleFailureRedirect(),
+        url: googleFailureRedirect(failureUrl),
         statusCode: HttpStatus.FOUND,
       };
     }
 
-    response.cookie('token', result.token, this.authentication.tokenCookieOptions());
+    response.cookie(
+      'token',
+      result.token,
+      tokenCookieOptions(this.configuration.app.environment === 'production'),
+    );
     return {
       url: `aeko://(home)?token=${result.token}`,
       statusCode: HttpStatus.FOUND,
@@ -74,9 +87,14 @@ export class GoogleAuthenticationController {
 
   @Post('google/mobile')
   @HttpCode(HttpStatus.OK)
-  public async mobile(@Body() body: unknown): Promise<Readonly<Record<string, unknown>>> {
-    if (!this.authentication.isGoogleConfigured()) {
-      return legacyAuthFailure(HttpStatus.SERVICE_UNAVAILABLE, GOOGLE_NOT_CONFIGURED);
+  public async mobile(
+    @Body() body: unknown,
+  ): Promise<Readonly<Record<string, unknown>>> {
+    if (!this.googleAuthentication.isConfigured()) {
+      return legacyAuthFailure(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        GOOGLE_NOT_CONFIGURED,
+      );
     }
     const parsed = mobileGoogleSchema.safeParse(body);
     if (!parsed.success) {
@@ -85,7 +103,7 @@ export class GoogleAuthenticationController {
         message: 'ID token is required',
       });
     }
-    const result = await this.authentication.authenticateGoogleMobile(parsed.data);
+    const result = await this.googleAuthentication.mobile(parsed.data);
     switch (result.kind) {
       case 'authenticated':
         return {
@@ -96,7 +114,10 @@ export class GoogleAuthenticationController {
           user: result.user,
         };
       case 'not-configured':
-        return legacyAuthFailure(HttpStatus.SERVICE_UNAVAILABLE, GOOGLE_NOT_CONFIGURED);
+        return legacyAuthFailure(
+          HttpStatus.SERVICE_UNAVAILABLE,
+          GOOGLE_NOT_CONFIGURED,
+        );
       case 'invalid-token':
         return legacyAuthFailure(HttpStatus.UNAUTHORIZED, {
           success: false,

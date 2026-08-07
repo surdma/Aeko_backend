@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { LegacyApiThrottlerExceptionFilter } from '../../common/legacy-api-throttler-exception.filter.js';
-import { AuthenticationService } from './authentication.service.js';
 import { legacyAuthFailure } from './authentication-http.js';
 import { LegacyAuthBodyPipe } from './legacy-auth-body.pipe.js';
 import {
@@ -18,12 +17,13 @@ import {
   type ForgotPasswordInput,
   type ResetPasswordInput,
 } from './authentication.schemas.js';
+import { PasswordRecoveryService } from './password-recovery.service.js';
 
 @Controller('api/auth')
 @UseGuards(ThrottlerGuard)
 @UseFilters(LegacyApiThrottlerExceptionFilter)
 export class PasswordRecoveryController {
-  public constructor(private readonly authentication: AuthenticationService) {}
+  public constructor(private readonly recovery: PasswordRecoveryService) {}
 
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
@@ -36,12 +36,13 @@ export class PasswordRecoveryController {
     )
     input: ForgotPasswordInput,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.forgotPassword(input);
+    const result = await this.recovery.forgotPassword(input);
     switch (result.kind) {
       case 'accepted':
         return {
           success: true,
-          message: 'If an account with that email exists, a password reset link has been sent.',
+          message:
+            'If an account with that email exists, a password reset link has been sent.',
         };
       case 'timed-out':
         return legacyAuthFailure(HttpStatus.GATEWAY_TIMEOUT, {
@@ -67,10 +68,13 @@ export class PasswordRecoveryController {
     )
     input: ResetPasswordInput,
   ): Promise<Readonly<Record<string, unknown>>> {
-    const result = await this.authentication.resetPassword(input);
+    const result = await this.recovery.resetPassword(input);
     switch (result.kind) {
       case 'reset':
-        return { success: true, message: 'Password has been reset successfully' };
+        return {
+          success: true,
+          message: 'Password has been reset successfully',
+        };
       case 'invalid-token':
         return legacyAuthFailure(HttpStatus.BAD_REQUEST, {
           success: false,
