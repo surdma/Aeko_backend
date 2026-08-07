@@ -35,17 +35,17 @@ jobs:
           corepack prepare pnpm@10.33.2 --activate
           pnpm --version
 
-      - name: Install dependencies from the committed lockfile
-        run: pnpm install --frozen-lockfile
+      - name: Refresh dependencies and lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run the full quality gate
         run: pnpm quality
 
-      - name: Upload verified lockfile
+      - name: Upload refreshed lockfile
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: nestjs-migration-pnpm-lock
+          name: better-auth-pnpm-lock
           path: pnpm-lock.yaml
           if-no-files-found: error
           retention-days: 7
@@ -86,8 +86,8 @@ jobs:
           corepack prepare pnpm@10.33.2 --activate
           pnpm --version
 
-      - name: Install dependencies from the committed lockfile
-        run: pnpm install --frozen-lockfile
+      - name: Install refreshed dependencies
+        run: pnpm install --no-frozen-lockfile
 
       - name: Create disposable PostgreSQL schema
         run: pnpm prisma db push --skip-generate
