@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { IncomingHttpHeaders } from 'node:http';
 import { expo } from '@better-auth/expo';
 import { passkey } from '@better-auth/passkey';
@@ -132,11 +132,73 @@ export class BetterAuthV1Service {
         user: {
           create: {
             after: async (user) => {
-              await prisma.profile.upsert({
-                where: { userId: user.id },
-                create: { userId: user.id },
-                update: {},
+              const pluginUsername = Reflect.get(user, 'username');
+              const usernameValue =
+                typeof pluginUsername === 'string' && pluginUsername.length > 0
+                  ? pluginUsername
+                  : `aeko_${user.id.replaceAll('-', '').slice(0, 20)}`;
+              const disabledPassword = await bcrypt.hash(
+                `${randomUUID()}:${user.id}`,
+                12,
+              );
+              const existingLegacy = await prisma.user.findUnique({
+                where: { email: user.email },
+                select: { id: true },
               });
+              if (existingLegacy !== null && existingLegacy.id !== user.id) {
+                throw new Error(
+                  'This legacy identity must be imported before canonical sign-in',
+                );
+              }
+
+              await prisma.$transaction([
+                prisma.profile.upsert({
+                  where: { userId: user.id },
+                  create: { userId: user.id },
+                  update: {},
+                }),
+                prisma.user.upsert({
+                  where: { id: user.id },
+                  create: {
+                    id: user.id,
+                    username: usernameValue,
+                    email: user.email,
+                    password: disabledPassword,
+                    name: user.name,
+                    avatar: user.image ?? null,
+                    profilePicture: user.image ?? null,
+                    emailVerification: {
+                      isVerified: user.emailVerified,
+                      source: 'better-auth-v1',
+                    },
+                    profileCompletion: {},
+                  },
+                  update: {
+                    name: user.name,
+                    avatar: user.image ?? null,
+                    profilePicture: user.image ?? null,
+                    emailVerification: {
+                      isVerified: user.emailVerified,
+                      source: 'better-auth-v1',
+                    },
+                  },
+                }),
+                prisma.authMigrationLink.upsert({
+                  where: { authUserId: user.id },
+                  create: {
+                    legacyUserId: user.id,
+                    authUserId: user.id,
+                    status: 'MIGRATED',
+                    migratedAt: new Date(),
+                    details: { source: 'canonical-user-create' },
+                  },
+                  update: {
+                    status: 'MIGRATED',
+                    migratedAt: new Date(),
+                    details: { source: 'canonical-user-create' },
+                  },
+                }),
+              ]);
             },
           },
         },
