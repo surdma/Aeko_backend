@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import ts from 'typescript';
+import { waitForVerificationUrl } from './runtime-auth-email-outbox.mjs';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 const sourceRoot = resolve(root, 'src');
@@ -390,16 +391,12 @@ async function verifyBetterAuth(
   await expect('POST', '/api/auth/sign-in/email', 403, {
     body: { email, password },
   });
-  const verification = await prisma.authVerification.findFirst({
-    where: { identifier: { contains: email } },
-    orderBy: { createdAt: 'desc' },
-  });
-  assert.ok(verification !== null, 'Better Auth did not persist an email verification token');
-  await expectStatusIn(
-    'GET',
-    `/api/auth/verify-email?token=${encodeURIComponent(verification.value)}&callbackURL=%2F`,
-    [200, 302],
-  );
+  const verificationUrl = await waitForVerificationUrl(email);
+await expectStatusIn(
+  'GET',
+  `${verificationUrl.pathname}${verificationUrl.search}`,
+  [200, 302],
+);
   assert.equal(
     (await prisma.authUser.findUnique({ where: { id: userId } }))?.emailVerified,
     true,

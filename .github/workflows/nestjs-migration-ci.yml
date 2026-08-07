@@ -11,19 +11,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   quality:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    outputs:
-      rewritten: ${{ steps.commit.outputs.rewritten }}
     steps:
-      - name: Checkout migration branch head
+      - name: Checkout migration branch
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Load safe test environment
         run: cp .env.example .env
@@ -42,71 +38,20 @@ jobs:
       - name: Install dependencies from the committed lockfile
         run: pnpm install --frozen-lockfile
 
-      - name: Replace verification database lookup with outbox reader
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          path = Path('scripts/verify-nest-runtime.mts')
-          text = path.read_text()
-          import_line = "import { waitForVerificationUrl } from './runtime-auth-email-outbox.mjs';\n"
-          if import_line not in text:
-              anchor = "import ts from 'typescript';\n"
-              if anchor not in text:
-                  raise SystemExit('TypeScript import anchor not found')
-              text = text.replace(anchor, anchor + import_line, 1)
-
-          pattern = re.compile(
-              r"  const verification = await prisma\.authVerification\.findFirst\(\{"
-              r"\s+where: \{ identifier: \{ contains: email \} \},"
-              r"\s+orderBy: \{ createdAt: 'desc' \},"
-              r"\s+\}\);"
-              r"\s+assert\.ok\(verification !== null, 'Better Auth did not persist an email verification token'\);"
-              r"\s+await expectStatusIn\("
-              r"\s+'GET',"
-              r"\s+`/api/auth/verify-email\?token=\$\{encodeURIComponent\(verification\.value\)\}&callbackURL=%2F`,"
-              r"\s+\[200, 302\],"
-              r"\s+\);",
-              re.MULTILINE,
-          )
-          replacement = """  const verificationUrl = await waitForVerificationUrl(email);
-          await expectStatusIn(
-            'GET',
-            `${verificationUrl.pathname}${verificationUrl.search}`,
-            [200, 302],
-          );"""
-          text, count = pattern.subn(replacement, text, count=1)
-          if count != 1:
-              raise SystemExit(f'Expected one verification lookup block, replaced {count}')
-          path.write_text(text)
-          PY
-
       - name: Run the full quality gate
         run: pnpm quality
 
-      - name: Commit verifier and restore frozen workflow
-        id: commit
-        if: github.event_name == 'pull_request'
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          git fetch origin migration/nestjs-clean --depth=1
-          git show FETCH_HEAD:.github/workflows/nestjs-migration-ci.yml > .github/workflows/nestjs-migration-ci.yml
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add scripts/verify-nest-runtime.mts .github/workflows/nestjs-migration-ci.yml
-          if git diff --cached --quiet; then
-            echo "rewritten=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git commit -m "test: consume Better Auth verification email outbox"
-          git push origin HEAD:"${HEAD_REF}"
-          echo "rewritten=true" >> "$GITHUB_OUTPUT"
+      - name: Upload verified lockfile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nestjs-migration-pnpm-lock
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 7
 
   runtime:
     needs: quality
-    if: needs.quality.outputs.rewritten != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     services:
