@@ -2,6 +2,7 @@
 /dist
 .corepack-cache/
 .pnpm-store/
+.pnpm-home/
 /node_modules
 /build
 
