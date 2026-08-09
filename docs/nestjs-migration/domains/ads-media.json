@@ -1,0 +1,58 @@
+{
+  "id": "ads-media",
+  "order": 2,
+  "capabilityIds": [
+    "model:model:Ad",
+    "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
+    "rest:GET:/api/ads/:adId/analytics:routes/adRoutes.js:685",
+    "rest:GET:/api/ads/admin/review:routes/adRoutes.js:692",
+    "rest:GET:/api/ads/dashboard:routes/adRoutes.js:679",
+    "rest:GET:/api/ads/targeted:routes/adRoutes.js:678",
+    "rest:GET:/api/ads:routes/adRoutes.js:677",
+    "rest:POST:/api/ads/admin/review/:adId:routes/adRoutes.js:693",
+    "rest:POST:/api/ads/track-view:routes/adRoutes.js:696",
+    "rest:POST:/api/ads/track/click:routes/adRoutes.js:683",
+    "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684",
+    "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682",
+    "rest:POST:/api/ads:routes/adRoutes.js:676",
+    "rest:POST:/api/photo/edit:routes/photoEdit.js:8",
+    "rest:POST:/api/video/edit:routes/videoEdit.js:8",
+    "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
+  ],
+  "dependsOn": [
+    "auth-users-security"
+  ],
+  "nestModules": [
+    "ads",
+    "photo-editing",
+    "video-editing",
+    "uploads",
+    "media",
+    "ipfs"
+  ],
+  "providerPorts": [],
+  "corrections": [],
+  "cutoverUnit": [
+    "model:model:Ad",
+    "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
+    "rest:GET:/api/ads/:adId/analytics:routes/adRoutes.js:685",
+    "rest:GET:/api/ads/admin/review:routes/adRoutes.js:692",
+    "rest:GET:/api/ads/dashboard:routes/adRoutes.js:679",
+    "rest:GET:/api/ads/targeted:routes/adRoutes.js:678",
+    "rest:GET:/api/ads:routes/adRoutes.js:677",
+    "rest:POST:/api/ads/admin/review/:adId:routes/adRoutes.js:693",
+    "rest:POST:/api/ads/track-view:routes/adRoutes.js:696",
+    "rest:POST:/api/ads/track/click:routes/adRoutes.js:683",
+    "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684",
+    "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682",
+    "rest:POST:/api/ads:routes/adRoutes.js:676",
+    "rest:POST:/api/photo/edit:routes/photoEdit.js:8",
+    "rest:POST:/api/video/edit:routes/videoEdit.js:8",
+    "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
+  ],
+  "risk": "high",
+  "specialistReview": [
+    "backend",
+    "security"
+  ]
+}

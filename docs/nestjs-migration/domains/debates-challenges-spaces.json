@@ -1,0 +1,55 @@
+{
+  "id": "debates-challenges-spaces",
+  "order": 4,
+  "capabilityIds": [
+    "model:model:Challenge",
+    "model:model:Debate",
+    "model:model:Space",
+    "rest:GET:/api/challenges:routes/challenges.js:118",
+    "rest:GET:/api/debates:routes/debates.js:116",
+    "rest:PATCH:/api/spaces/:spaceId/end:routes/space.js:30",
+    "rest:POST:/api/challenges/create:routes/challenges.js:8",
+    "rest:POST:/api/debates/start:routes/debates.js:9",
+    "rest:POST:/api/spaces/create:routes/space.js:9",
+    "rest:PUT:/api/challenges/:challengeId/duet:routes/challenges.js:30",
+    "rest:PUT:/api/challenges/:challengeId/end:routes/challenges.js:84",
+    "rest:PUT:/api/challenges/:challengeId/vote:routes/challenges.js:54",
+    "rest:PUT:/api/debates/:debateId/end:routes/debates.js:81",
+    "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33",
+    "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58",
+    "rest:PUT:/api/spaces/:spaceId/highlight:routes/space.js:60"
+  ],
+  "dependsOn": [
+    "auth-users-security",
+    "content-social"
+  ],
+  "nestModules": [
+    "debates",
+    "challenges",
+    "spaces"
+  ],
+  "providerPorts": [],
+  "corrections": [],
+  "cutoverUnit": [
+    "model:model:Challenge",
+    "model:model:Debate",
+    "model:model:Space",
+    "rest:GET:/api/challenges:routes/challenges.js:118",
+    "rest:GET:/api/debates:routes/debates.js:116",
+    "rest:PATCH:/api/spaces/:spaceId/end:routes/space.js:30",
+    "rest:POST:/api/challenges/create:routes/challenges.js:8",
+    "rest:POST:/api/debates/start:routes/debates.js:9",
+    "rest:POST:/api/spaces/create:routes/space.js:9",
+    "rest:PUT:/api/challenges/:challengeId/duet:routes/challenges.js:30",
+    "rest:PUT:/api/challenges/:challengeId/end:routes/challenges.js:84",
+    "rest:PUT:/api/challenges/:challengeId/vote:routes/challenges.js:54",
+    "rest:PUT:/api/debates/:debateId/end:routes/debates.js:81",
+    "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33",
+    "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58",
+    "rest:PUT:/api/spaces/:spaceId/highlight:routes/space.js:60"
+  ],
+  "risk": "high",
+  "specialistReview": [
+    "backend"
+  ]
+}
