@@ -124,6 +124,13 @@ export interface TrackEvent {
 export interface ReviewDecision {
   readonly status: 'approved' | 'rejected';
   readonly reason: string | null;
+  readonly feedback: string | null;
+}
+
+export interface ReviewListQuery {
+  readonly page: number;
+  readonly limit: number;
+  readonly status: AdStatus | null;
 }
 
 export interface AdAnalytics {
@@ -389,6 +396,14 @@ const listQuerySchema = z
   })
   .strip();
 
+const reviewListQuerySchema = z
+  .object({
+    page: queryInteger(1, 1_000_000).default(1),
+    limit: queryInteger(20, 100).default(20),
+    status: z.enum(AD_STATUSES).nullable().default(null),
+  })
+  .strip();
+
 const targetedQuerySchema = z
   .object({ limit: queryInteger(5, 50).default(5) })
   .strip();
@@ -407,10 +422,17 @@ const trackEventSchema = z
   })
   .strict();
 
+/**
+ * Legacy admin clients post `rejectionReason` and `feedback`; `reason` is the
+ * canonical name and `rejectionReason` is accepted as its alias so those
+ * clients keep working unchanged.
+ */
 const reviewDecisionSchema = z
   .object({
     status: z.enum(['approved', 'rejected']),
     reason: boundedText(1000).nullable().default(null),
+    rejectionReason: boundedText(1000).nullable().default(null),
+    feedback: boundedText(2000).nullable().default(null),
   })
   .strict();
 
@@ -606,8 +628,32 @@ export const parseTrackEvent = (input: unknown): TrackEvent => {
   });
 };
 
-export const parseReviewDecision = (input: unknown): ReviewDecision =>
-  Object.freeze(parseWithScope(reviewDecisionSchema, input, 'review decision'));
+export const parseReviewDecision = (input: unknown): ReviewDecision => {
+  const value = parseWithScope(reviewDecisionSchema, input, 'review decision');
+  const reason = value.reason ?? value.rejectionReason;
+  // Legacy recorded a rejection with no reason at all, leaving the advertiser
+  // with nothing to act on.
+  if (value.status === 'rejected' && reason === null) {
+    throw new DomainError(
+      'VALIDATION_FAILED',
+      'Invalid review decision: reason',
+      {
+        'review decision': ['A reason is required to reject an advertisement.'],
+      },
+    );
+  }
+  return Object.freeze({
+    status: value.status,
+    reason,
+    feedback: value.feedback,
+  });
+};
+
+/** Legacy defaulted the review queue to `pending` with a 20-row page. */
+export const parseReviewListQuery = (input: unknown): ReviewListQuery => {
+  const value = parseWithScope(reviewListQuerySchema, input, 'review query');
+  return Object.freeze(value);
+};
 
 export const parseAnalyticsQuery = (input: unknown): AnalyticsQuery => {
   const value = parseWithScope(analyticsQuerySchema, input, 'analytics query');

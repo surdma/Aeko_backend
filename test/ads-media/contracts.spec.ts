@@ -115,8 +115,22 @@ describe('ad contracts', () => {
     ).toEqual({
       status: 'rejected',
       reason: 'Policy',
+      feedback: null,
+    });
+    // Legacy admin clients post `rejectionReason`; it aliases `reason`.
+    expect(
+      parseReviewDecision({
+        status: 'rejected',
+        rejectionReason: 'Policy',
+        feedback: 'Revise the copy',
+      }),
+    ).toEqual({
+      status: 'rejected',
+      reason: 'Policy',
+      feedback: 'Revise the copy',
     });
     expect(() => parseReviewDecision({ status: 'running' })).toThrow('status');
+    expect(() => parseReviewDecision({ status: 'rejected' })).toThrow('reason');
     expect(
       parseAnalyticsQuery({ from: '2026-08-01', to: '2026-08-09' }),
     ).toEqual({

@@ -14,12 +14,14 @@ import {
 
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user/current-user.decorator';
+import { RoleGuard } from '../auth/guards/role/role.guard';
 import { SessionGuard } from '../auth/guards/session/session.guard';
 import { TwoFactorGuard } from '../auth/guards/two-factor/two-factor.guard';
 import {
   parseAdListQuery,
   parseAdTargetedQuery,
   parseDashboardQuery,
+  parseReviewListQuery,
   type AdAnalyticsView,
   type AdDashboard,
   type AdPage,
@@ -106,6 +108,26 @@ export class AdsController {
     @Body() body: unknown,
   ): Promise<ImpressionResult> {
     return this.ads.trackView(principal, body);
+  }
+
+  @Get('admin/review')
+  @UseGuards(SessionGuard, RoleGuard)
+  listForReview(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Query() query: unknown,
+  ): Promise<AdPage> {
+    return this.ads.listForReview(principal, parseReviewListQuery(query));
+  }
+
+  @Post('admin/review/:adId')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(SessionGuard, RoleGuard, TwoFactorGuard)
+  review(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('adId') adId: string,
+    @Body() body: unknown,
+  ): Promise<AdView> {
+    return this.ads.review(principal, adId, body);
   }
 
   @Get(':adId/analytics')

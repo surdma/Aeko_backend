@@ -50,6 +50,12 @@ export interface OwnedAdQuery {
   readonly take: number;
 }
 
+export interface StatusPageQuery {
+  readonly status: AdStatus;
+  readonly skip: number;
+  readonly take: number;
+}
+
 export interface AdWriteData {
   readonly [key: string]: JsonValue | Date | readonly string[] | undefined;
 }
@@ -79,6 +85,8 @@ export interface AdPrismaClient {
   findOwned(query: OwnedAdQuery): Promise<readonly AdRecord[]>;
   countOwned(advertiserId: string, status: AdStatus | null): Promise<number>;
   findRunning(): Promise<readonly AdRecord[]>;
+  findByStatus(query: StatusPageQuery): Promise<readonly AdRecord[]>;
+  countByStatus(status: AdStatus): Promise<number>;
   findCreatedBetween(
     advertiserId: string,
     from: Date,
@@ -204,6 +212,27 @@ export const createAdPrismaClient = (client: object): AdPrismaClient => {
         { where: { Status: 'running' }, include: advertiserInclude },
       ]);
       return parseAdRecords(value);
+    },
+    async findByStatus({ status, skip, take }) {
+      const value = await invoke(adDelegate, 'findMany', [
+        {
+          where: { Status: status },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          include: advertiserInclude,
+        },
+      ]);
+      return parseAdRecords(value);
+    },
+    async countByStatus(status) {
+      const value = await invoke(adDelegate, 'count', [
+        { where: { Status: status } },
+      ]);
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+        invalidResult('count');
+      }
+      return value;
     },
     async findCreatedBetween(advertiserId, from, to) {
       const value = await invoke(adDelegate, 'findMany', [

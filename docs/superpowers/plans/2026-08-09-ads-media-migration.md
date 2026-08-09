@@ -168,7 +168,7 @@ Expected: concurrent, retry, status, budget, malformed JSON, and sanitized failu
 
 **Interfaces:** Produces `listForReview(admin, query)` and `review(admin, adId, decision)` guarded by `SessionGuard`, `RoleGuard`, and `TwoFactorGuard` for mutation.
 
-- [ ] **Step 1: Write privilege RED**
+- [x] **Step 1: Write privilege RED**
 
 ```ts
 await expect(service.review(member, adId, decision)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
@@ -176,7 +176,7 @@ await expect(service.review(adminWithout2fa, adId, decision)).rejects.toMatchObj
 expect(await service.review(admin, adId, { status: 'approved', feedback: null })).toMatchObject({ status: 'running' });
 ```
 
-- [ ] **Step 2: Run RED, implement, then run GREEN**
+- [x] **Step 2: Run RED, implement, then run GREEN**
 
 Register exact `GET /api/ads/admin/review` and `POST /api/ads/admin/review/:adId`; accept only approved/rejected, require a bounded rejection reason when rejected, record reviewer/time/feedback, and return no internal Prisma field names.
 

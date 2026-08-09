@@ -6,6 +6,7 @@ import { PrismaService } from '../database/prisma/prisma.service';
 import {
   parseAdCreate,
   parseAdUpdate,
+  parseReviewDecision,
   parseTrackEvent,
   type AdAnalyticsView,
   type AdDashboard,
@@ -16,6 +17,7 @@ import {
   type AdTargetedQuery,
   type AdView,
   type DashboardQuery,
+  type ReviewListQuery,
   type JsonValue,
   type TargetedAds,
 } from './ad.contract';
@@ -407,6 +409,64 @@ export class AdsService {
     });
   }
 
+  async listForReview(
+    principal: AuthenticatedPrincipal,
+    query: ReviewListQuery,
+  ): Promise<AdPage> {
+    requireAdministrator(principal);
+    const now = new Date();
+    // Legacy defaulted the queue to pending; an explicit filter still wins.
+    const status: AdStatus = query.status ?? 'pending';
+    const [records, total] = await Promise.all([
+      this.ads.findByStatus({
+        status,
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+      this.ads.countByStatus(status),
+    ]);
+    return Object.freeze({
+      ads: Object.freeze(records.map((record) => projectAd(record, now))),
+      pagination: Object.freeze({
+        current: query.page,
+        pages: Math.ceil(total / query.limit),
+        total,
+      }),
+    });
+  }
+
+  async review(
+    principal: AuthenticatedPrincipal,
+    adId: string,
+    body: unknown,
+  ): Promise<AdView> {
+    requireAdministrator(principal);
+    if (principal.twoFactorEnabled && !principal.twoFactorSatisfied) {
+      throw new DomainError(
+        'TWO_FACTOR_REQUIRED',
+        'Confirm two-factor authentication to review an advertisement.',
+      );
+    }
+    const decision = parseReviewDecision(body);
+    const now = new Date();
+    const record = await this.ads.findById(adId);
+    if (record === null) {
+      throw new DomainError('NOT_FOUND', 'Advertisement not found.');
+    }
+    const review: JsonValue = {
+      reviewedBy: principal.userId,
+      reviewedAt: now.toISOString(),
+      rejectionReason: decision.status === 'rejected' ? decision.reason : null,
+      feedback: decision.feedback,
+    };
+    const updated = await this.ads.update(
+      adId,
+      { review },
+      decision.status === 'approved' ? 'running' : 'rejected',
+    );
+    return projectAd(updated, now);
+  }
+
   private async requireOwned(
     principal: AuthenticatedPrincipal,
     adId: string,
@@ -422,6 +482,15 @@ export class AdsService {
       );
     }
     return record;
+  }
+}
+
+function requireAdministrator(principal: AuthenticatedPrincipal): void {
+  if (!principal.isAdmin) {
+    throw new DomainError(
+      'AUTHORIZATION_DENIED',
+      'Administrator access is required.',
+    );
   }
 }
 
