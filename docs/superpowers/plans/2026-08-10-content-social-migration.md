@@ -107,7 +107,7 @@ Expected: all contracts return explicit values with no `undefined` and reject ow
 
 **Interfaces:** Produces `create`, `update`, `setPrivacy`, and `remove`. All routes use `SessionGuard`; deletion also asserts ownership.
 
-- [ ] **Step 1: Write lifecycle RED**
+- [x] **Step 1: Write lifecycle RED**
 
 ```ts
 await expect(service.update(other, postId, update)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
@@ -115,7 +115,7 @@ await expect(service.remove(other, postId)).rejects.toMatchObject({ code: 'AUTHO
 expect(await service.create(owner, input)).not.toHaveProperty('authorId', 'victim');
 ```
 
-- [ ] **Step 2: Run RED, implement, then run GREEN**
+- [x] **Step 2: Run RED, implement, then run GREEN**
 
 Register exact routes `POST /api/posts/create`, `PUT /api/posts/:postId`, `PUT /api/posts/:postId/privacy`, `DELETE /api/posts/:id`. Preserve media handling and response fields; allow only reviewed mutable fields.
 
