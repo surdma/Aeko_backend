@@ -42,7 +42,7 @@
 
 **Interfaces:** Consumes the committed 52-ID manifest. Produces one owner tuple per capability and six AppModule-imported feature modules.
 
-- [ ] **Step 1: Write ownership RED**
+- [x] **Step 1: Write ownership RED**
 
 ```ts
 expect(manifest.capabilityIds).toHaveLength(52);
@@ -58,19 +58,19 @@ expect(ownerCounts).toEqual({
 });
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `node node_modules/jest/bin/jest.js test/migration/content-social-coverage.spec.ts --runInBand --config test/migration/jest.config.json`
 
 Expected: FAIL because the owner map and generated modules do not exist.
 
-- [ ] **Step 3: Generate exact artifacts with Nest CLI**
+- [x] **Step 3: Generate exact artifacts with Nest CLI**
 
 Generate a module, controller, and service for each of `posts`, `comments`, `status`, `explore`, `notifications`, `reports`, plus the chain port class, recording each command in the ledger.
 
 Assign each model to its feature owner (`Post`/`Bookmark` to `posts`, `Comment` to `comments`, `Status` to `status`, `Notification` to `notifications`, `Report` to `reports`) and each route to the feature owning its path prefix.
 
-- [ ] **Step 4: Run ownership GREEN**
+- [x] **Step 4: Run ownership GREEN**
 
 Expected: 52 assigned, zero missing, zero duplicate, six modules imported by `AppModule`.
 

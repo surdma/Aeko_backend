@@ -1,0 +1,158 @@
+{
+  "model:model:Bookmark": [
+    "posts"
+  ],
+  "model:model:Comment": [
+    "comments"
+  ],
+  "model:model:Notification": [
+    "notifications"
+  ],
+  "model:model:Post": [
+    "posts"
+  ],
+  "model:model:Report": [
+    "reports"
+  ],
+  "model:model:Status": [
+    "status"
+  ],
+  "rest:DELETE:/api/notifications/:id:routes/notificationRoutes.js:241": [
+    "notifications"
+  ],
+  "rest:DELETE:/api/posts/:id:routes/postRoutes.js:1173": [
+    "posts"
+  ],
+  "rest:DELETE:/api/status/:id:routes/status.js:332": [
+    "status"
+  ],
+  "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333": [
+    "comments"
+  ],
+  "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277": [
+    "comments"
+  ],
+  "rest:GET:/api/explore:routes/explore.js:35": [
+    "explore"
+  ],
+  "rest:GET:/api/notifications/settings:routes/notificationRoutes.js:8": [
+    "notifications"
+  ],
+  "rest:GET:/api/notifications/unread-count:routes/notificationRoutes.js:172": [
+    "notifications"
+  ],
+  "rest:GET:/api/notifications:routes/notificationRoutes.js:120": [
+    "notifications"
+  ],
+  "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/:postId/verify:routes/postRoutes.js:1447": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/:postId:routes/postRoutes.js:686": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/feed:routes/postRoutes.js:564": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/search:routes/postRoutes.js:526": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/user/:userId:routes/postRoutes.js:975": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/user/bookmarks:routes/postRoutes.js:195": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/user/liked:routes/postRoutes.js:247": [
+    "posts"
+  ],
+  "rest:GET:/api/posts/videos:routes/postRoutes.js:1096": [
+    "posts"
+  ],
+  "rest:GET:/api/reports:routes/reportRoutes.js:76": [
+    "reports"
+  ],
+  "rest:GET:/api/status:routes/status.js:197": [
+    "status"
+  ],
+  "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9": [
+    "comments"
+  ],
+  "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204": [
+    "comments"
+  ],
+  "rest:POST:/api/comments/reply/:commentId:routes/commentRoutes.js:126": [
+    "comments"
+  ],
+  "rest:POST:/api/posts/:postId/anchor:routes/postRoutes.js:1246": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/mint-as-nft:routes/postRoutes.js:1393": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/not-interested:routes/postRoutes.js:83": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/:postId/view:routes/postRoutes.js:765": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/create:routes/postRoutes.js:297": [
+    "posts"
+  ],
+  "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142": [
+    "posts"
+  ],
+  "rest:POST:/api/reports/:userId/ban:routes/reportRoutes.js:154": [
+    "reports"
+  ],
+  "rest:POST:/api/reports/:userId/warn:routes/reportRoutes.js:100": [
+    "reports"
+  ],
+  "rest:POST:/api/reports:routes/reportRoutes.js:41": [
+    "reports"
+  ],
+  "rest:POST:/api/status/:id/react:routes/status.js:384": [
+    "status"
+  ],
+  "rest:POST:/api/status/:id/reshare:routes/status.js:449": [
+    "status"
+  ],
+  "rest:POST:/api/status:routes/status.js:70": [
+    "status"
+  ],
+  "rest:PUT:/api/notifications/:id/read:routes/notificationRoutes.js:191": [
+    "notifications"
+  ],
+  "rest:PUT:/api/notifications/push-token:routes/notificationRoutes.js:61": [
+    "notifications"
+  ],
+  "rest:PUT:/api/notifications/read-all:routes/notificationRoutes.js:221": [
+    "notifications"
+  ],
+  "rest:PUT:/api/notifications/settings:routes/notificationRoutes.js:42": [
+    "notifications"
+  ],
+  "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464": [
+    "posts"
+  ],
+  "rest:PUT:/api/posts/:postId:routes/postRoutes.js:404": [
+    "posts"
+  ]
+}

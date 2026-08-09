@@ -15,6 +15,12 @@ import { SecurityModule } from './security/security.module';
 import { MediaModule } from './providers/media/media.module';
 import { AdsModule } from './ads/ads.module';
 import { MediaProcessingModule } from './providers/media-processing/media-processing.module';
+import { PostsModule } from './posts/posts.module';
+import { CommentsModule } from './comments/comments.module';
+import { StatusModule } from './status/status.module';
+import { ExploreModule } from './explore/explore.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -24,6 +30,12 @@ import { MediaProcessingModule } from './providers/media-processing/media-proces
     MediaModule,
     AdsModule,
     MediaProcessingModule,
+    PostsModule,
+    CommentsModule,
+    StatusModule,
+    ExploreModule,
+    NotificationsModule,
+    ReportsModule,
   ],
 })
 export class AppModule {
