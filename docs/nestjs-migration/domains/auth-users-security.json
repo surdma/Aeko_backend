@@ -64,17 +64,8 @@
     "rest:PUT:/api/users/profile-picture:routes/userRoutes.js:457"
   ],
   "dependsOn": [],
-  "nestModules": [
-    "auth",
-    "users",
-    "profiles",
-    "security"
-  ],
-  "providerPorts": [
-    "cloudinary-media",
-    "email",
-    "google-oauth"
-  ],
+  "nestModules": ["auth", "users", "profiles", "security"],
+  "providerPorts": ["cloudinary-media", "email", "google-oauth"],
   "corrections": [
     "correction:database-readiness",
     "correction:native-better-auth-cutover"
@@ -142,8 +133,12 @@
     "rest:PUT:/api/users/profile-picture:routes/userRoutes.js:457"
   ],
   "risk": "high",
-  "specialistReview": [
-    "backend",
-    "security"
-  ]
+  "migration": {
+    "status": "implemented",
+    "assigned": 60,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  },
+  "specialistReview": ["backend", "security"]
 }

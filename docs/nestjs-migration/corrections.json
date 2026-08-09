@@ -16,9 +16,7 @@
   },
   {
     "id": "correction:blocking-privacy-order",
-    "capabilityIds": [
-      "provider:google-oauth:b484b527785d"
-    ],
+    "capabilityIds": ["provider:google-oauth:b484b527785d"],
     "category": "security",
     "legacyEvidence": [
       {
@@ -71,9 +69,7 @@
   },
   {
     "id": "correction:environment-load-order",
-    "capabilityIds": [
-      "provider:google-oauth:b484b527785d"
-    ],
+    "capabilityIds": ["provider:google-oauth:b484b527785d"],
     "category": "runtime",
     "legacyEvidence": [
       {
@@ -264,9 +260,7 @@
   },
   {
     "id": "correction:security-headers",
-    "capabilityIds": [
-      "provider:google-oauth:b484b527785d"
-    ],
+    "capabilityIds": ["provider:google-oauth:b484b527785d"],
     "category": "security",
     "legacyEvidence": [
       {
@@ -327,9 +321,7 @@
   },
   {
     "id": "correction:subscription-expiry-email",
-    "capabilityIds": [
-      "provider:email:d62f64af5dee"
-    ],
+    "capabilityIds": ["provider:email:d62f64af5dee"],
     "category": "runtime",
     "legacyEvidence": [
       {
@@ -391,6 +383,19 @@
   {
     "id": "correction:native-better-auth-cutover",
     "capabilityIds": [
+      "provider:email:9611586235e6",
+      "provider:google-oauth:3b8ab112fd02",
+      "rest:DELETE:/api/profile/delete-account:routes/profile.js:420",
+      "rest:DELETE:/api/security/2fa:routes/security.js:838",
+      "rest:GET:/api/security/2fa/status:routes/security.js:1009",
+      "rest:POST:/api/security/2fa/backup-codes:routes/security.js:896",
+      "rest:POST:/api/security/2fa/backup-verify:routes/security.js:962",
+      "rest:POST:/api/security/2fa/setup:routes/security.js:647",
+      "rest:POST:/api/security/2fa/verify-setup:routes/security.js:722",
+      "rest:POST:/api/security/2fa/verify:routes/security.js:779",
+      "rest:POST:/api/users/login:routes/userRoutes.js:102",
+      "rest:POST:/api/users/register:routes/userRoutes.js:40",
+      "rest:PUT:/api/profile/change-password:routes/profile.js:389",
       "rest:GET:/api/auth/google:routes/auth.js:363",
       "rest:GET:/api/auth/google/callback:routes/auth.js:368",
       "rest:GET:/api/auth/google:routes/auth.js:398",

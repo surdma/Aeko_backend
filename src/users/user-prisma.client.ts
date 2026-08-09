@@ -31,6 +31,11 @@ export interface UserPrismaClient {
   findMany(request: FindManyRequest): Promise<readonly UserRecord[]>;
   count(search: string): Promise<number>;
   deleteInTransaction(id: string): Promise<void>;
+  updatePicture(
+    id: string,
+    purpose: 'profile' | 'cover',
+    url: string,
+  ): Promise<string>;
 }
 
 export const createUserPrismaClient = (client: object): UserPrismaClient => {
@@ -96,6 +101,21 @@ export const createUserPrismaClient = (client: object): UserPrismaClient => {
           await invoke(transactionUser, 'delete', [{ where: { id } }]);
         },
       ]);
+    },
+    async updatePicture(id, purpose, url) {
+      requireMethod(userDelegate, 'update');
+      const field = purpose === 'profile' ? 'profilePicture' : 'coverPicture';
+      const value = await invoke(userDelegate, 'update', [
+        {
+          where: { id },
+          data: { [field]: url },
+          select: { [field]: true },
+        },
+      ]);
+      const record = requireObject(value, 'update result');
+      const storedUrl = readString(record, field);
+      if (storedUrl !== url) invalidResult(field);
+      return storedUrl;
     },
   };
 };

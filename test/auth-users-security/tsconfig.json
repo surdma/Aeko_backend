@@ -3,5 +3,11 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["contracts.spec.ts", "users.spec.ts", "profiles.spec.ts"]
+  "include": [
+    "contracts.spec.ts",
+    "users.spec.ts",
+    "profiles.spec.ts",
+    "profile-media.spec.ts",
+    "social-security.spec.ts"
+  ]
 }

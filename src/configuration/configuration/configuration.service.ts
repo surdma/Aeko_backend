@@ -9,6 +9,9 @@ export interface ProviderCredentials {
   readonly googleClientId?: string;
   readonly googleClientSecret?: string;
   readonly resendApiKey?: string;
+  readonly cloudinaryCloudName?: string;
+  readonly cloudinaryApiKey?: string;
+  readonly cloudinaryApiSecret?: string;
 }
 
 export interface AppConfig {
@@ -41,6 +44,9 @@ const environmentSchema = z
     BETTER_AUTH_GOOGLE_CLIENT_ID: z.string().trim().min(1).optional(),
     BETTER_AUTH_GOOGLE_CLIENT_SECRET: z.string().trim().min(1).optional(),
     RESEND_API_KEY: z.string().trim().min(1).optional(),
+    CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
+    CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
+    CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
   })
   .superRefine((value, context) => {
     if (
@@ -51,6 +57,19 @@ const environmentSchema = z
         code: 'custom',
         path: ['BETTER_AUTH_GOOGLE_CLIENT_ID'],
         message: 'Google credentials must be configured together',
+      });
+    }
+    const cloudinaryValues = [
+      value.CLOUDINARY_CLOUD_NAME,
+      value.CLOUDINARY_API_KEY,
+      value.CLOUDINARY_API_SECRET,
+    ];
+    const configuredCloudinaryValues = cloudinaryValues.filter(Boolean).length;
+    if (configuredCloudinaryValues > 0 && configuredCloudinaryValues < 3) {
+      context.addIssue({
+        code: 'custom',
+        path: ['CLOUDINARY_CLOUD_NAME'],
+        message: 'Cloudinary credentials must be configured together',
       });
     }
     if (
@@ -91,6 +110,15 @@ export function loadAppConfig(environment: NodeJS.ProcessEnv): AppConfig {
       : {}),
     ...(parsed.data.RESEND_API_KEY
       ? { resendApiKey: parsed.data.RESEND_API_KEY }
+      : {}),
+    ...(parsed.data.CLOUDINARY_CLOUD_NAME
+      ? { cloudinaryCloudName: parsed.data.CLOUDINARY_CLOUD_NAME }
+      : {}),
+    ...(parsed.data.CLOUDINARY_API_KEY
+      ? { cloudinaryApiKey: parsed.data.CLOUDINARY_API_KEY }
+      : {}),
+    ...(parsed.data.CLOUDINARY_API_SECRET
+      ? { cloudinaryApiSecret: parsed.data.CLOUDINARY_API_SECRET }
       : {}),
   });
 

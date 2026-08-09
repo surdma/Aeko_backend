@@ -133,7 +133,7 @@ describe('profile endpoints', () => {
     capturedUpdate = undefined;
   });
 
-  it('registers exactly the four non-auth profile routes', () => {
+  it('registers the ten non-auth profile and social routes', () => {
     expect(reflector.get<unknown>(PATH_METADATA, ProfilesController)).toBe(
       'api/profile',
     );
@@ -162,9 +162,15 @@ describe('profile endpoints', () => {
         { method: RequestMethod.GET, path: 'activity' },
         { method: RequestMethod.PUT, path: 'update' },
         { method: RequestMethod.GET, path: 'eligibility' },
+        { method: RequestMethod.POST, path: 'verify' },
+        { method: RequestMethod.GET, path: 'followers' },
+        { method: RequestMethod.GET, path: 'following' },
+        { method: RequestMethod.GET, path: 'followers/search' },
+        { method: RequestMethod.PUT, path: 'follow/:id' },
+        { method: RequestMethod.PUT, path: 'unfollow/:id' },
       ]),
     );
-    expect(routes).toHaveLength(4);
+    expect(routes).toHaveLength(10);
     expect(routes).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ path: 'change-password' }),
@@ -179,6 +185,9 @@ describe('profile endpoints', () => {
       'update',
     );
     expect(typeof updateHandler).toBe('function');
+    if (typeof updateHandler !== 'function') {
+      throw new Error('ProfilesController.update is missing.');
+    }
     expect(
       reflector.get<readonly unknown[]>(GUARDS_METADATA, updateHandler),
     ).toContain(TwoFactorGuard);

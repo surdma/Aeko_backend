@@ -13,9 +13,11 @@ import { UsersModule } from './users/users.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { SecurityModule } from './security/security.module';
 import { MediaModule } from './providers/media/media.module';
+import { AdsModule } from './ads/ads.module';
+import { MediaProcessingModule } from './providers/media-processing/media-processing.module';
 
 @Module({
-  imports: [UsersModule, ProfilesModule, SecurityModule, MediaModule],
+  imports: [UsersModule, ProfilesModule, SecurityModule, MediaModule, AdsModule, MediaProcessingModule],
 })
 export class AppModule {
   static register(

@@ -7,6 +7,12 @@ import {
 } from '../common/pagination/page-query';
 import { PrismaService } from '../database/prisma/prisma.service';
 import {
+  MediaPort,
+  type ImageMimeType,
+  type MediaPurpose,
+  type UploadedMedia,
+} from '../providers/media/media.port';
+import {
   projectUser,
   type UserListQuery,
   type UserPage,
@@ -20,10 +26,92 @@ import {
 
 @Injectable()
 export class UsersService {
-  private readonly users: UserPrismaClient;
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly media: MediaPort,
+  ) {}
 
-  constructor(prisma: PrismaService) {
-    this.users = createUserPrismaClient(prisma.adapterClient);
+  private get users(): UserPrismaClient {
+    return createUserPrismaClient(this.prisma.adapterClient);
+  }
+
+  updateProfilePicture(
+    principal: AuthenticatedPrincipal,
+    file: unknown,
+  ): Promise<{ readonly profilePicture: string }> {
+    return this.updatePicture(principal.userId, 'profile', file).then(
+      (profilePicture) => ({ profilePicture }),
+    );
+  }
+
+  updateCoverPicture(
+    principal: AuthenticatedPrincipal,
+    file: unknown,
+  ): Promise<{ readonly coverPicture: string }> {
+    return this.updatePicture(principal.userId, 'cover', file).then(
+      (coverPicture) => ({ coverPicture }),
+    );
+  }
+
+  private async updatePicture(
+    ownerId: string,
+    purpose: MediaPurpose,
+    value: unknown,
+  ): Promise<string> {
+    const file = parseImageFile(value);
+    let uploaded: UploadedMedia;
+    try {
+      uploaded = await this.media.uploadProfileImage({
+        ownerId,
+        purpose,
+        bytes: file.bytes,
+        mimeType: file.mimeType,
+      });
+    } catch (error: unknown) {
+      if (
+        error instanceof DomainError &&
+        error.code === 'PROVIDER_UNAVAILABLE' &&
+        error.message === 'Media uploads are not configured.'
+      ) {
+        throw error;
+      }
+      throw new DomainError(
+        'PROVIDER_UNAVAILABLE',
+        'The media provider is temporarily unavailable.',
+      );
+    }
+    const expectedProviderId = `aeko/users/${encodeURIComponent(ownerId)}/${purpose}`;
+    if (
+      !isHttpsUrl(uploaded.url) ||
+      uploaded.providerId !== expectedProviderId
+    ) {
+      throw new DomainError(
+        'PROVIDER_UNAVAILABLE',
+        'The media provider is temporarily unavailable.',
+      );
+    }
+    try {
+      return await this.users.updatePicture(ownerId, purpose, uploaded.url);
+    } catch (databaseError: unknown) {
+      await this.cleanupUploadedMedia(uploaded.providerId);
+      if (isPrismaNotFound(databaseError)) {
+        throw new DomainError('NOT_FOUND', 'User not found.');
+      }
+      if (databaseError instanceof DomainError) throw databaseError;
+      throw new DomainError(
+        'INTERNAL_ERROR',
+        'The profile picture could not be saved.',
+      );
+    }
+  }
+
+  private async cleanupUploadedMedia(providerId: string): Promise<void> {
+    try {
+      await this.media.deleteProfileImage(providerId);
+    } catch {
+      // Cleanup is best-effort; the original sanitized database error remains
+      // authoritative and the reconciliation gate handles residual orphans.
+    }
   }
 
   async getUser(viewerId: string, targetId: string): Promise<UserView> {
@@ -181,6 +269,90 @@ export class UsersService {
         : null,
     };
   }
+}
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const allowedMimeTypes: readonly ImageMimeType[] = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+];
+
+interface ValidatedImageFile {
+  readonly bytes: Uint8Array;
+  readonly mimeType: ImageMimeType;
+}
+
+const parseImageFile = (value: unknown): ValidatedImageFile => {
+  if (typeof value !== 'object' || value === null) invalidImage();
+  const buffer: unknown = Reflect.get(value, 'buffer');
+  const mimeType: unknown = Reflect.get(value, 'mimetype');
+  const declaredSize: unknown = Reflect.get(value, 'size');
+  if (
+    !(buffer instanceof Uint8Array) ||
+    typeof mimeType !== 'string' ||
+    typeof declaredSize !== 'number' ||
+    !Number.isSafeInteger(declaredSize) ||
+    declaredSize !== buffer.byteLength ||
+    buffer.byteLength === 0 ||
+    buffer.byteLength > MAX_IMAGE_BYTES ||
+    !isImageMimeType(mimeType) ||
+    !matchesSignature(buffer, mimeType)
+  ) {
+    invalidImage();
+  }
+  return { bytes: buffer, mimeType };
+};
+
+const isImageMimeType = (value: string): value is ImageMimeType =>
+  allowedMimeTypes.some((mimeType) => mimeType === value);
+
+const matchesSignature = (
+  bytes: Uint8Array,
+  mimeType: ImageMimeType,
+): boolean => {
+  if (mimeType === 'image/jpeg') {
+    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+  }
+  if (mimeType === 'image/png') {
+    return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every(
+      (byte, index) => bytes[index] === byte,
+    );
+  }
+  return (
+    ascii(bytes, 0, 'RIFF') && ascii(bytes, 8, 'WEBP') && bytes.byteLength >= 12
+  );
+};
+
+const ascii = (bytes: Uint8Array, start: number, expected: string): boolean =>
+  [...expected].every(
+    (character, index) => bytes[start + index] === character.charCodeAt(0),
+  );
+
+const isHttpsUrl = (value: string): boolean => {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === 'https:' &&
+      url.hostname.length > 0 &&
+      url.username.length === 0 &&
+      url.password.length === 0
+    );
+  } catch {
+    return false;
+  }
+};
+
+const isPrismaNotFound = (value: unknown): boolean => {
+  if (typeof value !== 'object' || value === null) return false;
+  return Reflect.get(value, 'code') === 'P2025';
+};
+
+function invalidImage(): never {
+  throw new DomainError(
+    'VALIDATION_FAILED',
+    'Upload a JPEG, PNG, or WebP image no larger than 5 MiB.',
+  );
 }
 
 const isPrivate = (value: unknown): boolean => {

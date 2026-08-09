@@ -302,7 +302,7 @@ git commit -m "feat: migrate profile lifecycle"
 - Consumes: validated image buffer, MIME type, principal ID.
 - Produces: `MediaPort.uploadProfileImage(input): Promise<UploadedMedia>` and protected picture endpoints.
 
-- [ ] **Step 1: Write media security RED tests**
+- [x] **Step 1: Write media security RED tests**
 
 ```ts
 await expect(
@@ -316,13 +316,13 @@ expect(await service.updateCoverPicture(principal, pngFile)).toEqual({
 expect(media.uploadCalls[0]).toMatchObject({ ownerId: 'u1', purpose: 'cover' });
 ```
 
-- [ ] **Step 2: Run media RED**
+- [x] **Step 2: Run media RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/profile-media.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL on missing media port.
 
-- [ ] **Step 3: Implement bounded uploads**
+- [x] **Step 3: Implement bounded uploads**
 
 ```ts
 export type MediaPurpose = 'profile' | 'cover';
@@ -343,7 +343,7 @@ export abstract class MediaPort {
 
 Add `PUT /api/users/profile-picture` and `PUT /api/users/cover-picture` guarded by session and 2FA. Limit uploads to 5 MiB, reject unapproved MIME types before provider invocation, do not expose provider exceptions, and save only the returned HTTPS URL after successful upload.
 
-- [ ] **Step 4: Run media GREEN and commit**
+- [x] **Step 4: Run media GREEN and commit**
 
 ```powershell
 git add -- src/providers/media src/users test/auth-users-security/profile-media.spec.ts
@@ -366,7 +366,7 @@ git commit -m "feat: migrate protected profile media"
 - Consumes: current principal and normalized JSON-backed privacy/follow collections.
 - Produces: atomic block/unblock, follow/unfollow, follow-request decisions, and filtered follower/following pages.
 
-- [ ] **Step 1: Write concurrency and ownership RED tests**
+- [x] **Step 1: Write concurrency and ownership RED tests**
 
 ```ts
 await expect(service.block(userId, userId, null)).rejects.toMatchObject({
@@ -387,13 +387,13 @@ await expect(
 });
 ```
 
-- [ ] **Step 2: Run social-security RED**
+- [x] **Step 2: Run social-security RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/social-security.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL because operations do not exist.
 
-- [ ] **Step 3: Implement controllers and transactional state transitions**
+- [x] **Step 3: Implement controllers and transactional state transitions**
 
 ```ts
 @Post('block/:userId') block(...): Promise<BlockResult>
@@ -409,7 +409,7 @@ Expected: FAIL because operations do not exist.
 
 Also implement `/api/profile/follow/:id`, `/unfollow/:id`, `/followers`, `/following`, and `/followers/search`. Use an interactive Prisma transaction for symmetric follower/following changes, make repeated operations idempotent, deny self-block/self-follow, remove follow relationships on block, require recipient ownership for request resolution, and never reveal private lists to unauthorized viewers.
 
-- [ ] **Step 4: Run social-security GREEN and commit**
+- [x] **Step 4: Run social-security GREEN and commit**
 
 ```powershell
 git add -- src/security src/profiles test/auth-users-security/social-security.spec.ts
@@ -432,7 +432,7 @@ git commit -m "feat: migrate privacy blocks and follows"
 - Consumes: `SecurityEvent`, `VerificationSettings`, request context, administrator principal.
 - Produces: append-only sanitized events, event page/statistics, eligibility verification decision.
 
-- [ ] **Step 1: Write audit and privilege RED tests**
+- [x] **Step 1: Write audit and privilege RED tests**
 
 ```ts
 await expect(
@@ -451,13 +451,13 @@ expect(await events.stats(ownerId, 30)).toEqual(
 );
 ```
 
-- [ ] **Step 2: Run security-events RED**
+- [x] **Step 2: Run security-events RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/security-events.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL on missing event service and authorization.
 
-- [ ] **Step 3: Implement append-only audit behavior**
+- [x] **Step 3: Implement append-only audit behavior**
 
 ```ts
 export interface RecordSecurityEventInput {
@@ -473,7 +473,7 @@ export interface RecordSecurityEventInput {
 
 Add `GET /api/security/events`, `GET /api/security/stats`, and `POST /api/profile/verify`. Restrict verification to administrators with a satisfied 2FA session, ignore the legacy caller-controlled `force` bypass for non-admins, calculate eligibility server-side, and record success/failure without credentials, tokens, secrets, raw provider errors, or full request bodies.
 
-- [ ] **Step 4: Run security-events GREEN and commit**
+- [x] **Step 4: Run security-events GREEN and commit**
 
 ```powershell
 git add -- src/security src/profiles test/auth-users-security/security-events.spec.ts
@@ -495,7 +495,7 @@ git commit -m "feat: migrate verification and security audit"
 - Consumes: all feature controllers/services and native Better Auth route inventory.
 - Produces: auditable closure for exactly 60 capabilities and zero legacy auth implementation.
 
-- [ ] **Step 1: Write the final cutover RED tests**
+- [x] **Step 1: Write the final cutover RED tests**
 
 ```ts
 expect(findCompatibilityAuthControllers()).toEqual([]);
@@ -510,17 +510,17 @@ expect(coverage).toEqual({
 });
 ```
 
-- [ ] **Step 2: Run the complete focused domain suite**
+- [x] **Step 2: Run the complete focused domain suite**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security test/migration/auth-users-security-coverage.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected before closure: FAIL on incomplete route/correction evidence.
 
-- [ ] **Step 3: Complete cutover documentation and safety scans**
+- [x] **Step 3: Complete cutover documentation and safety scans**
 
 Document native Better Auth replacements for legacy signup/login/logout/me/email-verification/password-reset/Google/2FA operations, exact client request/response/cookie changes, and the administrator/ownership/rate-limit/security-event corrections. Verify the source contains no compatibility `/api/auth` controller, bcrypt/JWT/Passport imports, second Prisma client, `any`, unsafe casts, non-null assertions, or raw secret logging.
 
-- [ ] **Step 4: Run all domain and foundation gates**
+- [x] **Step 4: Run all domain and foundation gates**
 
 ```powershell
 .\node_modules\.bin\jest.cmd test/auth-users-security test/migration/auth-users-security-coverage.spec.ts --runInBand --config test/auth/jest.config.json

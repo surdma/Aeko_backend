@@ -1,6 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
+import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import { DomainError } from '../common/errors/domain.error';
 import type { PageQuery } from '../common/pagination/page-query';
+import type { RequestAuditContext } from '../common/http/request-audit/request-audit.decorator';
+import type { UserPage } from '../users/user.contract';
+import type { UserSearch } from '../users/user.contract';
+import {
+  SecurityService,
+  type FollowState,
+} from '../security/security.service';
 import { PrismaService } from '../database/prisma/prisma.service';
 import {
   projectUserProfile,
@@ -20,10 +28,47 @@ import {
 
 @Injectable()
 export class ProfilesService {
-  private readonly profiles: ProfilePrismaClient;
+  constructor(
+    private readonly prisma: PrismaService,
+    @Optional() private readonly social?: SecurityService,
+  ) {}
 
-  constructor(prisma: PrismaService) {
-    this.profiles = createProfilePrismaClient(prisma.adapterClient);
+  private get profiles(): ProfilePrismaClient {
+    return createProfilePrismaClient(this.prisma.adapterClient);
+  }
+
+  followers(userId: string, query: PageQuery): Promise<UserPage> {
+    return this.requireSocial().graph(userId, 'followers', query);
+  }
+
+  following(userId: string, query: PageQuery): Promise<UserPage> {
+    return this.requireSocial().graph(userId, 'following', query);
+  }
+
+  searchFollowers(
+    userId: string,
+    query: PageQuery & UserSearch,
+  ): Promise<UserPage> {
+    return this.requireSocial().graph(userId, 'followers', query, query.search);
+  }
+
+  follow(userId: string, targetId: string): Promise<FollowState> {
+    return this.requireSocial().follow(userId, targetId);
+  }
+
+  unfollow(
+    userId: string,
+    targetId: string,
+  ): Promise<{ readonly state: 'not-following' }> {
+    return this.requireSocial().unfollow(userId, targetId);
+  }
+
+  verifyUser(
+    principal: AuthenticatedPrincipal,
+    targetId: string,
+    audit?: RequestAuditContext,
+  ): Promise<{ readonly verified: true }> {
+    return this.requireSocial().verifyUser(principal, targetId, audit);
   }
 
   async getProfile(userId: string): Promise<UserProfile> {
@@ -138,6 +183,16 @@ export class ProfilesService {
 
   private project(user: ProfileRecord): UserProfile {
     return projectUserProfile(user);
+  }
+
+  private requireSocial(): SecurityService {
+    if (!this.social) {
+      throw new DomainError(
+        'INTERNAL_ERROR',
+        'The social data service is unavailable.',
+      );
+    }
+    return this.social;
   }
 }
 

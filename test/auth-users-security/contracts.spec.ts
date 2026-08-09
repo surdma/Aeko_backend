@@ -134,45 +134,48 @@ describe('auth users security contracts', () => {
   describe('privacy and follow requests', () => {
     it('fills absent persisted privacy keys with safe explicit defaults', () => {
       expect(parsePrivacySettings({})).toEqual({
-        profileVisibility: 'public',
-        showFollowers: true,
-        showFollowing: true,
-        allowMessages: true,
+        isPrivate: false,
         allowFollowRequests: true,
+        showOnlineStatus: true,
+        allowDirectMessages: 'everyone',
+        allowComments: true,
+        allowTags: true,
       });
       expect(parsePrivacySettings(null)).toEqual({
-        profileVisibility: 'public',
-        showFollowers: true,
-        showFollowing: true,
-        allowMessages: true,
+        isPrivate: false,
         allowFollowRequests: true,
+        showOnlineStatus: true,
+        allowDirectMessages: 'everyone',
+        allowComments: true,
+        allowTags: true,
       });
     });
 
     it('rejects unsupported profile visibility with field context', () => {
       expect(() =>
-        parsePrivacySettings({ profileVisibility: 'friends' }),
+        parsePrivacySettings({ allowDirectMessages: 'friends' }),
       ).toThrow(DomainError);
       expect(() =>
-        parsePrivacySettings({ profileVisibility: 'friends' }),
-      ).toThrow('profileVisibility');
+        parsePrivacySettings({ allowDirectMessages: 'friends' }),
+      ).toThrow('allowDirectMessages');
     });
 
     it('rejects unexpected privacy fields instead of silently accepting them', () => {
       expect(() =>
         parsePrivacySettings({
-          profileVisibility: 'public',
-          showFollowers: true,
-          showFollowing: true,
-          allowMessages: true,
+          isPrivate: false,
           allowFollowRequests: true,
+          showOnlineStatus: true,
+          allowDirectMessages: 'everyone',
+          allowComments: true,
+          allowTags: true,
           isAdmin: true,
         }),
       ).toThrow(DomainError);
     });
 
     it('accepts only declared follow-request states', () => {
-      expect(parseFollowRequestStatus('accepted')).toBe('accepted');
+      expect(parseFollowRequestStatus('approved')).toBe('approved');
       expect(() => parseFollowRequestStatus('cancelled')).toThrow(DomainError);
       expect(() => parseFollowRequestStatus('cancelled')).toThrow('status');
     });

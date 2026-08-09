@@ -7,6 +7,13 @@ type CapabilityId = string;
 
 interface DomainManifest {
   readonly capabilityIds: readonly string[];
+  readonly migration?: {
+    readonly status: string;
+    readonly assigned: number;
+    readonly missing: number;
+    readonly duplicate: number;
+    readonly unresolved: number;
+  };
 }
 
 const ROOT = join(__dirname, '..', '..');
@@ -47,6 +54,8 @@ const generatedArtifacts = [
   'src/security/security.module.ts',
   'src/security/security.controller.ts',
   'src/security/security.service.ts',
+  'src/security/security-event.service.ts',
+  'src/common/http/request-audit/request-audit.decorator.ts',
   'src/providers/media/media.module.ts',
   'src/providers/media/cloudinary-media.adapter.ts',
 ] as const;
@@ -97,5 +106,15 @@ describe('auth users security capability ownership', () => {
     ]) {
       expect(appModule).toContain(moduleName);
     }
+  });
+
+  it('records focused domain implementation closure without claiming programme completion', () => {
+    expect(manifest.migration).toEqual({
+      status: 'implemented',
+      assigned: 60,
+      missing: 0,
+      duplicate: 0,
+      unresolved: 0,
+    });
   });
 });

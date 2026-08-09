@@ -142,37 +142,44 @@ const hasAdaSearch = (input: unknown): boolean =>
   JSON.stringify(input).toLocaleLowerCase().includes('ada');
 
 const userDelegate = {
-  findUnique: async (input: unknown): Promise<FixtureUser | null> => {
+  findUnique: (input: unknown): Promise<FixtureUser | null> => {
     const id = readPathId(input);
     if (id === 'viewer') viewerFindUniqueCalls += 1;
-    return fixtures.get(id) ?? null;
+    return Promise.resolve(fixtures.get(id) ?? null);
   },
-  findMany: async (input: unknown): Promise<readonly FixtureUser[]> => {
+  findMany: (input: unknown): Promise<readonly FixtureUser[]> => {
     const ids = readIds(input);
     if (ids.length > 0) {
-      return ids.flatMap((id) => {
-        const user = fixtures.get(id);
-        return user ? [user] : [];
-      });
+      return Promise.resolve(
+        ids.flatMap((id) => {
+          const user = fixtures.get(id);
+          return user ? [user] : [];
+        }),
+      );
     }
-    return hasAdaSearch(input) ? [publicUser] : [publicUser, privateUser];
+    return Promise.resolve(
+      hasAdaSearch(input) ? [publicUser] : [publicUser, privateUser],
+    );
   },
-  count: async (input: unknown): Promise<number> =>
-    hasAdaSearch(input) ? 1 : 2,
-  delete: async (input: unknown): Promise<FixtureUser> => {
+  count: (input: unknown): Promise<number> =>
+    Promise.resolve(hasAdaSearch(input) ? 1 : 2),
+  delete: (input: unknown): Promise<FixtureUser> => {
     const user = fixtures.get(readPathId(input));
-    if (!user) throw new Error('fixture user missing');
-    return user;
+    return user
+      ? Promise.resolve(user)
+      : Promise.reject(new Error('fixture user missing'));
   },
 };
 
 const fakeClient = {
-  $connect: async (): Promise<void> => undefined,
-  $disconnect: async (): Promise<void> => undefined,
-  $queryRaw: async (): Promise<unknown> => 1,
-  $transaction: async (operation: unknown): Promise<unknown> => {
-    if (typeof operation !== 'function') throw new Error('expected callback');
-    return Reflect.apply(operation, undefined, [fakeClient]);
+  $connect: (): Promise<void> => Promise.resolve(),
+  $disconnect: (): Promise<void> => Promise.resolve(),
+  $queryRaw: (): Promise<unknown> => Promise.resolve(1),
+  $transaction: (operation: unknown): Promise<unknown> => {
+    if (typeof operation !== 'function')
+      return Promise.reject(new Error('expected callback'));
+    const result: unknown = Reflect.apply(operation, undefined, [fakeClient]);
+    return Promise.resolve(result);
   },
   user: userDelegate,
 };
@@ -207,7 +214,7 @@ describe('users endpoints', () => {
     viewerFindUniqueCalls = 0;
   });
 
-  it('registers only the five active users routes under /api/users', () => {
+  it('registers only the seven active users routes under /api/users', () => {
     const controllerPath: unknown = Reflect.getMetadata(
       PATH_METADATA,
       UsersController,
@@ -218,15 +225,17 @@ describe('users endpoints', () => {
       .filter((name) => name !== 'constructor')
       .map((name) => {
         const handler: unknown = Reflect.get(prototype, name);
+        const method: unknown =
+          typeof handler === 'function'
+            ? Reflect.getMetadata(METHOD_METADATA, handler)
+            : undefined;
+        const path: unknown =
+          typeof handler === 'function'
+            ? Reflect.getMetadata(PATH_METADATA, handler)
+            : undefined;
         return {
-          method:
-            typeof handler === 'function'
-              ? Reflect.getMetadata(METHOD_METADATA, handler)
-              : undefined,
-          path:
-            typeof handler === 'function'
-              ? Reflect.getMetadata(PATH_METADATA, handler)
-              : undefined,
+          method,
+          path,
         };
       });
 
@@ -239,7 +248,7 @@ describe('users endpoints', () => {
         { method: RequestMethod.DELETE, path: ':id' },
       ]),
     );
-    expect(routes).toHaveLength(5);
+    expect(routes).toHaveLength(7);
     expect(routes).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({ path: 'register' }),
@@ -299,12 +308,12 @@ describe('users endpoints', () => {
     );
   });
 
-  it('does not expose Prisma delegate members when its boundary is unavailable', () => {
+  it('does not expose Prisma delegate members when its boundary is unavailable', async () => {
     const incompleteClient = {
-      $connect: async (): Promise<void> => undefined,
-      $disconnect: async (): Promise<void> => undefined,
-      $queryRaw: async (): Promise<unknown> => 1,
-      $transaction: async (): Promise<unknown> => undefined,
+      $connect: (): Promise<void> => Promise.resolve(),
+      $disconnect: (): Promise<void> => Promise.resolve(),
+      $queryRaw: (): Promise<unknown> => Promise.resolve(1),
+      $transaction: (): Promise<unknown> => Promise.resolve(),
       user: {
         findMany: userDelegate.findMany,
         count: userDelegate.count,
@@ -312,12 +321,14 @@ describe('users endpoints', () => {
       },
     };
 
-    expect(() =>
-      Reflect.construct(UsersService, [new PrismaService(incompleteClient)]),
-    ).toThrow('The user data service is unavailable.');
-    expect(() =>
-      Reflect.construct(UsersService, [new PrismaService(incompleteClient)]),
-    ).not.toThrow('findUnique');
+    const service: unknown = Reflect.construct(UsersService, [
+      new PrismaService(incompleteClient),
+    ]);
+    const promise = invoke(service, 'getUser', ['viewer', 'public-user']);
+    await expect(promise).rejects.toThrow(
+      'The user data service is unavailable.',
+    );
+    await expect(promise).rejects.not.toThrow('findUnique');
   });
 
   it('returns a limited private profile with numeric graph counts to a non-follower', async () => {
