@@ -5,7 +5,9 @@
   "provider:cloudinary-media:3828853a82ea": ["media"],
   "provider:email:9611586235e6": ["better-auth-native-cutover"],
   "provider:google-oauth:3b8ab112fd02": ["better-auth-native-cutover"],
-  "rest:DELETE:/api/profile/delete-account:routes/profile.js:420": ["profiles"],
+  "rest:DELETE:/api/profile/delete-account:routes/profile.js:420": [
+    "better-auth-native-cutover"
+  ],
   "rest:DELETE:/api/security/2fa:routes/security.js:838": [
     "better-auth-native-cutover"
   ],
@@ -103,7 +105,9 @@
   "rest:POST:/api/users/register:routes/userRoutes.js:40": [
     "better-auth-native-cutover"
   ],
-  "rest:PUT:/api/profile/change-password:routes/profile.js:389": ["profiles"],
+  "rest:PUT:/api/profile/change-password:routes/profile.js:389": [
+    "better-auth-native-cutover"
+  ],
   "rest:PUT:/api/profile/follow/:id:routes/profile.js:563": ["profiles"],
   "rest:PUT:/api/profile/unfollow/:id:routes/profile.js:630": ["profiles"],
   "rest:PUT:/api/profile/update:routes/profile.js:352": ["profiles"],

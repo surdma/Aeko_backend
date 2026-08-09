@@ -75,9 +75,9 @@ describe('auth users security capability ownership', () => {
         },
       ),
     ).toEqual({
-      'better-auth-native-cutover': 26,
+      'better-auth-native-cutover': 28,
       users: 8,
-      profiles: 13,
+      profiles: 11,
       security: 12,
       media: 1,
     });

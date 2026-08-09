@@ -1,6 +1,7 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "../..",
+  "roots": ["<rootDir>/test/auth"],
   "testEnvironment": "node",
   "testRegex": "test/auth/(auth-configuration|authorization)\\.spec\\.ts$",
   "transform": {

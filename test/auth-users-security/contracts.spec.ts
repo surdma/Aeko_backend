@@ -42,6 +42,8 @@ const profileUser = {
   twoFactorEnabled: null,
   updatedAt: new Date('2026-08-02T10:00:00.000Z'),
   lastLoginAt: null,
+  postsCount: 0,
+  bookmarksCount: 0,
 } satisfies UserProfileSource;
 
 describe('auth users security contracts', () => {

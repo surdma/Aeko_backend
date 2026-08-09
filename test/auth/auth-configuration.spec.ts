@@ -81,6 +81,10 @@ describe('native Aeko Better Auth configuration', () => {
       requireEmailVerification: true,
     });
     expect(source).toMatch(/revokeSessionsOnPasswordReset:\s*true/);
+    expect(source).toMatch(/deleteUser:\s*\{\s*enabled:\s*true\s*\}/);
+    expect(source).toMatch(
+      /changeEmail:\s*\{\s*enabled:\s*Boolean\(emailCallbacks\)\s*\}/,
+    );
     expect(source).toMatch(/plugins:\s*\[bearer\(\),\s*twoFactor\(/);
     expect(source).toMatch(/disableCSRFCheck:\s*false/);
     expect(source).toMatch(/disableOriginCheck:\s*false/);
@@ -145,10 +149,11 @@ describe('native Aeko Better Auth configuration', () => {
     expect(new PrismaService(client).adapterClient).toBe(client);
 
     const mainSource = readFileSync(resolve(workspace, 'src/main.ts'), 'utf8');
-    const handlerIndex = mainSource.indexOf('toNodeHandler');
+    const authInitializationIndex = mainSource.indexOf('await initializeAuth');
     const jsonParserIndex = mainSource.indexOf("useBodyParser('json'");
-    expect(handlerIndex).toBeGreaterThan(-1);
-    expect(jsonParserIndex).toBeGreaterThan(handlerIndex);
+    expect(authInitializationIndex).toBeGreaterThan(-1);
+    expect(jsonParserIndex).toBeGreaterThan(authInitializationIndex);
+    expect(mainSource).toContain('toNodeHandler');
     expect(mainSource).toMatch(
       /pathname === '\/api\/auth' \|\| pathname\.startsWith\('\/api\/auth\/'\)/,
     );

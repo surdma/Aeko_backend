@@ -235,10 +235,10 @@ git commit -m "feat: migrate users endpoints"
 
 **Interfaces:**
 
-- Consumes: current principal, Better Auth password APIs, `VerificationSettings`, profile JSON projection.
-- Produces: `getCurrent`, `getActivity`, `update`, `changePassword`, `deleteAccount`, and `eligibility`.
+- Consumes: current principal, `VerificationSettings`, profile JSON projection, and native Better Auth ownership evidence.
+- Produces: `getCurrent`, `getActivity`, `update`, and `eligibility`; native Better Auth remains the sole owner of password change, email change, and self-deletion.
 
-- [ ] **Step 1: Write profile behavior RED tests**
+- [x] **Step 1: Write profile behavior RED tests**
 
 ```ts
 expect(await service.eligibility(completeUserId)).toEqual({
@@ -256,33 +256,30 @@ await expect(
 ).rejects.toMatchObject({
   code: 'CONFLICT',
 });
-await expect(
-  service.deleteAccount(twoFactorIncompletePrincipal),
-).rejects.toMatchObject({
-  code: 'TWO_FACTOR_REQUIRED',
-});
+expect(profileControllerRoutes).not.toEqual(
+  expect.arrayContaining(['change-password', 'delete-account']),
+);
+expect(authOptions.user?.deleteUser?.enabled).toBe(true);
 ```
 
-- [ ] **Step 2: Run profiles RED**
+- [x] **Step 2: Run profiles RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/profiles.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL on missing profile operations.
 
-- [ ] **Step 3: Implement strict profile endpoints**
+- [x] **Step 3: Implement strict profile endpoints**
 
 ```ts
 @Get() get(@CurrentUser() user: AuthenticatedPrincipal): Promise<CurrentProfile>
 @Get('activity') activity(@CurrentUser() user: AuthenticatedPrincipal, @Query() query: unknown): Promise<ActivityPage>
 @Put('update') @UseGuards(SessionGuard, TwoFactorGuard) update(...): Promise<CurrentProfile>
-@Put('change-password') @UseGuards(SessionGuard, TwoFactorGuard) changePassword(...): Promise<{ readonly changed: true }>
-@Delete('delete-account') @UseGuards(SessionGuard, TwoFactorGuard) deleteAccount(...): Promise<{ readonly deleted: true }>
 @Get('eligibility') eligibility(@CurrentUser() user: AuthenticatedPrincipal): Promise<VerificationEligibility>
 ```
 
-Register under `/api/profile`. Delegate password change and account/session invalidation to Better Auth APIs instead of reading credential hashes. Preserve activity ordering and eligibility thresholds from `VerificationSettings`; when no settings row exists, use the schema defaults `1000/10/true/true/true/true` without returning `undefined`.
+Register under `/api/profile`. Do not expose Nest compatibility routes for password change, email change, or self-deletion; enable and document Better Auth's native `/api/auth/change-password`, `/api/auth/change-email`, and `/api/auth/delete-user` flows instead. Preserve activity ordering and eligibility thresholds from `VerificationSettings`; when no settings row exists, use the schema defaults `1000/10/true/true/true/true` without returning `undefined`.
 
-- [ ] **Step 4: Run profiles GREEN and commit**
+- [x] **Step 4: Run profiles GREEN and commit**
 
 ```powershell
 git add -- src/profiles test/auth-users-security/profiles.spec.ts

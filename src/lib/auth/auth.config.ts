@@ -36,6 +36,8 @@ export async function createAekoAuth(
     }),
     user: {
       modelName: 'User',
+      deleteUser: { enabled: true },
+      changeEmail: { enabled: Boolean(emailCallbacks) },
       additionalFields: {
         username: { type: 'string', required: true },
         isAdmin: {
