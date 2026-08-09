@@ -1,0 +1,391 @@
+[
+  {
+    "id": "correction:admin-cookie-secret",
+    "capabilityIds": [],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "admin.js",
+        "line": 975
+      }
+    ],
+    "legacyBehavior": "AdminJS accepts a known fallback cookie secret.",
+    "replacementBehavior": "Startup rejects missing production admin session secrets.",
+    "reason": "A public fallback secret permits session forgery.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:blocking-privacy-order",
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "server.js",
+        "line": 128
+      }
+    ],
+    "legacyBehavior": "Blocking and privacy response middleware run before mounted route handlers.",
+    "replacementBehavior": "Nest guards and serializers enforce blocking/privacy at effective handler boundaries.",
+    "reason": "The legacy ordering can be ineffective or bypass expected response filtering.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-profile-ownership-drift",
+    "capabilityIds": [
+      "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72",
+      "rest:POST:/api/community-profiles/:id/upload-photo:routes/communityProfileRoutes.js:128",
+      "rest:PUT:/api/community-profiles/:id/settings:routes/communityProfileRoutes.js:199",
+      "rest:POST:/api/community-profiles/:id/follow:routes/communityProfileRoutes.js:248",
+      "rest:POST:/api/community-profiles/:id/unfollow:routes/communityProfileRoutes.js:280",
+      "rest:POST:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:329",
+      "rest:GET:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:384"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/communityProfileRoutes.js",
+        "line": 30
+      }
+    ],
+    "legacyBehavior": "Community-profile documentation and runtime ownership checks do not consistently agree.",
+    "replacementBehavior": "Typed policies enforce the approved owner/moderator contract.",
+    "reason": "Authorization behavior must match the public contract.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:database-readiness",
+    "capabilityIds": [],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "config/db.js",
+        "line": 18
+      }
+    ],
+    "legacyBehavior": "Database connection failure is logged and swallowed during startup.",
+    "replacementBehavior": "Readiness fails and bootstrap rejects when Prisma cannot connect.",
+    "reason": "A listening process must not claim readiness without its database.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:environment-load-order",
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "server.js",
+        "line": 225
+      }
+    ],
+    "legacyBehavior": "Jobs and chain configuration load before dotenv initialization.",
+    "replacementBehavior": "Validated configuration loads before providers and scheduled jobs.",
+    "reason": "Import-time provider configuration must not observe missing environment values.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:explorer-history-method",
+    "capabilityIds": [
+      "rest:POST:/api/wallet/link:routes/walletRoutes.js:51",
+      "rest:DELETE:/api/wallet/link:routes/walletRoutes.js:83",
+      "rest:GET:/api/wallet/:address/balance:routes/walletRoutes.js:118",
+      "rest:GET:/api/wallet/:address/history:routes/walletRoutes.js:147",
+      "rest:GET:/api/wallet/:address/nfts:routes/walletRoutes.js:180",
+      "rest:POST:/api/wallet/prepare-transfer:routes/walletRoutes.js:225",
+      "provider:aeko-chain:3e069ed039ff",
+      "provider:aeko-chain:943876a6267f",
+      "provider:aeko-chain:3fba2256071c"
+    ],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "routes/walletRoutes.js",
+        "line": 151
+      }
+    ],
+    "legacyBehavior": "Wallet history calls an explorer method that does not provide the documented history contract.",
+    "replacementBehavior": "The supported explorer history API is used through a typed adapter.",
+    "reason": "The incompatible method call fails or returns the wrong shape.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:health-route-drift",
+    "capabilityIds": [],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "swagger.js",
+        "line": 769
+      }
+    ],
+    "legacyBehavior": "Swagger documents a health route that the Express router does not mount.",
+    "replacementBehavior": "Nest exposes explicit liveness and readiness endpoints.",
+    "reason": "Operational documentation must describe executable routes.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:nonexistent-prisma-models",
+    "capabilityIds": [
+      "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72",
+      "rest:POST:/api/community-profiles/:id/upload-photo:routes/communityProfileRoutes.js:128",
+      "rest:PUT:/api/community-profiles/:id/settings:routes/communityProfileRoutes.js:199",
+      "rest:POST:/api/community-profiles/:id/follow:routes/communityProfileRoutes.js:248",
+      "rest:POST:/api/community-profiles/:id/unfollow:routes/communityProfileRoutes.js:280",
+      "rest:POST:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:329",
+      "rest:GET:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:384"
+    ],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "routes/communityProfileRoutes.js",
+        "line": 12
+      }
+    ],
+    "legacyBehavior": "Some legacy handlers reference Prisma delegates absent from the schema.",
+    "replacementBehavior": "Handlers use only generated delegates or explicit compatible repositories.",
+    "reason": "A nonexistent model delegate causes deterministic runtime failure.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:post-chain-ownership",
+    "capabilityIds": [
+      "rest:POST:/api/posts/:postId/not-interested:routes/postRoutes.js:83",
+      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
+      "rest:GET:/api/posts/user/bookmarks:routes/postRoutes.js:195",
+      "rest:GET:/api/posts/user/liked:routes/postRoutes.js:247",
+      "rest:POST:/api/posts/create:routes/postRoutes.js:297",
+      "rest:PUT:/api/posts/:postId:routes/postRoutes.js:404",
+      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464",
+      "rest:GET:/api/posts/search:routes/postRoutes.js:526",
+      "rest:GET:/api/posts/feed:routes/postRoutes.js:564",
+      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
+      "rest:POST:/api/posts/:postId/view:routes/postRoutes.js:765",
+      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
+      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
+      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939",
+      "rest:GET:/api/posts/user/:userId:routes/postRoutes.js:975",
+      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
+      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
+      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
+      "rest:DELETE:/api/posts/:id:routes/postRoutes.js:1173",
+      "rest:POST:/api/posts/:postId/anchor:routes/postRoutes.js:1246",
+      "rest:POST:/api/posts/:postId/mint-as-nft:routes/postRoutes.js:1393",
+      "rest:GET:/api/posts/:postId/verify:routes/postRoutes.js:1447",
+      "provider:cloudinary-media:5e7ac0957582",
+      "provider:aeko-chain:250b5b84da91",
+      "provider:aeko-chain:ed1ca9f1bba8",
+      "provider:aeko-chain:58bbb90584ad",
+      "provider:aeko-chain:1e14b54a1f71",
+      "provider:aeko-chain:33f769a2058c",
+      "provider:ipfs:1633e319d7f1"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 1434
+      }
+    ],
+    "legacyBehavior": "Post anchoring and mint preparation do not consistently enforce post/signing ownership.",
+    "replacementBehavior": "Authenticated post ownership and signing-address binding are required.",
+    "reason": "Chain preparation must not authorize another user’s content or address.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:prisma-imports",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93",
+      "provider:stripe:27be3542a7ac",
+      "provider:paystack:2d945d5f31cc",
+      "provider:paystack:1e6fbea184c5"
+    ],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "routes/webhookRoutes.js",
+        "line": 4
+      }
+    ],
+    "legacyBehavior": "Some webhook and community-profile paths use incompatible Prisma imports.",
+    "replacementBehavior": "All migrated handlers inject the single typed Prisma service.",
+    "reason": "Incorrect import shapes fail deterministically at runtime.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:raw-error-disclosure",
+    "capabilityIds": [
+      "rest:POST:/api/posts/:postId/not-interested:routes/postRoutes.js:83",
+      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
+      "rest:GET:/api/posts/user/bookmarks:routes/postRoutes.js:195",
+      "rest:GET:/api/posts/user/liked:routes/postRoutes.js:247",
+      "rest:POST:/api/posts/create:routes/postRoutes.js:297",
+      "rest:PUT:/api/posts/:postId:routes/postRoutes.js:404",
+      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464",
+      "rest:GET:/api/posts/search:routes/postRoutes.js:526",
+      "rest:GET:/api/posts/feed:routes/postRoutes.js:564",
+      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
+      "rest:POST:/api/posts/:postId/view:routes/postRoutes.js:765",
+      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
+      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
+      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939",
+      "rest:GET:/api/posts/user/:userId:routes/postRoutes.js:975",
+      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
+      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
+      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
+      "rest:DELETE:/api/posts/:id:routes/postRoutes.js:1173",
+      "rest:POST:/api/posts/:postId/anchor:routes/postRoutes.js:1246",
+      "rest:POST:/api/posts/:postId/mint-as-nft:routes/postRoutes.js:1393",
+      "rest:GET:/api/posts/:postId/verify:routes/postRoutes.js:1447",
+      "provider:cloudinary-media:5e7ac0957582",
+      "provider:aeko-chain:250b5b84da91",
+      "provider:aeko-chain:ed1ca9f1bba8",
+      "provider:aeko-chain:58bbb90584ad",
+      "provider:aeko-chain:1e14b54a1f71",
+      "provider:aeko-chain:33f769a2058c",
+      "provider:ipfs:1633e319d7f1"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 399
+      }
+    ],
+    "legacyBehavior": "Some handlers return raw internal exception messages.",
+    "replacementBehavior": "The global exception filter returns stable safe errors with correlation IDs.",
+    "reason": "Internal errors can expose implementation and provider details.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:security-headers",
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "server.js",
+        "line": 6
+      }
+    ],
+    "legacyBehavior": "Helmet is imported but not installed as active middleware.",
+    "replacementBehavior": "Compatible Helmet security headers are installed globally.",
+    "reason": "The runtime should apply the security headers its dependency implies.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:shadowed-post-routes",
+    "capabilityIds": [
+      "rest:POST:/api/posts/:postId/not-interested:routes/postRoutes.js:83",
+      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
+      "rest:GET:/api/posts/user/bookmarks:routes/postRoutes.js:195",
+      "rest:GET:/api/posts/user/liked:routes/postRoutes.js:247",
+      "rest:POST:/api/posts/create:routes/postRoutes.js:297",
+      "rest:PUT:/api/posts/:postId:routes/postRoutes.js:404",
+      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464",
+      "rest:GET:/api/posts/search:routes/postRoutes.js:526",
+      "rest:GET:/api/posts/feed:routes/postRoutes.js:564",
+      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
+      "rest:POST:/api/posts/:postId/view:routes/postRoutes.js:765",
+      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
+      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
+      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939",
+      "rest:GET:/api/posts/user/:userId:routes/postRoutes.js:975",
+      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
+      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
+      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
+      "rest:DELETE:/api/posts/:id:routes/postRoutes.js:1173",
+      "rest:POST:/api/posts/:postId/anchor:routes/postRoutes.js:1246",
+      "rest:POST:/api/posts/:postId/mint-as-nft:routes/postRoutes.js:1393",
+      "rest:GET:/api/posts/:postId/verify:routes/postRoutes.js:1447",
+      "provider:cloudinary-media:5e7ac0957582",
+      "provider:aeko-chain:250b5b84da91",
+      "provider:aeko-chain:ed1ca9f1bba8",
+      "provider:aeko-chain:58bbb90584ad",
+      "provider:aeko-chain:1e14b54a1f71",
+      "provider:aeko-chain:33f769a2058c",
+      "provider:ipfs:1633e319d7f1"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 83
+      }
+    ],
+    "legacyBehavior": "Duplicate method/path declarations in post routing shadow later handlers.",
+    "replacementBehavior": "One reviewed Nest owner implements each effective post method/path contract.",
+    "reason": "Declaration shadowing makes later code unreachable or ambiguous.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:subscription-expiry-email",
+    "capabilityIds": [
+      "provider:email:d62f64af5dee"
+    ],
+    "category": "runtime",
+    "legacyEvidence": [
+      {
+        "file": "jobs/subscriptionExpirationNotifications.js",
+        "line": 64
+      }
+    ],
+    "legacyBehavior": "Subscription expiry invokes an email path with a known incompatible service contract.",
+    "replacementBehavior": "The scheduled job calls the typed email provider with its supported contract.",
+    "reason": "The current invocation can fail instead of notifying expiring subscribers.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:wallet-ownership-proof",
+    "capabilityIds": [
+      "rest:POST:/api/wallet/link:routes/walletRoutes.js:51",
+      "rest:DELETE:/api/wallet/link:routes/walletRoutes.js:83",
+      "rest:GET:/api/wallet/:address/balance:routes/walletRoutes.js:118",
+      "rest:GET:/api/wallet/:address/history:routes/walletRoutes.js:147",
+      "rest:GET:/api/wallet/:address/nfts:routes/walletRoutes.js:180",
+      "rest:POST:/api/wallet/prepare-transfer:routes/walletRoutes.js:225",
+      "provider:aeko-chain:3e069ed039ff",
+      "provider:aeko-chain:943876a6267f",
+      "provider:aeko-chain:3fba2256071c"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/walletRoutes.js",
+        "line": 53
+      }
+    ],
+    "legacyBehavior": "A user can bind a supplied wallet address without proving control of it.",
+    "replacementBehavior": "Wallet binding requires nonce-based ownership proof tied to the authenticated user.",
+    "reason": "Unproven address binding creates asset and identity risk.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:webhook-verification",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93",
+      "provider:stripe:27be3542a7ac",
+      "provider:paystack:2d945d5f31cc",
+      "provider:paystack:1e6fbea184c5"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/webhookRoutes.js",
+        "line": 47
+      }
+    ],
+    "legacyBehavior": "Webhook verification lacks complete idempotency and replay protection.",
+    "replacementBehavior": "Raw-body signatures, event identity, idempotency, and replay windows are enforced.",
+    "reason": "Payment side effects must be authentic and exactly-once at the application boundary.",
+    "status": "approved"
+  }
+]
