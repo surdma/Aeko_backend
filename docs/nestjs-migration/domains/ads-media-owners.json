@@ -1,0 +1,18 @@
+{
+  "model:model:Ad": ["ads"],
+  "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689": ["ads"],
+  "rest:GET:/api/ads/:adId/analytics:routes/adRoutes.js:685": ["ads"],
+  "rest:GET:/api/ads/admin/review:routes/adRoutes.js:692": ["ads"],
+  "rest:GET:/api/ads/dashboard:routes/adRoutes.js:679": ["ads"],
+  "rest:GET:/api/ads/targeted:routes/adRoutes.js:678": ["ads"],
+  "rest:GET:/api/ads:routes/adRoutes.js:677": ["ads"],
+  "rest:POST:/api/ads/admin/review/:adId:routes/adRoutes.js:693": ["ads"],
+  "rest:POST:/api/ads/track-view:routes/adRoutes.js:696": ["ads"],
+  "rest:POST:/api/ads/track/click:routes/adRoutes.js:683": ["ads"],
+  "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684": ["ads"],
+  "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682": ["ads"],
+  "rest:POST:/api/ads:routes/adRoutes.js:676": ["ads"],
+  "rest:POST:/api/photo/edit:routes/photoEdit.js:8": ["media-processing"],
+  "rest:POST:/api/video/edit:routes/videoEdit.js:8": ["media-processing"],
+  "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688": ["ads"]
+}
