@@ -16,7 +16,9 @@
   },
   {
     "id": "correction:blocking-privacy-order",
-    "capabilityIds": ["provider:google-oauth:b484b527785d"],
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
     "category": "security",
     "legacyEvidence": [
       {
@@ -69,7 +71,9 @@
   },
   {
     "id": "correction:environment-load-order",
-    "capabilityIds": ["provider:google-oauth:b484b527785d"],
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
     "category": "runtime",
     "legacyEvidence": [
       {
@@ -188,7 +192,7 @@
     ],
     "legacyBehavior": "Post anchoring and mint preparation do not consistently enforce post/signing ownership.",
     "replacementBehavior": "Authenticated post ownership and signing-address binding are required.",
-    "reason": "Chain preparation must not authorize another user’s content or address.",
+    "reason": "Chain preparation must not authorize another userâ€™s content or address.",
     "status": "approved"
   },
   {
@@ -260,7 +264,9 @@
   },
   {
     "id": "correction:security-headers",
-    "capabilityIds": ["provider:google-oauth:b484b527785d"],
+    "capabilityIds": [
+      "provider:google-oauth:b484b527785d"
+    ],
     "category": "security",
     "legacyEvidence": [
       {
@@ -321,7 +327,9 @@
   },
   {
     "id": "correction:subscription-expiry-email",
-    "capabilityIds": ["provider:email:d62f64af5dee"],
+    "capabilityIds": [
+      "provider:email:d62f64af5dee"
+    ],
     "category": "runtime",
     "legacyEvidence": [
       {
@@ -434,6 +442,96 @@
     "legacyBehavior": "Express owns duplicated Passport Google callbacks, bcrypt/JWT credential flows, verification codes, reset tokens, token cookies, and handwritten two-factor/session middleware.",
     "replacementBehavior": "Better Auth exclusively owns /api/auth/** with native email/password, conditional Google, bearer, two-factor, verification, reset, cookie, and session contracts; Nest authorization consumes only immutable typed principals.",
     "reason": "One native protocol owner removes duplicated credential logic, prevents partial two-factor principals, preserves CSRF/origin defenses, and revokes sessions after password reset.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:ad-status-column",
+    "capabilityIds": [
+      "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
+      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688",
+      "model:model:Ad"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 695
+      },
+      {
+        "file": "controllers/adController.js",
+        "line": 851
+      }
+    ],
+    "legacyBehavior": "Deletion and the dashboard read ad.status, a field that does not exist on the row, so running ads were always deletable and every dashboard bucket collapsed into one undefined key.",
+    "replacementBehavior": "Every read and write goes through the canonical Status column at a single Prisma boundary.",
+    "reason": "The guard and the dashboard breakdown must act on the value actually stored.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:ad-tracking-concurrency",
+    "capabilityIds": [
+      "rest:POST:/api/ads/track-view:routes/adRoutes.js:696",
+      "rest:POST:/api/ads/track/click:routes/adRoutes.js:683",
+      "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684",
+      "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 374
+      },
+      {
+        "file": "controllers/adController.js",
+        "line": 450
+      }
+    ],
+    "legacyBehavior": "Analytics counters and budget were read outside any transaction and written back whole, losing concurrent increments; budget exhaustion assigned the lowercase status field, which Prisma rejects, so an exhausted ad errored instead of completing.",
+    "replacementBehavior": "Counter updates re-read inside a Serializable transaction with up to three P2034 retries, and completion is written through Status.",
+    "reason": "Impression, click, and conversion counts drive billing and must not be lost or error on exhaustion.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:ad-update-allowlist",
+    "capabilityIds": [
+      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 654
+      }
+    ],
+    "legacyBehavior": "The raw request body was forwarded to prisma.ad.update, so a caller could overwrite advertiserId, analytics, and review state.",
+    "replacementBehavior": "Updates are parsed against a strict allowlist that names any rejected field.",
+    "reason": "Ownership, analytics, and review state must not be caller-writable.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:media-editing-authentication",
+    "capabilityIds": [
+      "rest:POST:/api/photo/edit:routes/photoEdit.js:8",
+      "rest:POST:/api/video/edit:routes/videoEdit.js:8"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "server.js",
+        "line": 139
+      },
+      {
+        "file": "controllers/photoEditController.js",
+        "line": 63
+      },
+      {
+        "file": "controllers/videoEditController.js",
+        "line": 16
+      }
+    ],
+    "legacyBehavior": "Photo and video editing were mounted without authentication, accepted unbounded uploads validated only by declared MIME type, derived output names from the uploaded filename, wrote them synchronously, and returned raw Sharp and FFmpeg errors including absolute paths.",
+    "replacementBehavior": "Both routes require a session, bound uploads at 10 MiB and 100 MiB, verify magic bytes against the declared type, generate random output names under one configured root, invoke FFmpeg with shell:false and a fixed argument array under a 60-second timeout, and return a fixed unavailable message.",
+    "reason": "Anonymous callers must not be able to spend CPU, memory, and disk or learn server paths.",
     "status": "approved"
   }
 ]

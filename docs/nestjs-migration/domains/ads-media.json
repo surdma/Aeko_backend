@@ -24,14 +24,15 @@
   ],
   "nestModules": [
     "ads",
-    "photo-editing",
-    "video-editing",
-    "uploads",
-    "media",
-    "ipfs"
+    "media-processing"
   ],
   "providerPorts": [],
-  "corrections": [],
+  "corrections": [
+    "correction:ad-status-column",
+    "correction:ad-tracking-concurrency",
+    "correction:ad-update-allowlist",
+    "correction:media-editing-authentication"
+  ],
   "cutoverUnit": [
     "model:model:Ad",
     "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
@@ -51,6 +52,13 @@
     "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
   ],
   "risk": "high",
+  "migration": {
+    "status": "implemented",
+    "assigned": 16,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  },
   "specialistReview": [
     "backend",
     "security"

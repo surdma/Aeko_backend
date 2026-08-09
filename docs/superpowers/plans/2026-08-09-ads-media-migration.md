@@ -215,7 +215,7 @@ Expected: authentication, limits, signatures, allowlists, cleanup, timeouts, pro
 
 **Interfaces:** Produces auditable 16/16 closure and zero Express-style ad/media implementation.
 
-- [ ] **Step 1: Write cutover RED**
+- [x] **Step 1: Write cutover RED**
 
 ```ts
 expect(routeSet).toEqual(expectedFifteenRoutes);
@@ -224,11 +224,11 @@ expect(source).not.toMatch(/data:\s*\{[^}]*\bstatus\s*:/); // Prisma writes use 
 expect(source).not.toMatch(/writeFileSync|multer\(\{\s*dest|shell:\s*true/);
 ```
 
-- [ ] **Step 2: Complete correction and client documentation**
+- [x] **Step 2: Complete correction and client documentation**
 
 Document canonical `Status`, atomic analytics, authenticated editing, upload/processor limits, client error/response compatibility, and the retained `/track-view` alias. Mark the manifest implemented at 16/16 without claiming programme completion.
 
-- [ ] **Step 3: Run domain and foundation gates**
+- [x] **Step 3: Run domain and foundation gates**
 
 ```powershell
 .\node_modules\.bin\jest.cmd --runInBand --config test/ads-media/jest.config.json

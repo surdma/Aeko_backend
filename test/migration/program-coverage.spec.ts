@@ -86,6 +86,8 @@ const KNOWN_NEST_MODULES = new Set([
   'ads',
   'photo-editing',
   'video-editing',
+  // The approved ads-media plan serves both editing routes from one module.
+  'media-processing',
   'uploads',
   'media',
   'ipfs',
