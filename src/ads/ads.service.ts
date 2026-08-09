@@ -6,6 +6,7 @@ import { PrismaService } from '../database/prisma/prisma.service';
 import {
   parseAdCreate,
   parseAdUpdate,
+  parseTrackEvent,
   type AdAnalyticsView,
   type AdDashboard,
   type AdDashboardEntry,
@@ -23,11 +24,31 @@ import {
   toJsonValue,
   type AdPrismaClient,
   type AdRecord,
+  type AdTransactionClient,
   type AdViewerRecord,
   type AdWriteData,
 } from './ad-prisma.client';
 
 const DAY_IN_MILLISECONDS = 1000 * 60 * 60 * 24;
+
+export interface ImpressionResult {
+  readonly impressions: number;
+  readonly ctr: number;
+  readonly reach: number;
+}
+
+export interface ClickResult {
+  readonly clicks: number;
+  readonly ctr: number;
+  readonly budgetSpent: number;
+  readonly remainingBudget: number;
+}
+
+export interface ConversionResult {
+  readonly conversions: number;
+  readonly conversionRate: number;
+  readonly budgetSpent: number;
+}
 
 /** Statuses an owner may move a running ad into without pausing it first. */
 const RUNNING_TRANSITIONS: readonly AdStatus[] = ['paused', 'running'];
@@ -106,6 +127,120 @@ export class AdsService {
     return Object.freeze({
       ads: Object.freeze(eligible.map((record) => projectAd(record, now))),
       count: eligible.length,
+    });
+  }
+
+  trackImpression(
+    principal: AuthenticatedPrincipal,
+    body: unknown,
+  ): Promise<ImpressionResult> {
+    void principal;
+    const event = parseTrackEvent(body);
+    return this.ads.runSerializable(async (transaction) => {
+      const record = await requireRunning(transaction, event.adId);
+      const analytics = asObject(record.analytics);
+      const impressions = numberOf(analytics.impressions) + 1;
+      const reach = numberOf(analytics.reach) + 1;
+      const clicks = numberOf(analytics.clicks);
+      const ctr = ratio(clicks, impressions);
+      const next: Record<string, JsonValue> = {
+        ...analytics,
+        impressions,
+        reach,
+        clicks,
+        ctr,
+        frequency: round(impressions / reach, 2),
+        demographics: withAgeBucket(analytics.demographics, event.metadata),
+      };
+      // CPM is charged per thousand impressions, so only the thousandth
+      // impression in a batch draws down the budget.
+      const charge =
+        pricingModel(record) === 'cpm' && impressions % 1000 === 0
+          ? bidAmount(record)
+          : 0;
+      const budget = chargeBudget(record, charge);
+      await transaction.update(
+        event.adId,
+        { analytics: next, budget },
+        completionStatus(budget),
+      );
+      return Object.freeze({ impressions, ctr, reach });
+    });
+  }
+
+  /** Legacy alias: `/api/ads/track-view` has always been an impression. */
+  trackView(
+    principal: AuthenticatedPrincipal,
+    body: unknown,
+  ): Promise<ImpressionResult> {
+    return this.trackImpression(principal, body);
+  }
+
+  trackClick(
+    principal: AuthenticatedPrincipal,
+    body: unknown,
+  ): Promise<ClickResult> {
+    void principal;
+    const event = parseTrackEvent(body);
+    return this.ads.runSerializable(async (transaction) => {
+      const record = await requireRunning(transaction, event.adId);
+      const analytics = asObject(record.analytics);
+      const clicks = numberOf(analytics.clicks) + 1;
+      const impressions = numberOf(analytics.impressions);
+      const ctr = ratio(clicks, impressions);
+      const next: Record<string, JsonValue> = {
+        ...analytics,
+        clicks,
+        impressions,
+        ctr,
+      };
+      const charge = pricingModel(record) === 'cpc' ? bidAmount(record) : 0;
+      const budget = chargeBudget(record, charge);
+      await transaction.update(
+        event.adId,
+        { analytics: next, budget },
+        completionStatus(budget),
+      );
+      const spent = numberOf(budget.spent);
+      return Object.freeze({
+        clicks,
+        ctr,
+        budgetSpent: spent,
+        remainingBudget: numberOf(budget.total) - spent,
+      });
+    });
+  }
+
+  trackConversion(
+    principal: AuthenticatedPrincipal,
+    body: unknown,
+  ): Promise<ConversionResult> {
+    void principal;
+    const event = parseTrackEvent(body);
+    return this.ads.runSerializable(async (transaction) => {
+      const record = await requireRunning(transaction, event.adId);
+      const analytics = asObject(record.analytics);
+      const conversions = numberOf(analytics.conversions) + 1;
+      const clicks = numberOf(analytics.clicks);
+      const conversionRate = ratio(conversions, clicks);
+      const next: Record<string, JsonValue> = {
+        ...analytics,
+        conversions,
+        clicks,
+        conversionRate,
+      };
+      const charge = pricingModel(record) === 'cpa' ? bidAmount(record) : 0;
+      const budget = chargeBudget(record, charge);
+      await transaction.update(
+        event.adId,
+        { analytics: next, budget },
+        completionStatus(budget),
+      );
+      return Object.freeze({
+        conversions,
+        conversionRate,
+        budgetSpent: numberOf(budget.spent),
+      });
     });
   }
 
@@ -289,6 +424,87 @@ export class AdsService {
     return record;
   }
 }
+
+const requireRunning = async (
+  transaction: AdTransactionClient,
+  adId: string,
+): Promise<AdRecord> => {
+  const record = await transaction.findById(adId);
+  if (record === null) {
+    throw new DomainError('NOT_FOUND', 'Advertisement not found.');
+  }
+  if (record.status !== 'running') {
+    throw new DomainError(
+      'VALIDATION_FAILED',
+      'That advertisement is not currently running.',
+    );
+  }
+  return record;
+};
+
+const pricingModel = (record: AdRecord): string =>
+  stringOf(asObject(record.pricing).model, 'cpm');
+
+const chargeBudget = (
+  record: AdRecord,
+  charge: number,
+): Readonly<Record<string, JsonValue>> => {
+  const budget = asObject(record.budget);
+  return Object.freeze({
+    ...budget,
+    total: numberOf(budget.total),
+    spent: numberOf(budget.spent) + charge,
+  });
+};
+
+/**
+ * Legacy wrote the lowercase `status` field here, which Prisma does not know:
+ * an exhausted budget raised an unknown-argument error instead of completing
+ * the ad. Completion now goes through the canonical column.
+ */
+const completionStatus = (
+  budget: Readonly<Record<string, JsonValue>>,
+): AdStatus | null =>
+  numberOf(budget.spent) >= numberOf(budget.total) ? 'completed' : null;
+
+/** Legacy stored these as `toFixed(2)` strings; they are numbers here. */
+const ratio = (numerator: number, denominator: number): number =>
+  denominator > 0 ? round((numerator / denominator) * 100, 2) : 0;
+
+const AGE_BUCKETS: readonly (readonly [number, string])[] = [
+  [17, 'under-18'],
+  [24, '18-24'],
+  [34, '25-34'],
+  [44, '35-44'],
+  [54, '45-54'],
+  [64, '55-64'],
+];
+
+const ageRange = (age: number): string =>
+  AGE_BUCKETS.find(([ceiling]) => age <= ceiling)?.[1] ?? '65+';
+
+const withAgeBucket = (
+  demographics: JsonValue | undefined,
+  metadata: Readonly<Record<string, string | number | boolean>>,
+): JsonValue => {
+  const current = asObject(demographics);
+  const age = metadata.age;
+  if (typeof age !== 'number' || !Number.isFinite(age)) {
+    return Object.freeze({ ...current });
+  }
+  const range = ageRange(age);
+  const buckets = Array.isArray(current.age) ? current.age : [];
+  const existing = buckets.filter(isJsonObject);
+  const matched = existing.some((bucket) => bucket.range === range);
+  const next = matched
+    ? existing.map((bucket) =>
+        bucket.range === range
+          ? { ...bucket, count: numberOf(bucket.count) + 1 }
+          : bucket,
+      )
+    : [...existing, { range, count: 1 }];
+  return Object.freeze({ ...current, age: Object.freeze(next) });
+};
 
 const topPerformers = (
   records: readonly AdRecord[],

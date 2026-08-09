@@ -26,7 +26,12 @@ import {
   type AdView,
   type TargetedAds,
 } from './ad.contract';
-import { AdsService } from './ads.service';
+import {
+  AdsService,
+  type ClickResult,
+  type ConversionResult,
+  type ImpressionResult,
+} from './ads.service';
 
 @Controller('api/ads')
 @UseGuards(SessionGuard)
@@ -64,6 +69,43 @@ export class AdsController {
     @Query() query: unknown,
   ): Promise<AdDashboard> {
     return this.ads.dashboard(principal, parseDashboardQuery(query));
+  }
+
+  @Post('track/impression')
+  @HttpCode(HttpStatus.OK)
+  trackImpression(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Body() body: unknown,
+  ): Promise<ImpressionResult> {
+    return this.ads.trackImpression(principal, body);
+  }
+
+  @Post('track/click')
+  @HttpCode(HttpStatus.OK)
+  trackClick(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Body() body: unknown,
+  ): Promise<ClickResult> {
+    return this.ads.trackClick(principal, body);
+  }
+
+  @Post('track/conversion')
+  @HttpCode(HttpStatus.OK)
+  trackConversion(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Body() body: unknown,
+  ): Promise<ConversionResult> {
+    return this.ads.trackConversion(principal, body);
+  }
+
+  /** Retained legacy alias; identical to `POST track/impression`. */
+  @Post('track-view')
+  @HttpCode(HttpStatus.OK)
+  trackView(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Body() body: unknown,
+  ): Promise<ImpressionResult> {
+    return this.ads.trackView(principal, body);
   }
 
   @Get(':adId/analytics')

@@ -54,8 +54,27 @@ export interface AdWriteData {
   readonly [key: string]: JsonValue | Date | readonly string[] | undefined;
 }
 
+/** The subset of the boundary that is safe to use inside a transaction. */
+export interface AdTransactionClient {
+  findById(id: string): Promise<AdRecord | null>;
+  update(
+    id: string,
+    data: AdWriteData,
+    status: AdStatus | null,
+  ): Promise<AdRecord>;
+}
+
 export interface AdPrismaClient {
   create(data: AdWriteData, status: AdStatus): Promise<AdRecord>;
+  /**
+   * Runs `operation` at `Serializable` isolation, retrying up to
+   * {@link SERIALIZABLE_ATTEMPTS} times when the database reports a write
+   * conflict (P2034). Counter updates read-modify-write JSON columns, so a
+   * weaker isolation level would silently lose concurrent increments.
+   */
+  runSerializable<T>(
+    operation: (transaction: AdTransactionClient) => Promise<T>,
+  ): Promise<T>;
   findById(id: string): Promise<AdRecord | null>;
   findOwned(query: OwnedAdQuery): Promise<readonly AdRecord[]>;
   countOwned(advertiserId: string, status: AdStatus | null): Promise<number>;
@@ -74,6 +93,34 @@ export interface AdPrismaClient {
   findViewer(id: string): Promise<AdViewerRecord | null>;
 }
 
+export const SERIALIZABLE_ATTEMPTS = 3;
+
+const WRITE_CONFLICT_CODE = 'P2034';
+
+const isWriteConflict = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  Reflect.get(error, 'code') === WRITE_CONFLICT_CODE;
+
+const adOperations = (delegate: object): AdTransactionClient => ({
+  async findById(id) {
+    const value = await invoke(delegate, 'findUnique', [
+      { where: { id }, include: advertiserInclude },
+    ]);
+    return value === null || value === undefined ? null : parseAdRecord(value);
+  },
+  async update(id, data, status) {
+    const value = await invoke(delegate, 'update', [
+      {
+        where: { id },
+        data: status === null ? { ...data } : { ...data, Status: status },
+        include: advertiserInclude,
+      },
+    ]);
+    return parseAdRecord(value);
+  },
+});
+
 export const createAdPrismaClient = (client: object): AdPrismaClient => {
   const adDelegate = readObject(client, 'ad');
   const userDelegate = readObject(client, 'user');
@@ -91,6 +138,37 @@ export const createAdPrismaClient = (client: object): AdPrismaClient => {
         { data: { ...data, Status: status }, include: advertiserInclude },
       ]);
       return parseAdRecord(value);
+    },
+    async runSerializable<T>(
+      operation: (transaction: AdTransactionClient) => Promise<T>,
+    ): Promise<T> {
+      requireMethod(client, '$transaction');
+      for (let attempt = 0; attempt < SERIALIZABLE_ATTEMPTS; attempt += 1) {
+        // Captured in a box rather than read from the `$transaction` return
+        // value, which is untyped at this boundary.
+        const captured: { readonly value: T }[] = [];
+        try {
+          await invoke(client, '$transaction', [
+            async (transaction: unknown) => {
+              const scope = requireObject(transaction, 'transaction');
+              captured.push({
+                value: await operation(adOperations(readObject(scope, 'ad'))),
+              });
+            },
+            { isolationLevel: 'Serializable' },
+          ]);
+        } catch (error: unknown) {
+          if (!isWriteConflict(error)) throw error;
+          continue;
+        }
+        const [result] = captured;
+        if (result === undefined) invalidResult('transaction');
+        return result.value;
+      }
+      throw new DomainError(
+        'CONFLICT',
+        'That advertisement is being updated. Please try again.',
+      );
     },
     async findById(id) {
       const value = await invoke(adDelegate, 'findUnique', [

@@ -139,7 +139,7 @@ Expected: exact routes, ownership, 2FA deletion, targeting, dashboard, and safe 
 
 **Interfaces:** Produces `trackImpression`, `trackClick`, `trackConversion`, and legacy alias `trackView`, using `Serializable` transactions and P2034 retry at most three attempts.
 
-- [ ] **Step 1: Write tracking RED**
+- [x] **Step 1: Write tracking RED**
 
 ```ts
 await expect(Promise.all([service.track('impression', input), service.track('impression', input)])).resolves.toEqual([
@@ -150,15 +150,15 @@ expect(transactionOptions).toContainEqual({ isolationLevel: 'Serializable' });
 expect(attemptsAfterTwoP2034Failures).toBe(3);
 ```
 
-- [ ] **Step 2: Run tracking RED**
+- [x] **Step 2: Run tracking RED**
 
 Expected: FAIL on missing transactional tracking.
 
-- [ ] **Step 3: Implement atomic counter/budget transitions**
+- [x] **Step 3: Implement atomic counter/budget transitions**
 
 Re-read inside each transaction, require `Status === 'running'` for impressions/clicks/conversions, update JSON analytics and budget without mutation, calculate numeric CTR/conversion/frequency, charge CPM each 1000th impression and CPC/CPA once per request, and set canonical `Status: 'completed'` when exhausted. `/track-view` invokes the same impression method.
 
-- [ ] **Step 4: Run tracking GREEN**
+- [x] **Step 4: Run tracking GREEN**
 
 Expected: concurrent, retry, status, budget, malformed JSON, and sanitized failure tests pass.
 
