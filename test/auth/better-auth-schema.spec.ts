@@ -1,12 +1,12 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const workspace = process.cwd();
 const paths = {
-  config: path.resolve(workspace, 'src', 'lib', 'auth', 'auth.schema.ts'),
-  generated: path.resolve(workspace, 'prisma', 'better-auth.generated.prisma'),
-  target: path.resolve(workspace, 'prisma', 'schema.prisma'),
-  migration: path.resolve(
+  config: resolve(workspace, 'src', 'lib', 'auth', 'auth.schema.ts'),
+  generated: resolve(workspace, 'prisma', 'better-auth.generated.prisma'),
+  target: resolve(workspace, 'prisma', 'schema.prisma'),
+  migration: resolve(
     workspace,
     'prisma',
     'migrations',
@@ -15,13 +15,13 @@ const paths = {
   ),
 };
 
-function read(filePath) {
-  return fs.existsSync(filePath)
-    ? fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
+function read(filePath: string): string {
+  return existsSync(filePath)
+    ? readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
     : '';
 }
 
-function modelBlock(schema, name) {
+function modelBlock(schema: string, name: string): string {
   return (
     schema.match(
       new RegExp(`^model\\s+${name}\\s*\\{([\\s\\S]*?)^\\}`, 'm'),
@@ -29,11 +29,11 @@ function modelBlock(schema, name) {
   );
 }
 
-function fieldNames(block) {
+function fieldNames(block: string): string[] {
   return block
     .split('\n')
     .map((line) => line.trim().match(/^(\w+)\s/)?.[1])
-    .filter(Boolean);
+    .filter((fieldName): fieldName is string => fieldName !== undefined);
 }
 
 describe('native Better Auth schema provenance', () => {
@@ -44,7 +44,7 @@ describe('native Better Auth schema provenance', () => {
   const cliProvenanceTest = generated ? test : test.skip;
 
   test('uses an isolated Aeko schema-only Better Auth configuration', () => {
-    expect(config).toContain('appName: "Aeko"');
+    expect(config).toMatch(/appName:\s*['"]Aeko['"]/);
     expect(config).toMatch(/prismaAdapter\s*\(/);
     expect(config).toMatch(/emailAndPassword:\s*\{\s*enabled:\s*true/s);
     expect(config).toMatch(/socialProviders:[\s\S]*google/);

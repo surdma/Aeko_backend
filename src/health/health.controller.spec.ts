@@ -6,11 +6,12 @@ describe('HealthController', () => {
   it('returns the liveness contract', async () => {
     const health = {
       liveness: () => ({ success: true, status: 'live' }),
-      readiness: async () => ({
-        success: true,
-        status: 'ready',
-        checks: { database: 'up' },
-      }),
+      readiness: () =>
+        Promise.resolve({
+          success: true,
+          status: 'ready',
+          checks: { database: 'up' },
+        }),
     };
     const module: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],

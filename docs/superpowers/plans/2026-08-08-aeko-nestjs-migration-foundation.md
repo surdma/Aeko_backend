@@ -26,6 +26,7 @@
 ### Task 1: Repair And Lock The Project Toolchain
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `pnpm-lock.yaml`
 - Modify: `tsconfig.json`
@@ -39,6 +40,7 @@
 - Create: `test/jest-tooling.json`
 
 **Interfaces:**
+
 - Consumes: the generated NestJS scaffold and installed Node.js 24 runtime
 - Produces: `pnpm typecheck`, `pnpm lint`, `pnpm prisma:validate`, `pnpm build`, `pnpm verify:fast`, and an exact Nest CLI command ledger
 
@@ -60,7 +62,9 @@ expect(compilerOptions.noUncheckedIndexedAccess).toBe(true);
 expect(compilerOptions.noImplicitOverride).toBe(true);
 expect(compilerOptions.noImplicitReturns).toBe(true);
 expect(eslintSource).toContain("'@typescript-eslint/no-explicit-any': 'error'");
-expect(eslintSource).toContain("'@typescript-eslint/no-non-null-assertion': 'error'");
+expect(eslintSource).toContain(
+  "'@typescript-eslint/no-non-null-assertion': 'error'",
+);
 ```
 
 - [ ] **Step 2: Run the assertion and confirm the scaffold is RED**
@@ -141,6 +145,7 @@ git commit -m "build: lock strict NestJS migration toolchain"
 ### Task 2: Create The Machine-Checkable Legacy Capability Inventory
 
 **Files:**
+
 - Create: `scripts/inventory/legacy-source.ts`
 - Create: `scripts/inventory/extract-rest.ts`
 - Create: `scripts/inventory/extract-sockets.ts`
@@ -154,6 +159,7 @@ git commit -m "build: lock strict NestJS migration toolchain"
 - Create: `test/migration/inventory.spec.ts`
 
 **Interfaces:**
+
 - Consumes: legacy `server.js`, mounted `routes/**/*.js`, `sockets/**/*.js`, `jobs/**/*.js`, and `prisma/schema.prisma`
 - Produces: `CapabilityInventory` with stable identifiers for REST routes, socket events, jobs, models, providers, inactive code, and known corrections
 
@@ -162,8 +168,10 @@ git commit -m "build: lock strict NestJS migration toolchain"
 Use these discriminated interfaces without `any`:
 
 ```typescript
-type CapabilityKind = 'rest' | 'socket' | 'job' | 'model' | 'provider' | 'inactive';
-type MigrationStatus = 'legacy' | 'planned' | 'implemented' | 'verified' | 'inactive';
+type CapabilityKind =
+  'rest' | 'socket' | 'job' | 'model' | 'provider' | 'inactive';
+type MigrationStatus =
+  'legacy' | 'planned' | 'implemented' | 'verified' | 'inactive';
 
 interface SourceLocation {
   readonly file: string;
@@ -247,6 +255,7 @@ git commit -m "docs: inventory legacy Aeko capabilities"
 ### Task 3: Restore The Domain Prisma Contract And Generate Official Better Auth Storage
 
 **Files:**
+
 - Replace: `prisma/schema.prisma`
 - Regenerate: `prisma/generated/**`
 - Create: `prisma/migrations/20260808_add_better_auth_compatibility/migration.sql`
@@ -257,6 +266,7 @@ git commit -m "docs: inventory legacy Aeko capabilities"
 - Create: `test/auth/better-auth-schema.spec.ts`
 
 **Interfaces:**
+
 - Consumes: the complete legacy Prisma schema and existing PostgreSQL table/column mappings
 - Produces: Prisma 7 generated client, preserved Aeko domain relations, and CLI-generated official Better Auth `User`, `Session`, `Account`, and `Verification` storage
 
@@ -327,6 +337,7 @@ git commit -m "feat: restore Aeko schema with Better Auth storage"
 ### Task 4: Build The Strict Nest Application Foundation
 
 **Files:**
+
 - Replace: `src/main.ts`
 - Replace: `src/app.module.ts`
 - Create via Nest CLI: `src/configuration/**`
@@ -338,6 +349,7 @@ git commit -m "feat: restore Aeko schema with Better Auth storage"
 - Create: `test/foundation/errors.spec.ts`
 
 **Interfaces:**
+
 - Produces: `createApplication(options: ApplicationOptions): Promise<INestApplication>`, `PrismaService`, `AppConfig`, `DomainError`, `GlobalExceptionFilter`, `RequestContext`, `/health/live`, and `/health/ready`
 
 - [ ] **Step 1: Generate the foundation artifacts using Nest CLI**
@@ -415,6 +427,7 @@ git commit -m "feat: establish strict NestJS application foundation"
 ### Task 5: Install Native Aeko Better Auth And Typed Authorization Boundaries
 
 **Files:**
+
 - Replace: `src/auth/**`
 - Replace: `src/lib/auth/**`
 - Modify: `package.json`
@@ -428,6 +441,7 @@ git commit -m "feat: establish strict NestJS application foundation"
 - Create: `test/auth/authorization.spec.ts`
 
 **Interfaces:**
+
 - Produces: Aeko Better Auth instance, native `/api/auth/**` handling, `AuthenticatedPrincipal`, anonymous/session guards, and ownership/role/2FA policies
 
 - [ ] **Step 1: Inventory legacy auth removal and client cutover**
@@ -497,6 +511,7 @@ git commit -m "feat: add Aeko Better Auth foundation"
 ### Task 6: Publish Dependency-Ordered Domain Migration Manifests
 
 **Files:**
+
 - Create: `docs/nestjs-migration/program.md`
 - Create: `docs/nestjs-migration/domains/auth-users-security.json`
 - Create: `docs/nestjs-migration/domains/content-social.json`
@@ -511,6 +526,7 @@ git commit -m "feat: add Aeko Better Auth foundation"
 - Create: `test/migration/program-coverage.spec.ts`
 
 **Interfaces:**
+
 - Consumes: the reviewed capability inventory, corrections register, Prisma types, Nest foundation, and auth interfaces
 - Produces: exactly one domain owner and implementation order for every active capability
 
@@ -529,7 +545,9 @@ interface DomainManifest {
   readonly corrections: readonly string[];
   readonly cutoverUnit: readonly string[];
   readonly risk: 'low' | 'medium' | 'high' | 'critical';
-  readonly specialistReview: readonly ('backend' | 'security' | 'payments' | 'blockchain' | 'realtime')[];
+  readonly specialistReview: readonly (
+    'backend' | 'security' | 'payments' | 'blockchain' | 'realtime'
+  )[];
 }
 ```
 

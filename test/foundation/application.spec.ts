@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import type { Server } from 'node:http';
 import request from 'supertest';
 import { createApplication, type ApplicationOptions } from '../../src/main';
 import { RequestContext } from '../../src/common/http/request-context/request-context.middleware';
@@ -41,11 +42,11 @@ class FakePrismaClient implements PrismaLifecycleClient {
     await this.disconnectPromise;
   }
 
-  async $queryRaw(_query: TemplateStringsArray): Promise<unknown> {
+  $queryRaw(): Promise<unknown> {
     if (this.readinessError) {
-      throw this.readinessError;
+      return Promise.reject(this.readinessError);
     }
-    return [{ ready: 1 }];
+    return Promise.resolve([{ ready: 1 }]);
   }
 
   releaseConnect(): void {
@@ -69,8 +70,64 @@ function applicationOptions(
   return {
     environment: validEnvironment,
     databaseClient,
+    authInitializer: () => Promise.resolve(),
     logger: false,
   };
+}
+
+function nodeHttpServer(application: INestApplication): Server {
+  const server: unknown = application.getHttpServer();
+  if (!isNodeHttpServer(server)) {
+    throw new Error('The Nest application did not expose a Node HTTP server.');
+  }
+  return server;
+}
+
+function isNodeHttpServer(value: unknown): value is Server {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    hasFunction(value, 'address') &&
+    hasFunction(value, 'close') &&
+    hasFunction(value, 'listen')
+  );
+}
+
+function hasFunction(value: object, key: string): boolean {
+  const property: unknown = Reflect.get(value, key);
+  return typeof property === 'function';
+}
+
+function responseBody(response: unknown): Readonly<Record<string, unknown>> {
+  return recordProperty(response, 'body');
+}
+
+function responseHeader(response: unknown, name: string): string | undefined {
+  const headers = recordProperty(response, 'headers');
+  const value = headers[name];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function responseBodyField(
+  response: unknown,
+  name: string,
+): string | undefined {
+  const value = responseBody(response)[name];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function recordProperty(
+  value: unknown,
+  key: string,
+): Readonly<Record<string, unknown>> {
+  if (typeof value !== 'object' || value === null) {
+    throw new Error(`Expected a response object with ${key}.`);
+  }
+  const property: unknown = Reflect.get(value, key);
+  if (typeof property !== 'object' || property === null) {
+    throw new Error(`Expected response ${key} to be an object.`);
+  }
+  return property;
 }
 
 describe('strict application foundation', () => {
@@ -158,19 +215,19 @@ describe('strict application foundation', () => {
     });
 
     it('reports liveness without querying dependencies', async () => {
-      const response = await request(application.getHttpServer())
+      const response = await request(nodeHttpServer(application))
         .get('/health/live')
         .expect(200);
 
-      expect(response.body).toEqual({ success: true, status: 'live' });
+      expect(responseBody(response)).toEqual({ success: true, status: 'live' });
     });
 
     it('reports readiness when the database responds', async () => {
-      const response = await request(application.getHttpServer())
+      const response = await request(nodeHttpServer(application))
         .get('/health/ready')
         .expect(200);
 
-      expect(response.body).toEqual({
+      expect(responseBody(response)).toEqual({
         success: true,
         status: 'ready',
         checks: { database: 'up' },
@@ -182,45 +239,55 @@ describe('strict application foundation', () => {
         'postgresql://admin:raw-secret@db.internal/aeko',
       );
 
-      const response = await request(application.getHttpServer())
+      const response = await request(nodeHttpServer(application))
         .get('/health/ready')
         .expect(503);
 
-      expect(response.body).toMatchObject({
+      expect(responseBody(response)).toMatchObject({
         success: false,
         code: 'DATABASE_UNAVAILABLE',
         message: 'The service is temporarily unavailable.',
       });
-      expect(JSON.stringify(response.body)).not.toContain('raw-secret');
+      expect(JSON.stringify(responseBody(response))).not.toContain(
+        'raw-secret',
+      );
     });
 
     it('accepts a safe request id and generates one when absent', async () => {
-      const accepted = await request(application.getHttpServer())
+      const accepted = await request(nodeHttpServer(application))
         .get('/health/live')
         .set('x-request-id', 'request-from-edge-123')
         .expect(200);
-      const generated = await request(application.getHttpServer())
+      const generated = await request(nodeHttpServer(application))
         .get('/health/live')
         .expect(200);
 
-      expect(accepted.headers['x-request-id']).toBe('request-from-edge-123');
-      expect(generated.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/);
+      expect(responseHeader(accepted, 'x-request-id')).toBe(
+        'request-from-edge-123',
+      );
+      expect(responseHeader(generated, 'x-request-id')).toMatch(
+        /^[0-9a-f-]{36}$/,
+      );
     });
 
     it('maps malformed JSON to a friendly validation response', async () => {
-      const response = await request(application.getHttpServer())
+      const response = await request(nodeHttpServer(application))
         .post('/health/live')
         .set('content-type', 'application/json')
         .send('{')
         .expect(400);
 
-      expect(response.body).toMatchObject({
+      expect(responseBody(response)).toMatchObject({
         success: false,
         code: 'VALIDATION_FAILED',
         message: 'Malformed JSON request body.',
       });
-      expect(response.body.requestId).toMatch(/^[0-9a-f-]{36}$/);
-      expect(JSON.stringify(response.body)).not.toContain('Unexpected');
+      expect(responseBodyField(response, 'requestId')).toMatch(
+        /^[0-9a-f-]{36}$/,
+      );
+      expect(JSON.stringify(responseBody(response))).not.toContain(
+        'Unexpected',
+      );
     });
   });
 });

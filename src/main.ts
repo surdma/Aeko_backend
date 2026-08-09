@@ -24,8 +24,15 @@ export interface ApplicationOptions {
   readonly environment?: NodeJS.ProcessEnv;
   readonly databaseClient?: PrismaLifecycleClient;
   readonly authEmailPort?: AuthEmailPort;
+  readonly authInitializer?: AekoAuthInitializer;
   readonly logger?: LoggerService | false;
 }
+
+export type AekoAuthInitializer = (context: {
+  readonly application: NestExpressApplication;
+  readonly configuration: ReturnType<typeof loadAppConfig>;
+  readonly emailPort?: AuthEmailPort;
+}) => Promise<void>;
 
 export async function createApplication(
   options: ApplicationOptions = {},
@@ -58,10 +65,35 @@ export async function createApplication(
     'trust proxy',
     configuration.proxyHops === 0 ? false : configuration.proxyHops,
   );
+  const initializeAuth = options.authInitializer ?? initializeAekoAuth;
+  await initializeAuth({
+    application,
+    configuration,
+    ...(options.authEmailPort ? { emailPort: options.authEmailPort } : {}),
+  });
+  application.useBodyParser('json', { limit: '50mb' });
+  application.useBodyParser('urlencoded', { extended: true, limit: '50mb' });
+  application.useGlobalInterceptors(new ResponseCompatibilityInterceptor());
+  application.useGlobalFilters(
+    new GlobalExceptionFilter(
+      new Logger(GlobalExceptionFilter.name),
+      application.get(RequestContext),
+    ),
+  );
+  application.enableShutdownHooks();
+  await application.init();
+  return application;
+}
+
+async function initializeAekoAuth({
+  application,
+  configuration,
+  emailPort,
+}: Parameters<AekoAuthInitializer>[0]): Promise<void> {
   const auth = await createAekoAuth(
     application.get(PrismaService).adapterClient,
     configuration,
-    options.authEmailPort,
+    emailPort,
   );
   application.get(AuthRuntimeService).initialize(auth);
   const { toNodeHandler } = await import('better-auth/node');
@@ -77,18 +109,6 @@ export async function createApplication(
       next();
     },
   );
-  application.useBodyParser('json', { limit: '50mb' });
-  application.useBodyParser('urlencoded', { extended: true, limit: '50mb' });
-  application.useGlobalInterceptors(new ResponseCompatibilityInterceptor());
-  application.useGlobalFilters(
-    new GlobalExceptionFilter(
-      new Logger(GlobalExceptionFilter.name),
-      application.get(RequestContext),
-    ),
-  );
-  application.enableShutdownHooks();
-  await application.init();
-  return application;
 }
 
 async function bootstrap(): Promise<void> {

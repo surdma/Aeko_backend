@@ -1,32 +1,35 @@
-const fs = require('node:fs');
-const path = require('node:path');
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 const workspace = process.cwd();
-const legacyPath = path.resolve(
+const legacyPath = resolve(
   workspace,
   '..',
   'backend',
   'prisma',
   'schema.prisma',
 );
-const targetPath = path.resolve(workspace, 'prisma', 'schema.prisma');
+const targetPath = resolve(workspace, 'prisma', 'schema.prisma');
 
-function read(filePath) {
-  return fs.existsSync(filePath)
-    ? fs.readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
+function read(filePath: string): string {
+  return existsSync(filePath)
+    ? readFileSync(filePath, 'utf8').replace(/\r\n/g, '\n')
     : '';
 }
 
-function modelBlocks(schema) {
-  return new Map(
-    [...schema.matchAll(/^model\s+(\w+)\s*\{([\s\S]*?)^\}/gm)].map((match) => [
-      match[1],
-      match[2],
-    ]),
-  );
+function modelBlocks(schema: string): Map<string, string> {
+  const blocks = new Map<string, string>();
+  for (const match of schema.matchAll(/^model\s+(\w+)\s*\{([\s\S]*?)^\}/gm)) {
+    const name = match[1];
+    const block = match[2];
+    if (typeof name === 'string' && typeof block === 'string') {
+      blocks.set(name, block);
+    }
+  }
+  return blocks;
 }
 
-function semanticLines(block) {
+function semanticLines(block: string): string[] {
   return block
     .split('\n')
     .map((line) =>
@@ -38,7 +41,7 @@ function semanticLines(block) {
     .filter(Boolean);
 }
 
-function fieldName(line) {
+function fieldName(line: string): string | undefined {
   return line.match(/^(\w+)\s/)?.[1];
 }
 

@@ -19,7 +19,7 @@ export default tseslint.config(
       },
       sourceType: 'commonjs',
       parserOptions: {
-        projectService: true,
+        project: './tsconfig.eslint.json',
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -35,7 +35,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-return': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/only-throw-error': 'error',
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
   },
 );

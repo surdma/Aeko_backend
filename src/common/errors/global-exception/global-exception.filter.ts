@@ -3,7 +3,6 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
-  HttpStatus,
 } from '@nestjs/common';
 import {
   DomainError,
@@ -35,6 +34,18 @@ interface ErrorMapping {
   readonly message: string;
   readonly details?: Readonly<Record<string, string | readonly string[]>>;
 }
+
+const statusCode = {
+  badRequest: 400,
+  unauthorized: 401,
+  forbidden: 403,
+  notFound: 404,
+  conflict: 409,
+  unprocessableEntity: 422,
+  tooManyRequests: 429,
+  serviceUnavailable: 503,
+  internalServerError: 500,
+} as const;
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter<unknown> {
@@ -95,7 +106,7 @@ function mapException(exception: unknown): ErrorMapping {
   }
   if (isMalformedJsonError(exception)) {
     return {
-      status: HttpStatus.BAD_REQUEST,
+      status: statusCode.badRequest,
       code: 'VALIDATION_FAILED',
       message: 'Malformed JSON request body.',
     };
@@ -103,20 +114,20 @@ function mapException(exception: unknown): ErrorMapping {
   if (isPrismaError(exception)) {
     if (readStringProperty(exception, 'code') === 'P2002') {
       return {
-        status: HttpStatus.CONFLICT,
+        status: statusCode.conflict,
         code: 'CONFLICT',
         message: 'The requested change conflicts with existing data.',
       };
     }
     return {
-      status: HttpStatus.SERVICE_UNAVAILABLE,
+      status: statusCode.serviceUnavailable,
       code: 'DATABASE_UNAVAILABLE',
       message: 'The service is temporarily unavailable.',
     };
   }
   if (isProviderError(exception)) {
     return {
-      status: HttpStatus.SERVICE_UNAVAILABLE,
+      status: statusCode.serviceUnavailable,
       code: 'PROVIDER_UNAVAILABLE',
       message: 'An external service is temporarily unavailable.',
     };
@@ -130,7 +141,7 @@ function mapException(exception: unknown): ErrorMapping {
     };
   }
   return {
-    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    status: statusCode.internalServerError,
     code: 'INTERNAL_ERROR',
     message: 'An unexpected error occurred.',
   };
@@ -142,7 +153,7 @@ function isMalformedJsonError(value: unknown): boolean {
   }
   if (
     value instanceof HttpException &&
-    value.getStatus() === HttpStatus.BAD_REQUEST &&
+    value.getStatus() === statusCode.badRequest &&
     /(?:JSON|Unexpected end|Unexpected token)/i.test(value.message)
   ) {
     return true;
@@ -150,7 +161,7 @@ function isMalformedJsonError(value: unknown): boolean {
   return (
     value instanceof SyntaxError &&
     (readStringProperty(value, 'type') === 'entity.parse.failed' ||
-      readNumberProperty(value, 'status') === HttpStatus.BAD_REQUEST)
+      readNumberProperty(value, 'status') === statusCode.badRequest)
   );
 }
 
@@ -167,7 +178,7 @@ function readStringProperty(value: unknown, key: string): string | undefined {
   if (typeof value !== 'object' || value === null || !(key in value)) {
     return undefined;
   }
-  const property = Reflect.get(value, key);
+  const property: unknown = Reflect.get(value, key);
   return typeof property === 'string' ? property : undefined;
 }
 
@@ -175,26 +186,26 @@ function readNumberProperty(value: unknown, key: string): number | undefined {
   if (typeof value !== 'object' || value === null || !(key in value)) {
     return undefined;
   }
-  const property = Reflect.get(value, key);
+  const property: unknown = Reflect.get(value, key);
   return typeof property === 'number' ? property : undefined;
 }
 
 function httpStatusCode(status: number): DomainErrorCode {
   switch (status) {
-    case HttpStatus.BAD_REQUEST:
-    case HttpStatus.UNPROCESSABLE_ENTITY:
+    case statusCode.badRequest:
+    case statusCode.unprocessableEntity:
       return 'VALIDATION_FAILED';
-    case HttpStatus.UNAUTHORIZED:
+    case statusCode.unauthorized:
       return 'AUTHENTICATION_REQUIRED';
-    case HttpStatus.FORBIDDEN:
+    case statusCode.forbidden:
       return 'AUTHORIZATION_DENIED';
-    case HttpStatus.NOT_FOUND:
+    case statusCode.notFound:
       return 'NOT_FOUND';
-    case HttpStatus.CONFLICT:
+    case statusCode.conflict:
       return 'CONFLICT';
-    case HttpStatus.TOO_MANY_REQUESTS:
+    case statusCode.tooManyRequests:
       return 'RATE_LIMITED';
-    case HttpStatus.SERVICE_UNAVAILABLE:
+    case statusCode.serviceUnavailable:
       return 'PROVIDER_UNAVAILABLE';
     default:
       return 'INTERNAL_ERROR';
@@ -203,20 +214,20 @@ function httpStatusCode(status: number): DomainErrorCode {
 
 function httpStatusMessage(status: number): string {
   switch (status) {
-    case HttpStatus.BAD_REQUEST:
-    case HttpStatus.UNPROCESSABLE_ENTITY:
+    case statusCode.badRequest:
+    case statusCode.unprocessableEntity:
       return 'The request could not be validated.';
-    case HttpStatus.UNAUTHORIZED:
+    case statusCode.unauthorized:
       return 'Authentication is required.';
-    case HttpStatus.FORBIDDEN:
+    case statusCode.forbidden:
       return 'You are not allowed to perform this action.';
-    case HttpStatus.NOT_FOUND:
+    case statusCode.notFound:
       return 'The requested resource was not found.';
-    case HttpStatus.CONFLICT:
+    case statusCode.conflict:
       return 'The request conflicts with the current state.';
-    case HttpStatus.TOO_MANY_REQUESTS:
+    case statusCode.tooManyRequests:
       return 'Too many requests. Please try again later.';
-    case HttpStatus.SERVICE_UNAVAILABLE:
+    case statusCode.serviceUnavailable:
       return 'The service is temporarily unavailable.';
     default:
       return 'An unexpected error occurred.';

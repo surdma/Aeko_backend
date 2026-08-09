@@ -6,21 +6,21 @@ Better Auth is the only owner of `/api/auth/**`. The native Node handler is moun
 
 ## Legacy removal map
 
-| Removed Express behavior | Native Better Auth replacement | Client change |
-| --- | --- | --- |
-| `POST /api/auth/signup` with bcrypt and a legacy response envelope | `POST /api/auth/sign-up/email` | Send Better Auth's native sign-up body and consume its native response. When no typed email port is installed, sign-up is deliberately disabled. |
-| `POST /api/auth/login` with JWT creation and handwritten 2FA middleware | `POST /api/auth/sign-in/email` plus the two-factor plugin | Treat `twoFactorRedirect: true` as incomplete authentication. Complete TOTP/backup-code verification before requesting a session. |
-| `POST /api/auth/verify-email` | `GET /api/auth/verify-email` | Follow the Better Auth verification URL delivered by the Aeko email port. Do not submit a legacy verification-code payload. |
-| `POST /api/auth/resend-verification` | `POST /api/auth/send-verification-email` | Use the native request and response contract. |
-| `GET /api/auth/me` | `GET /api/auth/get-session` | Read `user` and `session`; do not expect a legacy `{ token, user }` envelope. |
-| `POST /api/auth/logout` | `POST /api/auth/sign-out` | Let Better Auth clear its session cookie; bearer clients discard the returned/held bearer token. |
-| `POST /api/auth/forgot-password` | `POST /api/auth/request-password-reset` | Submit the native email and absolute redirect URL. Responses do not disclose whether the account exists. |
-| `POST /api/auth/reset-password` with an application reset token | `POST /api/auth/reset-password` | Submit Better Auth's native token contract. A successful reset revokes sessions. |
-| Passport `GET /api/auth/google` and callback handlers | `POST /api/auth/sign-in/social` and `GET /api/auth/callback/google` | Send `provider: "google"`; use the native redirect/callback flow. Google exists only when both validated credentials are configured. |
-| `POST /api/auth/google/mobile` token exchange | Native Google social sign-in flow | Mobile clients use Better Auth's supported social flow; the handwritten mobile payload and JWT response are removed. |
-| `GET /api/auth/profile-completion` | No auth-protocol replacement | This is application profile data and moves to a later user/profile slice; clients must not call it as an auth endpoint. |
-| JWT/auth middleware, admin JWT login, and role checks | Better Auth cookie or bearer session plus typed Nest guards | Protected Nest routes receive only an immutable `AuthenticatedPrincipal`. Admin access uses `isAdmin`; resource routes use explicit ownership guards. |
-| Handwritten auth/admin token cookies | Better Auth host-only session cookies | Browser clients send credentials and accept Better Auth `Set-Cookie`; they must not read or manufacture token cookies. |
+| Removed Express behavior                                                | Native Better Auth replacement                                      | Client change                                                                                                                                         |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/auth/signup` with bcrypt and a legacy response envelope      | `POST /api/auth/sign-up/email`                                      | Send Better Auth's native sign-up body and consume its native response. When no typed email port is installed, sign-up is deliberately disabled.      |
+| `POST /api/auth/login` with JWT creation and handwritten 2FA middleware | `POST /api/auth/sign-in/email` plus the two-factor plugin           | Treat `twoFactorRedirect: true` as incomplete authentication. Complete TOTP/backup-code verification before requesting a session.                     |
+| `POST /api/auth/verify-email`                                           | `GET /api/auth/verify-email`                                        | Follow the Better Auth verification URL delivered by the Aeko email port. Do not submit a legacy verification-code payload.                           |
+| `POST /api/auth/resend-verification`                                    | `POST /api/auth/send-verification-email`                            | Use the native request and response contract.                                                                                                         |
+| `GET /api/auth/me`                                                      | `GET /api/auth/get-session`                                         | Read `user` and `session`; do not expect a legacy `{ token, user }` envelope.                                                                         |
+| `POST /api/auth/logout`                                                 | `POST /api/auth/sign-out`                                           | Let Better Auth clear its session cookie; bearer clients discard the returned/held bearer token.                                                      |
+| `POST /api/auth/forgot-password`                                        | `POST /api/auth/request-password-reset`                             | Submit the native email and absolute redirect URL. Responses do not disclose whether the account exists.                                              |
+| `POST /api/auth/reset-password` with an application reset token         | `POST /api/auth/reset-password`                                     | Submit Better Auth's native token contract. A successful reset revokes sessions.                                                                      |
+| Passport `GET /api/auth/google` and callback handlers                   | `POST /api/auth/sign-in/social` and `GET /api/auth/callback/google` | Send `provider: "google"`; use the native redirect/callback flow. Google exists only when both validated credentials are configured.                  |
+| `POST /api/auth/google/mobile` token exchange                           | Native Google social sign-in flow                                   | Mobile clients use Better Auth's supported social flow; the handwritten mobile payload and JWT response are removed.                                  |
+| `GET /api/auth/profile-completion`                                      | No auth-protocol replacement                                        | This is application profile data and moves to a later user/profile slice; clients must not call it as an auth endpoint.                               |
+| JWT/auth middleware, admin JWT login, and role checks                   | Better Auth cookie or bearer session plus typed Nest guards         | Protected Nest routes receive only an immutable `AuthenticatedPrincipal`. Admin access uses `isAdmin`; resource routes use explicit ownership guards. |
+| Handwritten auth/admin token cookies                                    | Better Auth host-only session cookies                               | Browser clients send credentials and accept Better Auth `Set-Cookie`; they must not read or manufacture token cookies.                                |
 
 ## Security decisions
 

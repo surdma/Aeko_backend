@@ -5,14 +5,21 @@ const root = join(__dirname, '..');
 
 describe('toolchain contracts', () => {
   it('locks the NestJS migration toolchain', () => {
-    const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    const manifest = JSON.parse(
+      readFileSync(join(root, 'package.json'), 'utf8'),
+    ) as {
       packageManager?: string;
       engines?: { node?: string };
       scripts: Record<string, string | undefined>;
     };
-    const tsconfig = JSON.parse(readFileSync(join(root, 'tsconfig.json'), 'utf8')) as {
+    const tsconfig = JSON.parse(
+      readFileSync(join(root, 'tsconfig.json'), 'utf8'),
+    ) as {
       compilerOptions: Record<string, unknown>;
     };
+    const eslintTsconfig = JSON.parse(
+      readFileSync(join(root, 'tsconfig.eslint.json'), 'utf8'),
+    ) as { include: readonly string[] };
     const eslintSource = readFileSync(join(root, 'eslint.config.mjs'), 'utf8');
     const { compilerOptions } = tsconfig;
 
@@ -28,7 +35,14 @@ describe('toolchain contracts', () => {
     expect(compilerOptions.noUncheckedIndexedAccess).toBe(true);
     expect(compilerOptions.noImplicitOverride).toBe(true);
     expect(compilerOptions.noImplicitReturns).toBe(true);
-    expect(eslintSource).toContain("'@typescript-eslint/no-explicit-any': 'error'");
-    expect(eslintSource).toContain("'@typescript-eslint/no-non-null-assertion': 'error'");
+    expect(eslintSource).toContain(
+      "'@typescript-eslint/no-explicit-any': 'error'",
+    );
+    expect(eslintSource).toContain(
+      "'@typescript-eslint/no-non-null-assertion': 'error'",
+    );
+    expect(eslintTsconfig.include).toEqual(
+      expect.arrayContaining(['scripts/**/*.ts', 'test/**/*.ts']),
+    );
   });
 });
