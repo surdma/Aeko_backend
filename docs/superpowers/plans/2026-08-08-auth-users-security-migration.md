@@ -111,7 +111,7 @@ git commit -m "feat: scaffold auth users security migration"
 - Consumes: controller query/body values of type `unknown`.
 - Produces: `PageQuery`, `UserSummary`, `UserProfile`, `PrivacySettings`, `FollowRequestStatus`, and Zod parsers that either return fully defined values or throw `DomainError.validation`.
 
-- [ ] **Step 1: Write failing contract tests**
+- [x] **Step 1: Write failing contract tests**
 
 ```ts
 expect(parsePageQuery({ page: '0', limit: '500' })).toEqual({
@@ -127,13 +127,13 @@ expect(
 ).toBe(false);
 ```
 
-- [ ] **Step 2: Run contracts RED**
+- [x] **Step 2: Run contracts RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/contracts.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL on missing contract modules.
 
-- [ ] **Step 3: Implement explicit non-null contracts**
+- [x] **Step 3: Implement explicit non-null contracts**
 
 ```ts
 export interface PageQuery {
@@ -159,7 +159,7 @@ export type FollowRequestStatus = 'pending' | 'accepted' | 'rejected';
 
 Use Zod defaults for absent persisted JSON keys, cap `limit` at 100, normalize empty search to `''`, and map optional database values to explicit `null` in response DTOs. Never return password/account/session/provider secrets or raw Prisma records.
 
-- [ ] **Step 4: Run contracts GREEN and commit**
+- [x] **Step 4: Run contracts GREEN and commit**
 
 ```powershell
 git add -- src/common/pagination src/users/user.contract.ts src/profiles/profile.contract.ts src/security/security.contract.ts test/auth-users-security/contracts.spec.ts

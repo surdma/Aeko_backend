@@ -1,0 +1,10 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../..",
+  "roots": ["<rootDir>/test/auth-users-security"],
+  "testEnvironment": "node",
+  "testRegex": "test/auth-users-security/contracts\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "<rootDir>/node_modules/.pnpm/ts-jest@29.4.12_@babel+core_c0aa02714c6df37fa81f3283809b63a8/node_modules/ts-jest"
+  }
+}
