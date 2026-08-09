@@ -83,7 +83,7 @@ Expected: 16 assigned, zero missing, zero duplicate, modules imported by `AppMod
 
 **Interfaces:** Produces non-null `AdView`, `AdPage`, `AdCreate`, `AdUpdate`, `AdTargeting`, `AdBudget`, `AdPricing`, `AdCampaign`, `AdAnalytics`, `TrackEvent`, `ReviewDecision`, `ImageEffect`, and `VideoEffect` parsers.
 
-- [ ] **Step 1: Write contracts RED**
+- [x] **Step 1: Write contracts RED**
 
 ```ts
 expect(parseAdListQuery({ page: '0', limit: '500' })).toEqual({ page: 1, limit: 100, status: null });
@@ -92,17 +92,17 @@ expect(() => parseAdUpdate({ advertiserId: 'victim' })).toThrow('advertiserId');
 expect(parseTrackEvent({ adId: ' a1 ', metadata: {} }).adId).toBe('a1');
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run: `.\node_modules\.bin\jest.cmd test/ads-media/contracts.spec.ts --runInBand --config test/ads-media/jest.config.json`
 
 Expected: FAIL on missing contract modules.
 
-- [ ] **Step 3: Implement strict Zod parsers**
+- [x] **Step 3: Implement strict Zod parsers**
 
 Use API status values `draft|pending|approved|rejected|running|paused|completed|expired`, map only at the Prisma boundary to canonical column `Status`, require positive finite budgets and bids, require HTTPS media/CTA URLs, reject past starts and non-increasing schedules, cap strings/arrays, and strip no unknown mutation keys: reject them.
 
-- [ ] **Step 4: Run contracts GREEN**
+- [x] **Step 4: Run contracts GREEN**
 
 Expected: all contracts return explicit values with no `undefined` and reject ownership/status/analytics injection.
 

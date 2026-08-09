@@ -171,8 +171,7 @@ const targetingSchema = z
     location: z.array(boundedText(200)).max(100).default([]),
     followersRange: rangeSchema.nullable().default(null),
   })
-  .strict()
-  .default({ age: null, location: [], followersRange: null });
+  .strict();
 
 const budgetInputSchema = z
   .object({
@@ -224,19 +223,18 @@ const callToActionSchema = z
     type: boundedText(100).default('learn_more'),
     url: nullableHttpsUrl.default(null),
   })
-  .strict()
-  .default({ type: 'learn_more', url: null });
+  .strict();
 
-const placementSchema = z
-  .record(z.string().trim().min(1).max(100), z.boolean())
-  .default({ feed: true });
+const placementSchema = z.record(
+  z.string().trim().min(1).max(100),
+  z.boolean(),
+);
 const frequencySchema = z
   .object({
     cap: z.number().int().min(1).max(100).default(3),
     currentCap: z.number().int().nonnegative().default(0),
   })
-  .strict()
-  .default({ cap: 3, currentCap: 0 });
+  .strict();
 
 const adCreateSchema = z
   .object({
@@ -245,12 +243,19 @@ const adCreateSchema = z
     mediaType: boundedText(50),
     mediaUrl: nullableHttpsUrl.default(null),
     mediaUrls: z.array(httpsUrl).max(20).default([]),
-    targetAudience: targetingSchema,
+    targetAudience: targetingSchema.default({
+      age: null,
+      location: [],
+      followersRange: null,
+    }),
     budget: budgetInputSchema,
     pricing: pricingSchema,
     campaign: campaignSchema,
-    callToAction: callToActionSchema,
-    placement: placementSchema,
+    callToAction: callToActionSchema.default({
+      type: 'learn_more',
+      url: null,
+    }),
+    placement: placementSchema.default({ feed: true }),
   })
   .strict();
 
@@ -330,9 +335,16 @@ const analyticsQuerySchema = z
     },
   );
 
+const issueFields = (issue: z.core.$ZodIssue): readonly string[] => {
+  if (issue.code === 'unrecognized_keys') {
+    return issue.keys;
+  }
+  return [issue.path.length > 0 ? issue.path.join('.') : ''];
+};
+
 const validationFailure = (scope: string, error: z.ZodError): never => {
-  const fields = error.issues.map((issue) =>
-    issue.path.length > 0 ? issue.path.join('.') : scope,
+  const fields = error.issues.flatMap((issue) =>
+    issueFields(issue).map((field) => (field === '' ? scope : field)),
   );
   throw new DomainError(
     'VALIDATION_FAILED',
