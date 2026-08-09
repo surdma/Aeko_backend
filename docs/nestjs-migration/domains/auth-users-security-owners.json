@@ -1,0 +1,116 @@
+{
+  "model:model:SecurityEvent": ["security"],
+  "model:model:User": ["users"],
+  "model:model:VerificationSettings": ["profiles"],
+  "provider:cloudinary-media:3828853a82ea": ["media"],
+  "provider:email:9611586235e6": ["better-auth-native-cutover"],
+  "provider:google-oauth:3b8ab112fd02": ["better-auth-native-cutover"],
+  "rest:DELETE:/api/profile/delete-account:routes/profile.js:420": ["profiles"],
+  "rest:DELETE:/api/security/2fa:routes/security.js:838": [
+    "better-auth-native-cutover"
+  ],
+  "rest:DELETE:/api/security/block/:userId:routes/security.js:138": [
+    "security"
+  ],
+  "rest:DELETE:/api/users/:id:routes/userRoutes.js:793": ["users"],
+  "rest:GET:/api/auth/google/callback:routes/auth.js:368": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/auth/google/callback:routes/auth.js:405": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/auth/google:routes/auth.js:363": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/auth/google:routes/auth.js:398": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/auth/me:routes/auth.js:1071": ["better-auth-native-cutover"],
+  "rest:GET:/api/auth/profile-completion:routes/auth.js:1018": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/profile/activity:routes/profile.js:270": ["profiles"],
+  "rest:GET:/api/profile/eligibility:routes/profile.js:757": ["profiles"],
+  "rest:GET:/api/profile/followers/search:routes/profile.js:528": ["profiles"],
+  "rest:GET:/api/profile/followers:routes/profile.js:437": ["profiles"],
+  "rest:GET:/api/profile/following:routes/profile.js:483": ["profiles"],
+  "rest:GET:/api/profile:routes/profile.js:215": ["profiles"],
+  "rest:GET:/api/security/2fa/status:routes/security.js:1009": [
+    "better-auth-native-cutover"
+  ],
+  "rest:GET:/api/security/block-status/:userId:routes/security.js:262": [
+    "security"
+  ],
+  "rest:GET:/api/security/blocked:routes/security.js:215": ["security"],
+  "rest:GET:/api/security/events:routes/security.js:1103": ["security"],
+  "rest:GET:/api/security/follow-requests:routes/security.js:597": ["security"],
+  "rest:GET:/api/security/privacy:routes/security.js:385": ["security"],
+  "rest:GET:/api/security/stats:routes/security.js:1169": ["security"],
+  "rest:GET:/api/users/:id/followers:routes/userRoutes.js:550": ["users"],
+  "rest:GET:/api/users/:id/following:routes/userRoutes.js:676": ["users"],
+  "rest:GET:/api/users/:id:routes/userRoutes.js:151": ["users"],
+  "rest:GET:/api/users:routes/userRoutes.js:332": ["users"],
+  "rest:POST:/api/auth/forgot-password:routes/auth.js:1131": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/google/mobile:routes/auth.js:468": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/google/mobile:routes/auth.js:595": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/login:routes/auth.js:881": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/logout:routes/auth.js:1116": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/resend-verification:routes/auth.js:808": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/reset-password:routes/auth.js:1194": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/signup:routes/auth.js:603": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/auth/verify-email:routes/auth.js:695": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/profile/verify:routes/profile.js:676": ["profiles"],
+  "rest:POST:/api/security/2fa/backup-codes:routes/security.js:896": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/security/2fa/backup-verify:routes/security.js:962": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/security/2fa/setup:routes/security.js:647": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/security/2fa/verify-setup:routes/security.js:722": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/security/2fa/verify:routes/security.js:779": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/security/block/:userId:routes/security.js:89": ["security"],
+  "rest:POST:/api/security/follow-request/:userId:routes/security.js:446": [
+    "security"
+  ],
+  "rest:POST:/api/users/login:routes/userRoutes.js:102": [
+    "better-auth-native-cutover"
+  ],
+  "rest:POST:/api/users/register:routes/userRoutes.js:40": [
+    "better-auth-native-cutover"
+  ],
+  "rest:PUT:/api/profile/change-password:routes/profile.js:389": ["profiles"],
+  "rest:PUT:/api/profile/follow/:id:routes/profile.js:563": ["profiles"],
+  "rest:PUT:/api/profile/unfollow/:id:routes/profile.js:630": ["profiles"],
+  "rest:PUT:/api/profile/update:routes/profile.js:352": ["profiles"],
+  "rest:PUT:/api/security/follow-request/:requesterId:routes/security.js:507": [
+    "security"
+  ],
+  "rest:PUT:/api/security/privacy:routes/security.js:331": ["security"],
+  "rest:PUT:/api/users/cover-picture:routes/userRoutes.js:507": ["users"],
+  "rest:PUT:/api/users/profile-picture:routes/userRoutes.js:457": ["users"]
+}

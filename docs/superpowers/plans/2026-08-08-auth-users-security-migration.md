@@ -42,6 +42,7 @@
 - Create: `src/providers/media/media.module.ts`, `src/providers/media/cloudinary-media.adapter.ts`
 - Modify: `src/app.module.ts`
 - Modify: `docs/nestjs-migration/nest-cli-ledger.md`
+- Create: `docs/nestjs-migration/domains/auth-users-security-owners.json`
 - Test: `test/migration/auth-users-security-coverage.spec.ts`
 
 **Interfaces:**
@@ -49,7 +50,7 @@
 - Consumes: `docs/nestjs-migration/domains/auth-users-security.json`.
 - Produces: one declared owner for each capability and generated Nest feature boundaries imported by `AppModule`.
 
-- [ ] **Step 1: Write the failing ownership test**
+- [x] **Step 1: Write the failing ownership test**
 
 ```ts
 expect(manifest.capabilityIds).toHaveLength(60);
@@ -62,13 +63,13 @@ expect(ownerMap['rest:POST:/api/auth/login:routes/auth.js:881']).toEqual([
 ]);
 ```
 
-- [ ] **Step 2: Run the test and verify RED**
+- [x] **Step 2: Run the test and verify RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/migration/auth-users-security-coverage.spec.ts --runInBand --config test/migration/jest.config.json`
 
 Expected: FAIL because the owner map and generated modules do not exist.
 
-- [ ] **Step 3: Generate every Nest artifact with the CLI**
+- [x] **Step 3: Generate every Nest artifact with the CLI**
 
 ```powershell
 .\node_modules\.bin\nest.cmd generate module users --no-spec
@@ -84,14 +85,14 @@ Expected: FAIL because the owner map and generated modules do not exist.
 .\node_modules\.bin\nest.cmd generate class providers/media/cloudinary-media.adapter --no-spec
 ```
 
-Record each successful command and generated path in the CLI ledger. Define `ownerMap` as a checked-in `Readonly<Record<CapabilityId, readonly [CapabilityOwner]>>`; assign legacy auth and legacy 2FA route IDs to `better-auth-native-cutover`, and assign every other ID to `users`, `profiles`, `security`, or `media`.
+Record each successful command and generated path in the CLI ledger. Define `ownerMap` as a checked-in `Readonly<Record<CapabilityId, readonly [CapabilityOwner]>>`; assign legacy auth, legacy users register/login, legacy 2FA route IDs, the email provider, and the Google OAuth provider to `better-auth-native-cutover`. Assign Cloudinary to `media`, the three models to their owning feature, and every remaining route to `users`, `profiles`, or `security`.
 
-- [ ] **Step 4: Run coverage GREEN and commit**
+- [x] **Step 4: Run coverage GREEN and commit**
 
 Run the Step 2 command. Expected: PASS with 60 capabilities, zero missing, zero duplicate owners.
 
 ```powershell
-git add -- src/users src/profiles src/security src/providers/media src/app.module.ts docs/nestjs-migration/nest-cli-ledger.md test/migration/auth-users-security-coverage.spec.ts
+git add -- src/users src/profiles src/security src/providers/media src/app.module.ts docs/nestjs-migration/nest-cli-ledger.md docs/nestjs-migration/domains/auth-users-security-owners.json test/migration/auth-users-security-coverage.spec.ts
 git commit -m "feat: scaffold auth users security migration"
 ```
 
@@ -544,7 +545,7 @@ git commit -m "feat: complete auth users security migration"
 
 ## Self-Review
 
-- Spec coverage: all 60 manifest capabilities have a task and exactly one owner; native auth/2FA routes close through the approved Better Auth correction, while users/profiles/security/media close through Nest modules.
+- Spec coverage: all 60 manifest capabilities have a task and exactly one owner; native auth/2FA routes plus email and Google OAuth providers close through the approved Better Auth correction, while users/profiles/security/media close through Nest modules.
 - Security coverage: self/ownership/admin checks, 2FA elevation, upload validation, transactional follow state, event redaction, provider error sanitization, and removal of caller-controlled verification bypass are explicit.
 - Placeholder scan: no deferred implementation markers or unspecified test steps remain.
 - Type consistency: controller/service names, `AuthenticatedPrincipal`, page contracts, media port, privacy types, and security-event input are defined before consumers.

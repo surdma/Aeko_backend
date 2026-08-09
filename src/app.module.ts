@@ -9,8 +9,14 @@ import {
   RequestContextMiddleware,
 } from './common/http/request-context/request-context.middleware';
 import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { ProfilesModule } from './profiles/profiles.module';
+import { SecurityModule } from './security/security.module';
+import { MediaModule } from './providers/media/media.module';
 
-@Module({})
+@Module({
+  imports: [UsersModule, ProfilesModule, SecurityModule, MediaModule],
+})
 export class AppModule {
   static register(
     configuration: AppConfig,
