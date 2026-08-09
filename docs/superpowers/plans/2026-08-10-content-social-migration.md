@@ -80,7 +80,7 @@ Expected: 52 assigned, zero missing, zero duplicate, six modules imported by `Ap
 
 **Interfaces:** Produces non-null `PostView`, `PostPage`, `PostCreate`, `PostUpdate`, `PostPrivacy`, `CommentView`, `CommentPage`, `StatusView`, `NotificationView`, `NotificationSettings`, `ReportCreate`, and `ModerationDecision` parsers plus `canViewPost`.
 
-- [ ] **Step 1: Write contracts RED**
+- [x] **Step 1: Write contracts RED**
 
 ```ts
 expect(parsePostListQuery({ page: '0', limit: '500' })).toEqual({ page: 1, limit: 50 });
@@ -89,15 +89,15 @@ expect(() => parsePostUpdate({ authorId: 'victim' })).toThrow('authorId');
 expect(canViewPost({ privacy: 'followers' }, { isFollower: false, isOwner: false })).toBe(false);
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Expected: FAIL on missing contract modules.
 
-- [ ] **Step 3: Implement strict Zod parsers and the visibility policy**
+- [x] **Step 3: Implement strict Zod parsers and the visibility policy**
 
 Bound every page and search term, require HTTPS media URLs, cap arrays and text, reject unknown mutation keys rather than stripping them, and express privacy, blocking, and not-interested as one pure policy function.
 
-- [ ] **Step 4: Run contracts GREEN**
+- [x] **Step 4: Run contracts GREEN**
 
 Expected: all contracts return explicit values with no `undefined` and reject ownership and counter injection.
 
