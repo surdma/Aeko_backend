@@ -387,5 +387,48 @@
     "replacementBehavior": "Raw-body signatures, event identity, idempotency, and replay windows are enforced.",
     "reason": "Payment side effects must be authentic and exactly-once at the application boundary.",
     "status": "approved"
+  },
+  {
+    "id": "correction:native-better-auth-cutover",
+    "capabilityIds": [
+      "rest:GET:/api/auth/google:routes/auth.js:363",
+      "rest:GET:/api/auth/google/callback:routes/auth.js:368",
+      "rest:GET:/api/auth/google:routes/auth.js:398",
+      "rest:GET:/api/auth/google/callback:routes/auth.js:405",
+      "rest:POST:/api/auth/google/mobile:routes/auth.js:468",
+      "rest:POST:/api/auth/google/mobile:routes/auth.js:595",
+      "rest:POST:/api/auth/signup:routes/auth.js:603",
+      "rest:POST:/api/auth/verify-email:routes/auth.js:695",
+      "rest:POST:/api/auth/resend-verification:routes/auth.js:808",
+      "rest:POST:/api/auth/login:routes/auth.js:881",
+      "rest:GET:/api/auth/profile-completion:routes/auth.js:1018",
+      "rest:GET:/api/auth/me:routes/auth.js:1071",
+      "rest:POST:/api/auth/logout:routes/auth.js:1116",
+      "rest:POST:/api/auth/forgot-password:routes/auth.js:1131",
+      "rest:POST:/api/auth/reset-password:routes/auth.js:1194"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/auth.js",
+        "line": 363
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 603
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 881
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 1131
+      }
+    ],
+    "legacyBehavior": "Express owns duplicated Passport Google callbacks, bcrypt/JWT credential flows, verification codes, reset tokens, token cookies, and handwritten two-factor/session middleware.",
+    "replacementBehavior": "Better Auth exclusively owns /api/auth/** with native email/password, conditional Google, bearer, two-factor, verification, reset, cookie, and session contracts; Nest authorization consumes only immutable typed principals.",
+    "reason": "One native protocol owner removes duplicated credential logic, prevents partial two-factor principals, preserves CSRF/origin defenses, and revokes sessions after password reset.",
+    "status": "approved"
   }
 ]

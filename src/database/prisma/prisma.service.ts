@@ -30,4 +30,8 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   async assertReady(): Promise<void> {
     await this.client.$queryRaw`SELECT 1`;
   }
+
+  get adapterClient(): object {
+    return this.client;
+  }
 }

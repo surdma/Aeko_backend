@@ -8,6 +8,7 @@ import {
   RequestContext,
   RequestContextMiddleware,
 } from './common/http/request-context/request-context.middleware';
+import { AuthModule } from './auth/auth.module';
 
 @Module({})
 export class AppModule {
@@ -20,6 +21,7 @@ export class AppModule {
       imports: [
         ConfigurationModule.register(configuration),
         DatabaseModule.register(configuration, databaseClient),
+        AuthModule,
         HealthModule,
       ],
       providers: [RequestContext, RequestContextMiddleware],

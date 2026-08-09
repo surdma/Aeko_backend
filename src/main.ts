@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { AuthRuntimeService } from './auth/auth-runtime.service';
 import { GlobalExceptionFilter } from './common/errors/global-exception/global-exception.filter';
 import {
   RequestContext,
@@ -12,11 +13,17 @@ import {
 } from './common/http/request-context/request-context.middleware';
 import { ResponseCompatibilityInterceptor } from './common/http/response-compatibility/response-compatibility.interceptor';
 import { loadAppConfig } from './configuration/configuration/configuration.service';
-import type { PrismaLifecycleClient } from './database/prisma/prisma.service';
+import {
+  type PrismaLifecycleClient,
+  PrismaService,
+} from './database/prisma/prisma.service';
+import { createAekoAuth } from './lib/auth/auth.config';
+import type { AuthEmailPort } from './lib/auth/auth-email.port';
 
 export interface ApplicationOptions {
   readonly environment?: NodeJS.ProcessEnv;
   readonly databaseClient?: PrismaLifecycleClient;
+  readonly authEmailPort?: AuthEmailPort;
   readonly logger?: LoggerService | false;
 }
 
@@ -50,6 +57,25 @@ export async function createApplication(
   application.set(
     'trust proxy',
     configuration.proxyHops === 0 ? false : configuration.proxyHops,
+  );
+  const auth = await createAekoAuth(
+    application.get(PrismaService).adapterClient,
+    configuration,
+    options.authEmailPort,
+  );
+  application.get(AuthRuntimeService).initialize(auth);
+  const { toNodeHandler } = await import('better-auth/node');
+  const authHandler = toNodeHandler(auth);
+  application.use(
+    (request: Request, response: Response, next: NextFunction) => {
+      const pathname = new URL(request.originalUrl, configuration.betterAuthUrl)
+        .pathname;
+      if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) {
+        void Promise.resolve(authHandler(request, response)).catch(next);
+        return;
+      }
+      next();
+    },
   );
   application.useBodyParser('json', { limit: '50mb' });
   application.useBodyParser('urlencoded', { extended: true, limit: '50mb' });
