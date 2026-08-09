@@ -180,7 +180,7 @@ git commit -m "feat: add strict user security contracts"
 - Consumes: `PrismaService`, `AuthenticatedPrincipal`, `PageQuery`, privacy/block decisions.
 - Produces: `getUser(viewerId, targetId)`, `listUsers(viewerId, query)`, `followers(viewerId, targetId, query)`, `following(viewerId, targetId, query)`, and `deleteUser(principal, targetId)`.
 
-- [ ] **Step 1: Write controller and service RED tests**
+- [x] **Step 1: Write controller and service RED tests**
 
 ```ts
 await expect(
@@ -199,13 +199,13 @@ expect(
 });
 ```
 
-- [ ] **Step 2: Run users RED**
+- [x] **Step 2: Run users RED**
 
 Run: `.\\node_modules\\.bin\\jest.cmd test/auth-users-security/users.spec.ts --runInBand --config test/auth/jest.config.json`
 
 Expected: FAIL because generated service methods are absent.
 
-- [ ] **Step 3: Implement endpoints and policies**
+- [x] **Step 3: Implement endpoints and policies**
 
 ```ts
 @Get(':id') getUser(@CurrentUser() user: AuthenticatedPrincipal, @Param('id') id: string): Promise<UserProfile>
@@ -217,7 +217,7 @@ Expected: FAIL because generated service methods are absent.
 
 Register `UsersController` under `/api/users`. Preserve pagination/search/filter semantics, enforce block and privacy visibility before returning records, allow account deletion only for self with satisfied 2FA or administrator, and perform dependent deletion through Prisma referential actions/one transaction. Do not restore `/api/users/register` or `/api/users/login`; those are owned by native Better Auth cutover.
 
-- [ ] **Step 4: Run users GREEN and commit**
+- [x] **Step 4: Run users GREEN and commit**
 
 ```powershell
 git add -- src/users test/auth-users-security/users.spec.ts

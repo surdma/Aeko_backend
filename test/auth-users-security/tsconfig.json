@@ -3,5 +3,5 @@
   "compilerOptions": {
     "noEmit": true
   },
-  "include": ["contracts.spec.ts"]
+  "include": ["contracts.spec.ts", "users.spec.ts"]
 }

@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import type { UserModel } from '../../prisma/generated/models/User';
 import { DomainError } from '../common/errors/domain.error';
+import type { PageMeta, PageQuery } from '../common/pagination/page-query';
 
 export interface UserSearch {
   readonly search: string;
@@ -21,6 +22,19 @@ export interface UserSummary {
   readonly goldenTick: boolean;
   readonly createdAt: string;
 }
+
+export interface UserView extends UserSummary {
+  readonly isPrivate: boolean;
+  readonly followersCount: number | null;
+  readonly followingCount: number | null;
+}
+
+export interface UserPage {
+  readonly items: readonly UserView[];
+  readonly page: PageMeta;
+}
+
+export interface UserListQuery extends PageQuery, UserSearch {}
 
 export type UserProjectionSource = Pick<
   UserModel,
