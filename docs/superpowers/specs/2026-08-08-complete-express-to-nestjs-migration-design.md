@@ -74,26 +74,28 @@ Large capabilities may contain focused submodules, but transport, orchestration,
 
 ## Prisma And Data Preservation
 
-The complete legacy Prisma schema and migration history are the starting database contract. The four-table Better Auth-only scaffold is not an acceptable replacement for the legacy schema.
+The complete legacy non-auth Prisma schema and migration history are the starting domain database contract. The existing Better Auth CLI-generated schema is the starting auth contract and must be regenerated from the final Aeko Better Auth configuration before merge.
 
 The target schema will:
 
 - retain every legacy model, enum, table mapping, column mapping, relation, index, uniqueness rule, default, numeric type, and nullable field required by existing data;
-- merge Better Auth requirements additively into the existing user/account/session model rather than creating a disconnected duplicate user store;
+- merge CLI-generated Better Auth user requirements into the canonical Aeko `User` model without creating a disconnected duplicate user store;
 - use reviewed Prisma migrations with expand-and-contract sequencing when a schema transition cannot be immediately backward compatible;
-- provide data audits and backfills for Better Auth accounts and sessions without deleting, re-registering, or silently invalidating existing users;
+- document the native Better Auth account/session cutover and the treatment of pre-existing users without implementing a legacy password or token compatibility path;
 - retain exact money and chain values using database decimals, bigint, or strings as appropriate, never unsafe JavaScript number conversion;
 - verify AdminJS and reporting consumers still observe compatible data.
 
 No destructive migration or production backfill runs without separate environment authority, a dry run, row-count evidence, and rollback instructions.
 
-## Better Auth Compatibility Design
+## Better Auth Native Design
 
-Better Auth becomes the authentication and session source of truth, using its Prisma adapter and NestJS integration. Email/password, Google OAuth, bearer sessions, email verification, password reset, and required two-factor behavior are configured from Aeko requirements only.
+Better Auth becomes the only authentication and session implementation, using its Prisma adapter and NestJS integration. Email/password, Google OAuth, bearer sessions, email verification, password reset, and required two-factor behavior are configured from Aeko requirements using Better Auth native APIs and official plugins.
 
-The existing `/api/auth/**` and overlapping `/api/users/**` contracts remain available through compatibility controllers. These controllers translate legacy request and response shapes into Better Auth operations; clients are not forced to adopt a new endpoint contract during the backend migration.
+The Better Auth CLI-generated Prisma schema is authoritative for authentication storage. Auth models keep the official `User`, `Session`, `Account`, and `Verification` names and generated field shapes. The Aeko `User` model may retain existing non-auth domain fields, relations, and its `users` table mapping so posts, profiles, payments, communities, and other persisted features remain connected; custom parallel models such as `AuthUser`, `AuthSession`, `AuthAccount`, or `AuthVerification` are prohibited.
 
-Existing accounts remain usable. The migration characterizes the legacy password hashing and token behavior, then uses a reviewed compatibility strategy that can verify existing hashes and move users into Better Auth-managed credentials without forcing password resets. Legacy bearer tokens receive an explicit, time-bounded compatibility policy only if current client evidence requires it; new authentication is issued through Better Auth.
+Nest does not translate or retain the handwritten Express JWT, bcrypt, Passport, verification-code, password-reset, Google callback, or token-cookie implementation. It does not provide legacy-auth compatibility controllers. Better Auth owns `/api/auth/**` directly, and client-side authentication changes required by its native contract are documented explicitly.
+
+Legacy password/token/OAuth columns may be preserved temporarily for data safety, but no Nest runtime code reads or writes them. Their deprecation, optionality, and eventual removal require an explicit reviewed migration; the Better Auth `Account` model is the only credential/provider store used by the new runtime.
 
 Authorization is represented by Nest guards and typed policies for authenticated user, role, ownership, privacy, blocking, administrator, and two-factor requirements. Authentication alone never implies authorization.
 
@@ -206,9 +208,9 @@ Maintainability comes from feature ownership, small typed services, constructor 
 The repository will contain:
 
 - the machine-readable capability inventory and route/event/job coverage report;
-- the migration-corrections register;
+- the migration-corrections register, including the intentional native Better Auth contract cutover;
 - module ownership and dependency documentation;
-- Better Auth account/session/backfill and rollback instructions;
+- Better Auth CLI schema provenance, native account/session cutover, and rollback instructions;
 - AdminJS and client-side compatibility notes without migrating UI code;
 - environment and provider configuration reference with no secrets;
 - cutover, monitoring, and rollback runbooks;
@@ -218,4 +220,3 @@ The repository will contain:
 ## Completion Definition
 
 The migration is 10/10 complete only when executable evidence proves that every supported Express capability exists in NestJS, all approved corrections are implemented, existing data and clients remain compatible, strict null-safe type gates pass, the complete battle-test suite passes, performance does not regress materially, operational ownership is singular, rollback is proven, and the independent reviewer returns Pass.
-

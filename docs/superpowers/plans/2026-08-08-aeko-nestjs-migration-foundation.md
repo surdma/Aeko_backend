@@ -15,8 +15,8 @@
 - Use the Nest CLI to generate new Nest artifacts and append every command to `docs/nestjs-migration/nest-cli-ledger.md`.
 - Application source contains no explicit or implicit `any`, unsafe double casts, blanket TypeScript suppressions, or unchecked non-null assertions.
 - Keep legitimate nullable database semantics, but narrow every nullable value before use.
-- Restore the full existing Prisma schema; do not deploy migrations or backfills to any database in this plan.
-- Better Auth replaces handwritten authentication while compatibility controllers preserve legacy client contracts.
+- Restore the full existing non-auth Prisma domain schema and merge the CLI-generated Better Auth schema; do not deploy migrations or backfills to any database in this plan.
+- Better Auth replaces handwritten authentication completely; native Better Auth endpoints and CLI-generated official auth models are authoritative, with no legacy auth compatibility controllers.
 - AdminJS UI is not migrated; its persistence and export dependencies remain compatible and documented.
 - Expensive endpoint-by-endpoint parity testing runs after feature translation is complete. Every task in this plan must still pass strict type checking, Prisma validation where applicable, and production build checks.
 - Never claim the backend migration complete from compilation, directory presence, or inventory counts.
@@ -99,7 +99,7 @@ Set these manifest values exactly:
 }
 ```
 
-Install the foundation packages with pnpm: `@nestjs/config`, `@prisma/adapter-pg`, `pg`, `zod`, `helmet`, `cookie-parser`, `@thallesp/nestjs-better-auth`, `bcrypt`, and `jose`; install matching type packages and `@mrleebo/prisma-ast` as development dependencies where the library does not ship types. Keep Better Auth and Prisma on the versions already locked unless resolution proves an incompatibility.
+Install the foundation packages with pnpm: `@nestjs/config`, `@prisma/adapter-pg`, `pg`, `zod`, `helmet`, `cookie-parser`, and `@thallesp/nestjs-better-auth`; install matching type packages and `@mrleebo/prisma-ast` as development dependencies where the library does not ship types. Better Auth may retain its own transitive `jose` dependency, but application code must not add direct JWT or bcrypt implementations. Keep Better Auth and Prisma on the versions already locked unless resolution proves an incompatibility.
 
 - [ ] **Step 4: Enable strict compiler and lint gates**
 
@@ -244,44 +244,41 @@ git add -- scripts/inventory docs/nestjs-migration/capability-inventory.json doc
 git commit -m "docs: inventory legacy Aeko capabilities"
 ```
 
-### Task 3: Restore The Complete Prisma Contract And Add Better Auth Storage
+### Task 3: Restore The Domain Prisma Contract And Generate Official Better Auth Storage
 
 **Files:**
 - Replace: `prisma/schema.prisma`
 - Regenerate: `prisma/generated/**`
 - Create: `prisma/migrations/20260808_add_better_auth_compatibility/migration.sql`
-- Create: `scripts/auth/audit-better-auth-readiness.ts`
-- Create: `scripts/auth/backfill-better-auth.ts`
+- Create: `src/lib/auth/auth.schema.ts`
+- Create: `prisma/better-auth.generated.prisma`
 - Create: `docs/nestjs-migration/database-compatibility.md`
 - Create: `test/migration/prisma-schema.spec.ts`
-- Create: `test/auth/better-auth-backfill.spec.ts`
+- Create: `test/auth/better-auth-schema.spec.ts`
 
 **Interfaces:**
 - Consumes: the complete legacy Prisma schema and existing PostgreSQL table/column mappings
-- Produces: Prisma 7 generated client, legacy `User` compatibility, additive `Account`, `Session`, and `Verification` storage, and dry-run-only auth audit/backfill commands
+- Produces: Prisma 7 generated client, preserved Aeko domain relations, and CLI-generated official Better Auth `User`, `Session`, `Account`, and `Verification` storage
 
 - [ ] **Step 1: Write failing schema preservation tests**
 
-Parse the legacy and target Prisma schemas and assert every legacy model, enum, mapped table, field name, scalar/list shape, relation, index, unique constraint, default, and mapped column is present unchanged in the target unless listed in `corrections.json`. Add explicit assertions that target `User` remains mapped to `users`, retains its existing required `password`, and gains Better Auth fields and relations without a second user table.
+Parse the legacy and target Prisma schemas and assert every non-auth legacy model, enum, mapped table, field name, scalar/list shape, relation, index, unique constraint, default, and mapped column is present unchanged in the target unless listed in `corrections.json`. Assert that one canonical `User` model remains mapped to `users`, retains every non-auth Aeko field/relation, and incorporates the CLI-generated Better Auth user fields without a second user model.
 
-- [ ] **Step 2: Write failing backfill tests**
+- [ ] **Step 2: Write failing Better Auth schema provenance tests**
 
-Against an in-memory repository port, cover:
+Assert that:
 
-- existing email/password users;
-- existing Google OAuth users;
-- already-backfilled users;
-- malformed or duplicate legacy OAuth identifiers;
-- batch continuation and checkpointing;
-- dry-run producing counts without writes;
-- reruns producing no duplicate accounts;
-- no plaintext password or token logging.
+- `src/lib/auth/auth.schema.ts` contains only Aeko Better Auth configuration and has no imports from Express, Passport, JSON Web Token, bcrypt, Verilo packages, email templates, or legacy auth services;
+- Better Auth CLI output contains the official `User`, `Session`, `Account`, and `Verification` models and no custom `AuthUser`, `AuthSession`, `AuthAccount`, or `AuthVerification` models;
+- the merged target schema matches the CLI-generated auth fields and constraints;
+- legacy `password`, `oauthId`, `oauthProvider`, `emailVerification`, and `twoFactorAuth` fields are not consumed as Better Auth credential/session storage;
+- no schema generation command connects to or mutates a database.
 
 - [ ] **Step 3: Verify RED**
 
-Run: `pnpm exec jest test/migration/prisma-schema.spec.ts test/auth/better-auth-backfill.spec.ts --runInBand`
+Run: `pnpm exec jest test/migration/prisma-schema.spec.ts test/auth/better-auth-schema.spec.ts --runInBand`
 
-Expected: FAIL because the target currently contains only four Better Auth models and no legacy schema/backfill.
+Expected: FAIL because the target currently has only the generated auth schema, the Aeko domain schema is absent, and the current auth configuration is Verilo-derived.
 
 - [ ] **Step 4: Restore the legacy schema for Prisma 7**
 
@@ -298,76 +295,17 @@ datasource db {
 }
 ```
 
-Do not rename or reformat mapped database identifiers as a migration shortcut.
+Do not rename or reformat non-auth mapped database identifiers as a migration shortcut. Do not copy the legacy `password` field into Better Auth `Account.password` or implement legacy hash verification.
 
-- [ ] **Step 5: Add Better Auth compatibility fields and models**
+- [ ] **Step 5: Generate the official Better Auth schema with the CLI**
 
-Extend the existing `User` model with:
+Create a schema-only Better Auth configuration with Aeko as the application, the Prisma PostgreSQL adapter, native email/password, Google when configured, bearer sessions, and approved official plugins only. Run the Better Auth CLI `generate` command with that exact configuration and write its unedited output to `prisma/better-auth.generated.prisma`. Do not use `migrate`; the official Prisma adapter supports generation, not Better Auth-managed schema migration.
 
-```prisma
-emailVerified Boolean        @default(false) @map("better_auth_email_verified")
-image         String?        @map("better_auth_image")
-sessions      AuthSession[]
-accounts      AuthAccount[]
-```
+Merge the CLI-generated `User`, `Session`, `Account`, and `Verification` definitions into the complete Aeko schema. Keep those official model names and generated fields/constraints. Extend the canonical `User` only with preserved Aeko domain fields/relations and its existing `@@map("users")`; do not create parallel auth-prefixed models.
 
-Add additive models mapped to isolated table names:
+- [ ] **Step 6: Create a reviewed Prisma migration without executing it**
 
-```prisma
-model AuthSession {
-  id        String   @id @default(uuid())
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("better_auth_sessions")
-}
-
-model AuthAccount {
-  id                    String    @id @default(uuid())
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  @@unique([providerId, accountId])
-  @@index([userId])
-  @@map("better_auth_accounts")
-}
-
-model AuthVerification {
-  id         String   @id @default(uuid())
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  @@index([identifier])
-  @@map("better_auth_verifications")
-}
-```
-
-Configure Better Auth model names to match these Prisma model names; adapter configuration uses Prisma model names, not table names.
-
-- [ ] **Step 6: Create additive migration and dry-run tooling**
-
-The SQL migration may only add the two `users` columns and the three Better Auth tables/indexes/foreign keys. It must not drop, rename, truncate, or rewrite a legacy table. The audit script reports candidate counts and conflicts. The backfill requires `--dry-run` by default and refuses writes unless both `--apply` and an explicit non-production confirmation variable are supplied.
+The SQL migration adds the CLI-required Better Auth user columns and official `session`, `account`, and `verification` tables/indexes/foreign keys. Legacy auth columns may be made nullable or documented as deprecated, but this plan must not drop them or copy their values into Better Auth credentials. The migration must not drop, rename, truncate, rewrite, or execute against a legacy table.
 
 - [ ] **Step 7: Validate without deploying**
 
@@ -375,14 +313,14 @@ Run: `pnpm prisma:validate`
 
 Run: `pnpm prisma:generate`
 
-Run: `pnpm exec jest test/migration/prisma-schema.spec.ts test/auth/better-auth-backfill.spec.ts --runInBand`
+Run: `pnpm exec jest test/migration/prisma-schema.spec.ts test/auth/better-auth-schema.spec.ts --runInBand`
 
-Expected: PASS. Do not run `prisma migrate deploy`, `prisma migrate dev`, or the backfill against a real database in this task.
+Expected: PASS. Do not run `prisma migrate deploy`, `prisma migrate dev`, Better Auth `migrate`, or any schema command against a real database in this task.
 
 - [ ] **Step 8: Commit the task**
 
 ```powershell
-git add -- prisma scripts/auth docs/nestjs-migration/database-compatibility.md test/migration/prisma-schema.spec.ts test/auth/better-auth-backfill.spec.ts
+git add -- prisma src/lib/auth/auth.schema.ts docs/nestjs-migration/database-compatibility.md test/migration/prisma-schema.spec.ts test/auth/better-auth-schema.spec.ts
 git commit -m "feat: restore Aeko schema with Better Auth storage"
 ```
 
@@ -474,27 +412,27 @@ git add -- src test/foundation docs/nestjs-migration/nest-cli-ledger.md
 git commit -m "feat: establish strict NestJS application foundation"
 ```
 
-### Task 5: Install Aeko Better Auth And Typed Authorization Boundaries
+### Task 5: Install Native Aeko Better Auth And Typed Authorization Boundaries
 
 **Files:**
 - Replace: `src/auth/**`
 - Replace: `src/lib/auth/**`
+- Modify: `package.json`
+- Modify: `pnpm-lock.yaml`
 - Create via Nest CLI: `src/auth/guards/**`
 - Create via Nest CLI: `src/auth/decorators/**`
 - Create: `src/auth/auth.types.ts`
 - Create: `src/auth/auth.config.ts`
-- Create: `src/auth/legacy-auth-contracts.ts`
 - Create: `docs/nestjs-migration/auth-compatibility.md`
 - Create: `test/auth/auth-configuration.spec.ts`
 - Create: `test/auth/authorization.spec.ts`
 
 **Interfaces:**
-- Produces: Aeko Better Auth instance, `AuthenticatedPrincipal`, anonymous/session guards, ownership/role/2FA policies, and typed legacy auth contract definitions
-- Does not yet produce: the complete legacy auth controller behavior, which belongs to the auth/users/security domain plan
+- Produces: Aeko Better Auth instance, native `/api/auth/**` handling, `AuthenticatedPrincipal`, anonymous/session guards, and ownership/role/2FA policies
 
-- [ ] **Step 1: Characterize legacy auth contracts**
+- [ ] **Step 1: Inventory legacy auth removal and client cutover**
 
-Record all `/api/auth` and overlapping `/api/users` endpoints, current status/envelopes, seven-day bearer/cookie behavior, bcrypt cost, partial 2FA claims, banned-user handling, verification JSON behavior, Google web/mobile flows, and error defects. Mark raw errors, verification-code disclosure, OAuth deep-link token exposure, and missing ownership/enum defenses in `corrections.json` where evidenced.
+Record every legacy JWT, bcrypt, Passport, verification-code, password-reset, Google callback, token-cookie, and auth middleware capability as removed/replaced by a named Better Auth native endpoint or plugin. Document client changes for Better Auth session cookies/bearer tokens and native response contracts. Do not create compatibility controllers or reproduce legacy auth payloads.
 
 - [ ] **Step 2: Generate Aeko auth boundaries using Nest CLI**
 
@@ -514,11 +452,11 @@ If an artifact already exists, move or replace it only after preserving any Aeko
 
 - [ ] **Step 3: Write focused configuration and policy tests**
 
-Assert the auth instance uses Aeko, `/api/auth`, the Prisma PostgreSQL adapter, email/password minimum length 6 for legacy compatibility, Google only when configured, bearer sessions, secure production cookies, trusted origins, and `AuthUser`/`AuthSession`/`AuthAccount` model names. Test anonymous, authenticated, banned, role, ownership, partial-2FA, and full-2FA policy decisions.
+Assert the auth instance uses Aeko, `/api/auth`, the Prisma PostgreSQL adapter, Better Auth's native email/password policy, Google only when configured, bearer sessions, secure production cookies, trusted origins, and official `User`/`Session`/`Account`/`Verification` model names. Test anonymous, authenticated, banned, role, ownership, partial-2FA, and full-2FA policy decisions.
 
 - [ ] **Step 4: Configure Better Auth from Aeko evidence**
 
-Use the existing `User` model and additive auth models. Configure email/password, Google OAuth, bearer support, and two-factor support required by legacy behavior. Use Aeko email/provider ports rather than importing application-specific concrete services into the auth instance. Keep compatibility response translation outside Better Auth configuration.
+Use the CLI-generated official `User`, `Session`, `Account`, and `Verification` models. Configure native email/password, Google OAuth, bearer support, and Better Auth two-factor support. Use Aeko email/provider ports rather than importing application-specific concrete services into the auth instance. Remove direct `bcrypt`, `@types/bcrypt`, and application-level `jose` dependencies if they have no non-auth consumer; Better Auth may retain its own transitive cryptographic dependencies.
 
 - [ ] **Step 5: Define the principal without Prisma leakage**
 
@@ -537,9 +475,9 @@ interface AuthenticatedPrincipal {
 
 Guards attach only this immutable principal. They do not delete fields from a Prisma object or mutate request user records.
 
-- [ ] **Step 6: Define compatibility contracts**
+- [ ] **Step 6: Prove legacy auth code is absent**
 
-Create Zod schemas and response types for every legacy auth endpoint without yet implementing all handlers. The later auth domain plan must consume these exported contracts verbatim.
+Add static assertions that Nest auth source contains no Express router, Passport, `jsonwebtoken`, bcrypt password flow, legacy verification code, legacy password reset token, or compatibility controller implementation. Better Auth is mounted as the only `/api/auth/**` owner.
 
 - [ ] **Step 7: Verify auth foundation**
 
