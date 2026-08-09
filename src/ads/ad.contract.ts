@@ -16,6 +16,14 @@ export const AD_STATUSES = [
 export type AdStatus = (typeof AD_STATUSES)[number];
 export type AdPricingModel = 'cpm' | 'cpc' | 'cpa';
 
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue };
+
 export interface AdRange {
   readonly min: number;
   readonly max: number;
@@ -128,6 +136,17 @@ export interface AdAnalytics {
   readonly frequency: number;
 }
 
+export interface AdAdvertiserView {
+  readonly username: string;
+  readonly profilePicture: string | null;
+  readonly blueTick: boolean;
+}
+
+/**
+ * The legacy response shape. `Status` is deliberately absent: Express relied on
+ * `Status: undefined` being dropped by `res.json`, which is not a guarantee we
+ * want to depend on, so the internal column never enters the projection.
+ */
 export interface AdView {
   readonly id: string;
   readonly title: string;
@@ -135,8 +154,20 @@ export interface AdView {
   readonly mediaType: string;
   readonly mediaUrl: string | null;
   readonly mediaUrls: readonly string[];
+  readonly targetAudience: JsonValue;
+  readonly budget: JsonValue;
+  readonly pricing: JsonValue;
+  readonly campaign: JsonValue;
+  readonly callToAction: JsonValue;
+  readonly placement: JsonValue;
+  readonly frequency: JsonValue;
+  readonly analytics: JsonValue;
   readonly status: AdStatus;
   readonly advertiserId: string;
+  readonly advertiser: AdAdvertiserView | null;
+  readonly performanceScore: number;
+  readonly remainingBudget: number;
+  readonly daysRemaining: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
@@ -148,6 +179,69 @@ export interface AdPage {
     pages: number;
     total: number;
   }>;
+}
+
+export interface TargetedAds {
+  readonly ads: readonly AdView[];
+  readonly count: number;
+}
+
+export interface AdAnalyticsView {
+  readonly overview: Readonly<{
+    impressions: number;
+    clicks: number;
+    ctr: number;
+    conversions: number;
+    conversionRate: number;
+    reach: number;
+    frequency: number;
+    performanceScore: number;
+  }>;
+  readonly budget: Readonly<{
+    total: number;
+    spent: number;
+    remaining: number;
+    currency: string;
+  }>;
+  readonly engagement: JsonValue;
+  readonly demographics: JsonValue;
+  readonly performance: JsonValue;
+  readonly campaign: Readonly<{
+    daysRemaining: number;
+    status: AdStatus;
+    objective: string;
+  }>;
+}
+
+export interface AdDashboardEntry {
+  readonly id: string;
+  readonly title: string;
+  readonly performanceScore: number;
+  readonly ctr: number;
+  readonly conversions: number;
+}
+
+export interface AdDashboard {
+  readonly summary: Readonly<{
+    totalAds: number;
+    activeAds: number;
+    totalSpent: number;
+    totalImpressions: number;
+    totalClicks: number;
+    totalConversions: number;
+    averageCTR: number;
+  }>;
+  readonly byStatus: Readonly<Record<string, number>>;
+  readonly topPerformingAds: readonly AdDashboardEntry[];
+  readonly spending: Readonly<{
+    totalBudget: number;
+    totalSpent: number;
+    remainingBudget: number;
+  }>;
+}
+
+export interface DashboardQuery {
+  readonly days: number;
 }
 
 const finitePositive = z.number().finite().positive();
@@ -478,6 +572,22 @@ export const parseAdUpdate = (input: unknown): AdUpdate => {
       : {}),
     ...(value.status !== undefined ? { status: value.status } : {}),
   });
+};
+
+/**
+ * Legacy accepted `timeRange=30d` and fed `parseInt` straight into a Date. A
+ * non-numeric value produced an Invalid Date and a 500; here it falls back to
+ * the documented 30-day window.
+ */
+export const parseDashboardQuery = (input: unknown): DashboardQuery => {
+  const raw: unknown =
+    typeof input === 'object' && input !== null
+      ? Reflect.get(input, 'timeRange')
+      : undefined;
+  if (typeof raw !== 'string') return Object.freeze({ days: 30 });
+  const days = Number.parseInt(raw.replace(/d$/u, ''), 10);
+  if (!Number.isInteger(days) || days < 1) return Object.freeze({ days: 30 });
+  return Object.freeze({ days: Math.min(365, days) });
 };
 
 export const parseAdListQuery = (input: unknown): AdListQuery =>

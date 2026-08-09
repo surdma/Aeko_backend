@@ -112,7 +112,7 @@ Expected: all contracts return explicit values with no `undefined` and reject ow
 
 **Interfaces:** Produces `create`, `listOwned`, `targeted`, `dashboard`, `analytics`, `updateOwned`, and `deleteOwned`. All user routes use `SessionGuard`; delete also uses `TwoFactorGuard`.
 
-- [ ] **Step 1: Write lifecycle RED**
+- [x] **Step 1: Write lifecycle RED**
 
 ```ts
 await expect(service.updateOwned(other, adId, update)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
@@ -121,15 +121,15 @@ expect((await service.listOwned(ownerId, query)).items[0]).not.toHaveProperty('S
 expect(await service.targeted(userId, 5)).toEqual([highestEligibleBid]);
 ```
 
-- [ ] **Step 2: Run lifecycle RED**
+- [x] **Step 2: Run lifecycle RED**
 
 Expected: FAIL because generated ads service has no behavior.
 
-- [ ] **Step 3: Implement lifecycle**
+- [x] **Step 3: Implement lifecycle**
 
 Register exact routes `POST/GET /api/ads`, `GET /targeted`, `GET /dashboard`, `GET /:adId/analytics`, `PUT/DELETE /:adId`. Preserve newest-first owner pages, location/follower targeting, bid ordering, time/budget eligibility, dashboard formulae, and legacy response field `status`; correct every internal `status` write/read to Prisma `Status`. Updates allow only title, description, approved media/targeting/budget/pricing/campaign/CTA/placement fields and legal owner status transitions.
 
-- [ ] **Step 4: Run lifecycle GREEN**
+- [x] **Step 4: Run lifecycle GREEN**
 
 Expected: exact routes, ownership, 2FA deletion, targeting, dashboard, and safe projections pass.
 
