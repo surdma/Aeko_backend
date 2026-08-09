@@ -14,20 +14,28 @@ export interface VideoProcessingRequest {
 }
 
 const imageEffectSchema = z
-  .object({ filter: z.enum(['none', 'greyscale', 'blur', 'rotate']).default('none') })
+  .object({
+    filter: z.enum(['none', 'greyscale', 'blur', 'rotate']).default('none'),
+  })
   .strict();
 
 const videoEffectSchema = z
-  .object({ effect: z.enum(['none', 'grayscale', 'negate', 'blur']).default('none') })
+  .object({
+    effect: z.enum(['none', 'grayscale', 'negate', 'blur']).default('none'),
+  })
   .strict();
 
 const fail = (scope: string, error: z.ZodError): never => {
   const fields = error.issues.map((issue) =>
     issue.path.length > 0 ? issue.path.join('.') : 'effect',
   );
-  throw new DomainError('VALIDATION_FAILED', `Invalid ${scope}: ${fields.join(', ')}`, {
-    [scope]: error.issues.map((issue) => issue.message),
-  });
+  throw new DomainError(
+    'VALIDATION_FAILED',
+    `Invalid ${scope}: ${fields.join(', ')}`,
+    {
+      [scope]: error.issues.map((issue) => issue.message),
+    },
+  );
 };
 
 export const parseImageEffect = (input: unknown): ImageProcessingRequest => {

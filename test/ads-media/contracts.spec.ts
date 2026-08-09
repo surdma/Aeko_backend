@@ -76,7 +76,10 @@ describe('ad contracts', () => {
       ),
     ).toThrow('campaign');
     expect(() =>
-      parseAdCreate({ ...validCreate, mediaUrl: 'http://example.com/ad.png' }, now),
+      parseAdCreate(
+        { ...validCreate, mediaUrl: 'http://example.com/ad.png' },
+        now,
+      ),
     ).toThrow('mediaUrl');
     expect(() =>
       parseAdCreate(
@@ -107,7 +110,9 @@ describe('ad contracts', () => {
     expect(() =>
       parseTrackEvent({ adId: 'a1', metadata: { secret: { nested: true } } }),
     ).toThrow('metadata');
-    expect(parseReviewDecision({ status: 'rejected', reason: ' Policy ' })).toEqual({
+    expect(
+      parseReviewDecision({ status: 'rejected', reason: ' Policy ' }),
+    ).toEqual({
       status: 'rejected',
       reason: 'Policy',
     });
@@ -129,7 +134,11 @@ describe('media-processing contracts', () => {
     expect(parseVideoEffect({ effect: 'grayscale' })).toEqual({
       effect: 'grayscale',
     });
-    expect(() => parseImageEffect({ filter: 'shell-command' })).toThrow('effect');
-    expect(() => parseVideoEffect({ effect: 'shell-command' })).toThrow('effect');
+    expect(() => parseImageEffect({ filter: 'shell-command' })).toThrow(
+      'effect',
+    );
+    expect(() => parseVideoEffect({ effect: 'shell-command' })).toThrow(
+      'effect',
+    );
   });
 });

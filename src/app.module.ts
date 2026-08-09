@@ -17,7 +17,14 @@ import { AdsModule } from './ads/ads.module';
 import { MediaProcessingModule } from './providers/media-processing/media-processing.module';
 
 @Module({
-  imports: [UsersModule, ProfilesModule, SecurityModule, MediaModule, AdsModule, MediaProcessingModule],
+  imports: [
+    UsersModule,
+    ProfilesModule,
+    SecurityModule,
+    MediaModule,
+    AdsModule,
+    MediaProcessingModule,
+  ],
 })
 export class AppModule {
   static register(

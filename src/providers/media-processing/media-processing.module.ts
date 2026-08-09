@@ -4,6 +4,6 @@ import { MediaProcessingService } from './media-processing.service';
 
 @Module({
   controllers: [MediaProcessingController],
-  providers: [MediaProcessingService]
+  providers: [MediaProcessingService],
 })
 export class MediaProcessingModule {}

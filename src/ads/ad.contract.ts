@@ -156,9 +156,14 @@ const nullableHttpsUrl = httpsUrl.nullable();
 const boundedText = (maximum: number) => z.string().trim().min(1).max(maximum);
 
 const rangeSchema = z
-  .object({ min: z.number().finite().nonnegative(), max: z.number().finite().nonnegative() })
+  .object({
+    min: z.number().finite().nonnegative(),
+    max: z.number().finite().nonnegative(),
+  })
   .strict()
-  .refine((value) => value.max >= value.min, { message: 'max must be at least min' });
+  .refine((value) => value.max >= value.min, {
+    message: 'max must be at least min',
+  });
 
 const targetingSchema = z
   .object({
@@ -222,7 +227,9 @@ const callToActionSchema = z
   .strict()
   .default({ type: 'learn_more', url: null });
 
-const placementSchema = z.record(z.string().trim().min(1).max(100), z.boolean()).default({ feed: true });
+const placementSchema = z
+  .record(z.string().trim().min(1).max(100), z.boolean())
+  .default({ feed: true });
 const frequencySchema = z
   .object({
     cap: z.number().int().min(1).max(100).default(3),
@@ -264,10 +271,16 @@ const adUpdateSchema = z
     status: z.enum(AD_STATUSES).optional(),
   })
   .strict()
-  .refine((value) => Object.keys(value).length > 0, { message: 'update is required' });
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'update is required',
+  });
 
 const queryInteger = (fallback: number, maximum: number) =>
-  z.coerce.number().int().catch(fallback).transform((value) => Math.min(maximum, Math.max(1, value)));
+  z.coerce
+    .number()
+    .int()
+    .catch(fallback)
+    .transform((value) => Math.min(maximum, Math.max(1, value)));
 
 const listQuerySchema = z
   .object({
@@ -308,26 +321,40 @@ const analyticsQuerySchema = z
     to: z.coerce.date().nullable().default(null),
   })
   .strip()
-  .refine((value) => value.from === null || value.to === null || value.to >= value.from, {
-    message: 'to must not precede from',
-    path: ['to'],
-  });
+  .refine(
+    (value) =>
+      value.from === null || value.to === null || value.to >= value.from,
+    {
+      message: 'to must not precede from',
+      path: ['to'],
+    },
+  );
 
 const validationFailure = (scope: string, error: z.ZodError): never => {
   const fields = error.issues.map((issue) =>
     issue.path.length > 0 ? issue.path.join('.') : scope,
   );
-  throw new DomainError('VALIDATION_FAILED', `Invalid ${scope}: ${fields.join(', ')}`, {
-    [scope]: error.issues.map((issue) => issue.message),
-  });
+  throw new DomainError(
+    'VALIDATION_FAILED',
+    `Invalid ${scope}: ${fields.join(', ')}`,
+    {
+      [scope]: error.issues.map((issue) => issue.message),
+    },
+  );
 };
 
-const parseWithScope = <T>(schema: z.ZodType<T>, input: unknown, scope: string): T => {
+const parseWithScope = <T>(
+  schema: z.ZodType<T>,
+  input: unknown,
+  scope: string,
+): T => {
   const result = schema.safeParse(input);
   return result.success ? result.data : validationFailure(scope, result.error);
 };
 
-const normalizeTargeting = (value: z.output<typeof targetingSchema>): AdTargeting =>
+const normalizeTargeting = (
+  value: z.output<typeof targetingSchema>,
+): AdTargeting =>
   Object.freeze({
     age: value.age,
     location: Object.freeze([...value.location]),
@@ -335,7 +362,8 @@ const normalizeTargeting = (value: z.output<typeof targetingSchema>): AdTargetin
   });
 
 const normalizeBudget = (
-  value: z.output<typeof budgetInputSchema> | z.output<typeof budgetUpdateSchema>,
+  value:
+    z.output<typeof budgetInputSchema> | z.output<typeof budgetUpdateSchema>,
 ): AdBudget =>
   Object.freeze({
     total: value.total,
@@ -347,7 +375,9 @@ const normalizeBudget = (
 const normalizePricing = (value: z.output<typeof pricingSchema>): AdPricing =>
   Object.freeze({ ...value });
 
-const normalizeCampaign = (value: z.output<typeof campaignSchema>): AdCampaign =>
+const normalizeCampaign = (
+  value: z.output<typeof campaignSchema>,
+): AdCampaign =>
   Object.freeze({
     objective: value.objective,
     schedule: Object.freeze({
@@ -361,13 +391,23 @@ const normalizeCampaign = (value: z.output<typeof campaignSchema>): AdCampaign =
     }),
   });
 
-const ensureSchedule = (campaign: AdCampaign, now: Date, scope: string): void => {
+const ensureSchedule = (
+  campaign: AdCampaign,
+  now: Date,
+  scope: string,
+): void => {
   const startDate = new Date(campaign.schedule.startDate);
   const endDate = new Date(campaign.schedule.endDate);
   if (startDate < now || endDate <= startDate) {
-    throw new DomainError('VALIDATION_FAILED', `Invalid ${scope}: campaign.schedule`, {
-      [scope]: ['Start date cannot be in the past and end date must be after start date.'],
-    });
+    throw new DomainError(
+      'VALIDATION_FAILED',
+      `Invalid ${scope}: campaign.schedule`,
+      {
+        [scope]: [
+          'Start date cannot be in the past and end date must be after start date.',
+        ],
+      },
+    );
   }
 };
 
@@ -395,16 +435,26 @@ export const parseAdUpdate = (input: unknown): AdUpdate => {
   const value = parseWithScope(adUpdateSchema, input, 'ad update');
   return Object.freeze({
     ...(value.title !== undefined ? { title: value.title } : {}),
-    ...(value.description !== undefined ? { description: value.description } : {}),
+    ...(value.description !== undefined
+      ? { description: value.description }
+      : {}),
     ...(value.mediaType !== undefined ? { mediaType: value.mediaType } : {}),
     ...(value.mediaUrl !== undefined ? { mediaUrl: value.mediaUrl } : {}),
-    ...(value.mediaUrls !== undefined ? { mediaUrls: Object.freeze([...value.mediaUrls]) } : {}),
+    ...(value.mediaUrls !== undefined
+      ? { mediaUrls: Object.freeze([...value.mediaUrls]) }
+      : {}),
     ...(value.targetAudience !== undefined
       ? { targetAudience: normalizeTargeting(value.targetAudience) }
       : {}),
-    ...(value.budget !== undefined ? { budget: normalizeBudget(value.budget) } : {}),
-    ...(value.pricing !== undefined ? { pricing: normalizePricing(value.pricing) } : {}),
-    ...(value.campaign !== undefined ? { campaign: normalizeCampaign(value.campaign) } : {}),
+    ...(value.budget !== undefined
+      ? { budget: normalizeBudget(value.budget) }
+      : {}),
+    ...(value.pricing !== undefined
+      ? { pricing: normalizePricing(value.pricing) }
+      : {}),
+    ...(value.campaign !== undefined
+      ? { campaign: normalizeCampaign(value.campaign) }
+      : {}),
     ...(value.callToAction !== undefined
       ? { callToAction: Object.freeze({ ...value.callToAction }) }
       : {}),
@@ -422,11 +472,16 @@ export const parseAdListQuery = (input: unknown): AdListQuery =>
   Object.freeze(parseWithScope(listQuerySchema, input, 'ad list query'));
 
 export const parseAdTargetedQuery = (input: unknown): AdTargetedQuery =>
-  Object.freeze(parseWithScope(targetedQuerySchema, input, 'targeted ad query'));
+  Object.freeze(
+    parseWithScope(targetedQuerySchema, input, 'targeted ad query'),
+  );
 
 export const parseTrackEvent = (input: unknown): TrackEvent => {
   const value = parseWithScope(trackEventSchema, input, 'track event');
-  return Object.freeze({ ...value, metadata: Object.freeze({ ...value.metadata }) });
+  return Object.freeze({
+    ...value,
+    metadata: Object.freeze({ ...value.metadata }),
+  });
 };
 
 export const parseReviewDecision = (input: unknown): ReviewDecision =>
