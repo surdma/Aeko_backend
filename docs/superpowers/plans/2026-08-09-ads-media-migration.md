@@ -186,7 +186,7 @@ Register exact `GET /api/ads/admin/review` and `POST /api/ads/admin/review/:adId
 
 **Interfaces:** `ImageProcessorPort.process(input): Promise<ProcessedMedia>` and `VideoProcessorPort.process(input): Promise<ProcessedMedia>` accept validated temporary inputs and return bounded files/URLs. Controllers expose exact `POST /api/photo/edit` and `POST /api/video/edit`.
 
-- [ ] **Step 1: Write processing RED**
+- [x] **Step 1: Write processing RED**
 
 ```ts
 await expect(service.editPhoto(executable, 'blur')).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
@@ -195,17 +195,17 @@ expect(photoRouteGuards).toContain(SessionGuard);
 expect(videoRouteGuards).toContain(SessionGuard);
 ```
 
-- [ ] **Step 2: Run RED and install only the reviewed dependency**
+- [x] **Step 2: Run RED and install only the reviewed dependency**
 
 Run: `corepack pnpm add sharp`
 
 No fluent wrapper is added; invoke FFmpeg with `spawn(file, args, { shell: false })`, fixed argument arrays, 60-second timeout, and a validated configured executable name/path.
 
-- [ ] **Step 3: Implement processing**
+- [x] **Step 3: Implement processing**
 
 Use memory upload for photos (10 MiB) and bounded temporary disk storage for video (100 MiB); validate MIME plus magic bytes before provider calls; allow only greyscale/blur/rotate and grayscale/negate/blur; use cryptographically random filenames inside one configured storage root; remove input/output on every failure/abort; never expose paths or raw Sharp/FFmpeg errors. Missing Sharp/FFmpeg returns fixed `PROVIDER_UNAVAILABLE`.
 
-- [ ] **Step 4: Run processing GREEN**
+- [x] **Step 4: Run processing GREEN**
 
 Expected: authentication, limits, signatures, allowlists, cleanup, timeouts, provider-unavailable and safe-error cases pass.
 
