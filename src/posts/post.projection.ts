@@ -90,3 +90,43 @@ export const projectPost = (
     updatedAt: record.updatedAt.toISOString(),
   });
 };
+
+/** The legacy Cloudinary effect map for `GET /api/posts/videos`. */
+const VIDEO_EFFECTS: Readonly<Record<string, string>> = {
+  grayscale: 'e_grayscale',
+  reverse: 'e_reverse',
+  loop: 'e_loop:2',
+  accelerate: 'e_accelerate:50',
+};
+
+const transformCloudinaryUrl = (
+  url: string,
+  transformation: string,
+): string => {
+  const marker = '/upload/';
+  const index = url.indexOf(marker);
+  if (index === -1) return url;
+  const tail = url.slice(index + marker.length);
+  // An already-transformed URL is left alone, as in Express.
+  if (tail.startsWith('e_')) return url;
+  return `${url.slice(0, index + marker.length)}${transformation}/${tail}`;
+};
+
+export const withVideoEffect = (
+  post: PostView,
+  effect: string | undefined,
+): PostView => {
+  const transformation =
+    effect === undefined ? undefined : VIDEO_EFFECTS[effect];
+  if (transformation === undefined || post.mediaUrl === null) return post;
+  const mediaUrl = transformCloudinaryUrl(post.mediaUrl, transformation);
+  const mediaUrls = post.mediaUrls.map((url) =>
+    transformCloudinaryUrl(url, transformation),
+  );
+  return Object.freeze({
+    ...post,
+    mediaUrl,
+    mediaUrls: Object.freeze(mediaUrls),
+    media: mediaUrls.length > 1 ? mediaUrls : mediaUrl,
+  });
+};

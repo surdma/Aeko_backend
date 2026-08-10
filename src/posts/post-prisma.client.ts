@@ -37,9 +37,32 @@ export interface PostViewerRecord {
   readonly notInterestedPostIds: readonly string[];
 }
 
+export type PostFilter =
+  | { readonly kind: 'all' }
+  | { readonly kind: 'search'; readonly q: string }
+  | { readonly kind: 'author'; readonly userId: string }
+  | { readonly kind: 'types'; readonly types: readonly string[] }
+  | { readonly kind: 'reposts'; readonly originalPostId: string }
+  | { readonly kind: 'liked'; readonly userId: string };
+
+export interface PostPageQuery {
+  readonly filter: PostFilter;
+  readonly skip: number;
+  readonly take: number;
+}
+
 export interface PostPrismaClient {
   create(data: PostWriteData): Promise<PostRecord>;
   findById(id: string): Promise<PostRecord | null>;
+  findMany(query: PostPageQuery): Promise<readonly PostRecord[]>;
+  count(filter: PostFilter): Promise<number>;
+  findBookmarked(
+    userId: string,
+    skip: number,
+    take: number,
+  ): Promise<readonly PostRecord[]>;
+  countBookmarked(userId: string): Promise<number>;
+  incrementViews(id: string): Promise<number>;
   update(id: string, data: PostWriteData): Promise<PostRecord>;
   delete(id: string): Promise<void>;
   readViewer(id: string): Promise<PostViewerRecord>;
@@ -68,6 +91,74 @@ export const createPostPrismaClient = (client: object): PostPrismaClient => {
       return value === null || value === undefined
         ? null
         : parsePostRecord(value);
+    },
+    async findMany({ filter, skip, take }) {
+      const value = await invoke(postDelegate, 'findMany', [
+        {
+          where: whereOf(filter),
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          include: postInclude,
+        },
+      ]);
+      if (!Array.isArray(value)) invalidResult('findMany');
+      return value.map(parsePostRecord);
+    },
+    async count(filter) {
+      const value = await invoke(postDelegate, 'count', [
+        { where: whereOf(filter) },
+      ]);
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+        invalidResult('count');
+      }
+      return value;
+    },
+    async findBookmarked(userId, skip, take) {
+      const bookmarkDelegate = readObject(client, 'bookmark');
+      requireMethod(bookmarkDelegate, 'findMany');
+      const value = await invoke(bookmarkDelegate, 'findMany', [
+        {
+          where: { userId },
+          orderBy: { savedAt: 'desc' },
+          skip,
+          take,
+          include: { post: { include: postInclude } },
+        },
+      ]);
+      if (!Array.isArray(value)) invalidResult('findMany');
+      return value.flatMap((entry: unknown) => {
+        const post: unknown =
+          typeof entry === 'object' && entry !== null
+            ? Reflect.get(entry, 'post')
+            : null;
+        // A bookmark can outlive its post; those rows are skipped, as before.
+        return post === null || post === undefined
+          ? []
+          : [parsePostRecord(post)];
+      });
+    },
+    async countBookmarked(userId) {
+      const bookmarkDelegate = readObject(client, 'bookmark');
+      requireMethod(bookmarkDelegate, 'count');
+      const value = await invoke(bookmarkDelegate, 'count', [
+        { where: { userId } },
+      ]);
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+        invalidResult('count');
+      }
+      return value;
+    },
+    async incrementViews(id) {
+      const value = await invoke(postDelegate, 'update', [
+        {
+          where: { id },
+          data: { views: { increment: 1 } },
+          select: { views: true },
+        },
+      ]);
+      const record = requireObject(value, 'view result');
+      return readNumber(record, 'views');
     },
     async update(id, data) {
       const value = await invoke(postDelegate, 'update', [
@@ -109,6 +200,23 @@ export const createPostPrismaClient = (client: object): PostPrismaClient => {
       });
     },
   };
+};
+
+const whereOf = (filter: PostFilter): Readonly<Record<string, unknown>> => {
+  switch (filter.kind) {
+    case 'all':
+      return {};
+    case 'search':
+      return { text: { contains: filter.q, mode: 'insensitive' } };
+    case 'author':
+      return { userId: filter.userId };
+    case 'types':
+      return { type: { in: [...filter.types] } };
+    case 'reposts':
+      return { originalPostId: filter.originalPostId };
+    case 'liked':
+      return { likes: { array_contains: filter.userId } };
+  }
 };
 
 /** The legacy relation name for the post author. */

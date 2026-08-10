@@ -125,7 +125,7 @@ Register exact routes `POST /api/posts/create`, `PUT /api/posts/:postId`, `PUT /
 
 **Interfaces:** Produces `feed`, `search`, `byId`, `byUser`, `bookmarks`, `liked`, `mixed`, `videos`, and `reposts`.
 
-- [ ] **Step 1: Write reads RED**
+- [x] **Step 1: Write reads RED**
 
 ```ts
 expect(routeOrder.indexOf('mixed')).toBeLessThan(routeOrder.indexOf(':postId'));
@@ -133,7 +133,7 @@ expect(await service.mixed(viewer, query)).toBeDefined();
 expect((await service.feed(viewer, query)).posts).not.toContainEqual(expect.objectContaining({ id: blockedPostId }));
 ```
 
-- [ ] **Step 2: Run RED, implement, then run GREEN**
+- [x] **Step 2: Run RED, implement, then run GREEN**
 
 `GET /api/posts/mixed` and `GET /api/posts/videos` are declared after `GET /:postId` in Express and are therefore unreachable today. Declare every literal path before the parametric one so both become reachable, and record the reachability change in the compatibility document. Apply the shared visibility policy and bounded pagination to every read.
 

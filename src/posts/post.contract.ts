@@ -77,12 +77,14 @@ export interface PostView {
   readonly updatedAt: string;
 }
 
+/** The legacy pagination envelope for post lists: total, page, pages, limit. */
 export interface PostPage {
   readonly posts: readonly PostView[];
   readonly pagination: Readonly<{
-    current: number;
-    pages: number;
     total: number;
+    page: number;
+    pages: number;
+    limit: number;
   }>;
 }
 

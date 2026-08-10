@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
   Param,
   Post,
   Put,
+  Query,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -16,7 +18,12 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import { CurrentUser } from '../auth/decorators/current-user/current-user.decorator';
 import { SessionGuard } from '../auth/guards/session/session.guard';
-import type { PostView } from './post.contract';
+import {
+  parsePostListQuery,
+  parsePostSearchQuery,
+  type PostPage,
+  type PostView,
+} from './post.contract';
 import { PostsService } from './posts.service';
 
 const MAX_MEDIA_FILES = 10;
@@ -40,6 +47,79 @@ export class PostsController {
     @UploadedFiles() files: unknown,
   ): Promise<PostView> {
     return this.posts.create(principal, body, readUploadPaths(files));
+  }
+
+  // Every literal path is declared before `:postId`. In Express `/mixed` and
+  // `/videos` were declared after it and were therefore unreachable.
+  @Get('feed')
+  feed(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+  ): Promise<readonly PostView[]> {
+    return this.posts.feed(principal);
+  }
+
+  @Get('search')
+  search(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Query() query: unknown,
+  ): Promise<readonly PostView[]> {
+    return this.posts.search(principal, parsePostSearchQuery(query));
+  }
+
+  @Get('mixed')
+  mixed(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+  ): Promise<readonly PostView[]> {
+    return this.posts.mixed(principal);
+  }
+
+  @Get('videos')
+  videos(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Query('effect') effect?: string,
+  ): Promise<readonly PostView[]> {
+    return this.posts.videos(principal, { effect });
+  }
+
+  @Get('user/bookmarks')
+  bookmarks(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Query() query: unknown,
+  ): Promise<PostPage> {
+    return this.posts.bookmarks(principal, parsePostListQuery(query));
+  }
+
+  @Get('user/liked')
+  liked(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Query() query: unknown,
+  ): Promise<PostPage> {
+    return this.posts.liked(principal, parsePostListQuery(query));
+  }
+
+  @Get('user/:userId')
+  byUser(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('userId') userId: string,
+    @Query() query: unknown,
+  ): Promise<PostPage> {
+    return this.posts.byUser(principal, userId, parsePostListQuery(query));
+  }
+
+  @Get(':postId/reposts')
+  reposts(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<readonly PostView[]> {
+    return this.posts.reposts(principal, postId);
+  }
+
+  @Get(':postId')
+  byId(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<PostView> {
+    return this.posts.byId(principal, postId);
   }
 
   @Put(':postId')

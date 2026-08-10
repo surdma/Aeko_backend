@@ -533,5 +533,51 @@
     "replacementBehavior": "Both routes require a session, bound uploads at 10 MiB and 100 MiB, verify magic bytes against the declared type, generate random output names under one configured root, invoke FFmpeg with shell:false and a fixed argument array under a 60-second timeout, and return a fixed unavailable message.",
     "reason": "Anonymous callers must not be able to spend CPU, memory, and disk or learn server paths.",
     "status": "approved"
+  },
+  {
+    "id": "correction:post-read-privacy-bypass",
+    "capabilityIds": [
+      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 686
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 869
+      }
+    ],
+    "legacyBehavior": "GET /api/posts/:postId checked blocking but never post privacy, so any authenticated caller who knew an id could read an only_me, followers, or select_users post. GET /api/posts/:postId/reposts applied neither privacy nor blocking.",
+    "replacementBehavior": "Both reads apply the shared visibility policy, and a denied read is reported as NOT_FOUND so an id cannot be probed.",
+    "reason": "A private post must not be readable by identifier.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:post-invalid-author-include",
+    "capabilityIds": [
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
+      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
+      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
+      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 874
+      },
+      {
+        "file": "prisma/schema.prisma",
+        "line": 10
+      }
+    ],
+    "legacyBehavior": "Four handlers include a Post relation named user, which does not exist on the model; the author relation is users_posts_userIdTouser. Every reachable call raises a Prisma validation error and returns 500.",
+    "replacementBehavior": "One Prisma boundary selects the real author relation and projects it as user for clients.",
+    "reason": "A permanently failing endpoint is not parity.",
+    "status": "approved"
   }
 ]
