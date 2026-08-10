@@ -205,3 +205,51 @@ export const parsePostPrivacy = (input: unknown): PostPrivacy => {
     ),
   });
 };
+
+export interface ShareToStatus {
+  readonly additionalContent: string;
+}
+
+export interface Promotion {
+  readonly budget: number | null;
+  readonly target: string | null;
+  readonly startDate: string | null;
+  readonly endDate: string | null;
+}
+
+const shareToStatusSchema = z
+  .object({ additionalContent: z.string().trim().max(5_000).default('') })
+  .strict();
+
+/**
+ * Legacy coerced budget with `Number(...)`, so `NaN` and negatives reached the
+ * stored ad record unchallenged.
+ */
+const promotionSchema = z
+  .object({
+    budget: z.coerce.number().finite().positive().nullable().default(null),
+    target: boundedText(500).nullable().default(null),
+    startDate: z.coerce.date().nullable().default(null),
+    endDate: z.coerce.date().nullable().default(null),
+  })
+  .strict()
+  .refine(
+    (value) =>
+      value.startDate === null ||
+      value.endDate === null ||
+      value.endDate > value.startDate,
+    { message: 'endDate must be after startDate', path: ['endDate'] },
+  );
+
+export const parseShareToStatus = (input: unknown): ShareToStatus =>
+  Object.freeze(parseWithScope(shareToStatusSchema, input, 'share'));
+
+export const parsePromotion = (input: unknown): Promotion => {
+  const value = parseWithScope(promotionSchema, input, 'promotion');
+  return Object.freeze({
+    budget: value.budget,
+    target: value.target,
+    startDate: value.startDate?.toISOString() ?? null,
+    endDate: value.endDate?.toISOString() ?? null,
+  });
+};

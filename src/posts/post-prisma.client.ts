@@ -15,6 +15,8 @@ export interface PostRecord {
   readonly privacy: JsonValue;
   readonly likes: JsonValue;
   readonly media: JsonValue;
+  readonly engagement: JsonValue;
+  readonly ad: JsonValue;
   readonly status: string;
   readonly isAnchored: boolean;
   readonly nftTokenId: string | null;
@@ -29,6 +31,15 @@ export interface PostRecord {
 export interface PostWriteData {
   readonly [key: string]:
     JsonValue | Date | readonly string[] | number | undefined;
+}
+
+export interface SharedStatusRecord {
+  readonly id: string;
+  readonly userId: string;
+  readonly content: string;
+  readonly sharedPostId: string | null;
+  readonly expiresAt: Date;
+  readonly createdAt: Date;
 }
 
 export interface PostViewerRecord {
@@ -51,8 +62,30 @@ export interface PostPageQuery {
   readonly take: number;
 }
 
+export interface PostTransactionClient {
+  findById(id: string): Promise<PostRecord | null>;
+  update(id: string, data: PostWriteData): Promise<PostRecord>;
+  countBookmarks(postId: string): Promise<number>;
+  findBookmark(userId: string, postId: string): Promise<string | null>;
+  createBookmark(userId: string, postId: string): Promise<void>;
+  deleteBookmark(id: string): Promise<void>;
+}
+
+export const SERIALIZABLE_ATTEMPTS = 3;
+
 export interface PostPrismaClient {
   create(data: PostWriteData): Promise<PostRecord>;
+  /**
+   * Like and bookmark toggles read-modify-write JSON columns, so they run at
+   * `Serializable` isolation with bounded P2034 retry; Express wrote them back
+   * whole with no transaction and lost concurrent updates.
+   */
+  runSerializable<T>(
+    operation: (transaction: PostTransactionClient) => Promise<T>,
+  ): Promise<T>;
+  createSharedStatus(data: PostWriteData): Promise<SharedStatusRecord>;
+  readNotInterested(userId: string): Promise<readonly string[]>;
+  writeNotInterested(userId: string, postIds: readonly string[]): Promise<void>;
   findById(id: string): Promise<PostRecord | null>;
   findMany(query: PostPageQuery): Promise<readonly PostRecord[]>;
   count(filter: PostFilter): Promise<number>;
@@ -91,6 +124,70 @@ export const createPostPrismaClient = (client: object): PostPrismaClient => {
       return value === null || value === undefined
         ? null
         : parsePostRecord(value);
+    },
+    async runSerializable<T>(
+      operation: (transaction: PostTransactionClient) => Promise<T>,
+    ): Promise<T> {
+      requireMethod(client, '$transaction');
+      for (let attempt = 0; attempt < SERIALIZABLE_ATTEMPTS; attempt += 1) {
+        const captured: { readonly value: T }[] = [];
+        try {
+          await invoke(client, '$transaction', [
+            async (transaction: unknown) => {
+              const scope = requireObject(transaction, 'transaction');
+              captured.push({ value: await operation(transactionOps(scope)) });
+            },
+            { isolationLevel: 'Serializable' },
+          ]);
+        } catch (error: unknown) {
+          if (!isWriteConflict(error)) throw error;
+          continue;
+        }
+        const [result] = captured;
+        if (result === undefined) invalidResult('transaction');
+        return result.value;
+      }
+      throw new DomainError(
+        'CONFLICT',
+        'That post is being updated. Please try again.',
+      );
+    },
+    async createSharedStatus(data) {
+      const statusDelegate = readObject(client, 'status');
+      requireMethod(statusDelegate, 'create');
+      const value = await invoke(statusDelegate, 'create', [
+        { data: { ...data } },
+      ]);
+      const record = requireObject(value, 'status result');
+      return Object.freeze({
+        id: readString(record, 'id'),
+        userId: readString(record, 'userId'),
+        content: readNullableString(record, 'content') ?? '',
+        sharedPostId: readNullableString(record, 'sharedPostId'),
+        expiresAt: readDate(record, 'expiresAt'),
+        createdAt: readDate(record, 'createdAt'),
+      });
+    },
+    async readNotInterested(userId) {
+      const value = await invoke(userDelegate, 'findUnique', [
+        { where: { id: userId }, select: { notInterested: true } },
+      ]);
+      if (value === null || value === undefined) return Object.freeze([]);
+      const record = requireObject(value, 'viewer result');
+      return Object.freeze(
+        stringList(
+          asJsonObject(toJsonValue(Reflect.get(record, 'notInterested'))).posts,
+        ),
+      );
+    },
+    async writeNotInterested(userId, postIds) {
+      requireMethod(userDelegate, 'update');
+      await invoke(userDelegate, 'update', [
+        {
+          where: { id: userId },
+          data: { notInterested: { posts: [...postIds] } },
+        },
+      ]);
     },
     async findMany({ filter, skip, take }) {
       const value = await invoke(postDelegate, 'findMany', [
@@ -202,6 +299,55 @@ export const createPostPrismaClient = (client: object): PostPrismaClient => {
   };
 };
 
+const WRITE_CONFLICT_CODE = 'P2034';
+
+const isWriteConflict = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  Reflect.get(error, 'code') === WRITE_CONFLICT_CODE;
+
+const transactionOps = (scope: object): PostTransactionClient => {
+  const postDelegate = readObject(scope, 'post');
+  const bookmarkDelegate = readObject(scope, 'bookmark');
+  return {
+    async findById(id) {
+      const value = await invoke(postDelegate, 'findUnique', [
+        { where: { id }, include: postInclude },
+      ]);
+      return value === null || value === undefined
+        ? null
+        : parsePostRecord(value);
+    },
+    async update(id, data) {
+      const value = await invoke(postDelegate, 'update', [
+        { where: { id }, data: { ...data }, include: postInclude },
+      ]);
+      return parsePostRecord(value);
+    },
+    async countBookmarks(postId) {
+      const value = await invoke(bookmarkDelegate, 'count', [
+        { where: { postId } },
+      ]);
+      return typeof value === 'number' && Number.isInteger(value) && value >= 0
+        ? value
+        : invalidResult('count');
+    },
+    async findBookmark(userId, postId) {
+      const value = await invoke(bookmarkDelegate, 'findUnique', [
+        { where: { userId_postId: { userId, postId } } },
+      ]);
+      if (value === null || value === undefined) return null;
+      return readString(requireObject(value, 'bookmark result'), 'id');
+    },
+    async createBookmark(userId, postId) {
+      await invoke(bookmarkDelegate, 'create', [{ data: { userId, postId } }]);
+    },
+    async deleteBookmark(id) {
+      await invoke(bookmarkDelegate, 'delete', [{ where: { id } }]);
+    },
+  };
+};
+
 const whereOf = (filter: PostFilter): Readonly<Record<string, unknown>> => {
   switch (filter.kind) {
     case 'all':
@@ -270,6 +416,8 @@ const parsePostRecord = (value: unknown): PostRecord => {
     privacy: toJsonValue(Reflect.get(record, 'privacy')),
     likes: toJsonValue(Reflect.get(record, 'likes')),
     media: toJsonValue(Reflect.get(record, 'media')),
+    engagement: toJsonValue(Reflect.get(record, 'engagement')),
+    ad: toJsonValue(Reflect.get(record, 'ad')),
     status: readNullableString(record, 'status') ?? 'active',
     isAnchored: Reflect.get(record, 'isAnchored') === true,
     nftTokenId: readNullableString(record, 'nftTokenId'),

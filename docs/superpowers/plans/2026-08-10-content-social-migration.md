@@ -143,7 +143,7 @@ expect((await service.feed(viewer, query)).posts).not.toContainEqual(expect.obje
 
 **Interfaces:** Produces `like`, `view`, `bookmark`, `notInterested`, `repost`, `shareToStatus`, and `promote`.
 
-- [ ] **Step 1: Write interactions RED**
+- [x] **Step 1: Write interactions RED**
 
 ```ts
 await expect(Promise.all([service.like(viewer, postId), service.like(viewer, postId)])).resolves.toEqual([
@@ -153,7 +153,7 @@ await expect(Promise.all([service.like(viewer, postId), service.like(viewer, pos
 expect(transactionOptions).toContainEqual({ isolationLevel: 'Serializable' });
 ```
 
-- [ ] **Step 2: Run RED, implement, then run GREEN**
+- [x] **Step 2: Run RED, implement, then run GREEN**
 
 Counter and toggle transitions use serializable transactions with bounded P2034 retry so like, view, bookmark, and repost counts cannot be lost. Blocked interactions are refused. Idempotent repeats return the current state rather than double-counting.
 

@@ -579,5 +579,34 @@
     "replacementBehavior": "One Prisma boundary selects the real author relation and projects it as user for clients.",
     "reason": "A permanently failing endpoint is not parity.",
     "status": "approved"
+  },
+  {
+    "id": "correction:post-interaction-integrity",
+    "capabilityIds": [
+      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
+      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
+      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
+      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
+      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 812
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 896
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 952
+      }
+    ],
+    "legacyBehavior": "Like and bookmark read the likes JSON array and engagement outside any transaction and wrote them back whole, losing concurrent updates. Share-to-status carried an explicit allow-sharing comment and performed no access check, copying a private post into a status. Repost applied no visibility check. Promote coerced budget with Number(), admitting NaN and negative values.",
+    "replacementBehavior": "Every write interaction resolves visibility first and runs in a Serializable transaction with bounded P2034 retry; promotion input is validated.",
+    "reason": "Interaction counts drive ranking and billing, and a private post must not be republishable by a stranger.",
+    "status": "approved"
   }
 ]

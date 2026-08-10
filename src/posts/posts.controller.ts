@@ -24,7 +24,12 @@ import {
   type PostPage,
   type PostView,
 } from './post.contract';
-import { PostsService } from './posts.service';
+import {
+  PostsService,
+  type BookmarkResult,
+  type LikeResult,
+  type SharedStatusView,
+} from './posts.service';
 
 const MAX_MEDIA_FILES = 10;
 const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
@@ -120,6 +125,71 @@ export class PostsController {
     @Param('postId') postId: string,
   ): Promise<PostView> {
     return this.posts.byId(principal, postId);
+  }
+
+  @Post(':postId/like')
+  @HttpCode(HttpStatus.OK)
+  like(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<LikeResult> {
+    return this.posts.like(principal, postId);
+  }
+
+  @Post(':postId/bookmark')
+  @HttpCode(HttpStatus.OK)
+  bookmark(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<BookmarkResult> {
+    return this.posts.bookmark(principal, postId);
+  }
+
+  @Post(':postId/view')
+  @HttpCode(HttpStatus.OK)
+  view(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<{ readonly success: true; readonly views: number }> {
+    return this.posts.view(principal, postId);
+  }
+
+  @Post(':postId/not-interested')
+  @HttpCode(HttpStatus.OK)
+  notInterested(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<{ readonly success: true; readonly message: string }> {
+    return this.posts.notInterested(principal, postId);
+  }
+
+  @Post(':postId/share-to-status')
+  @HttpCode(HttpStatus.CREATED)
+  shareToStatus(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+    @Body() body: unknown,
+  ): Promise<SharedStatusView> {
+    return this.posts.shareToStatus(principal, postId, body);
+  }
+
+  @Post(':postId/promote')
+  @HttpCode(HttpStatus.OK)
+  promote(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+    @Body() body: unknown,
+  ): Promise<PostView> {
+    return this.posts.promote(principal, postId, body);
+  }
+
+  @Post('repost/:postId')
+  @HttpCode(HttpStatus.CREATED)
+  repost(
+    @CurrentUser() principal: AuthenticatedPrincipal,
+    @Param('postId') postId: string,
+  ): Promise<PostView> {
+    return this.posts.repost(principal, postId);
   }
 
   @Put(':postId')

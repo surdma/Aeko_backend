@@ -8,6 +8,8 @@ import {
   parsePostCreate,
   parsePostPrivacy,
   parsePostUpdate,
+  parsePromotion,
+  parseShareToStatus,
   type PostListQuery,
   type PostPage,
   type PostPrivacy,
@@ -19,6 +21,7 @@ import {
   type PostFilter,
   type PostPrismaClient,
   type PostRecord,
+  type PostTransactionClient,
   type PostViewerRecord,
   type PostWriteData,
 } from './post-prisma.client';
@@ -27,6 +30,30 @@ import { canViewPost, readPostVisibility } from './visibility.policy';
 
 /** Legacy served these unpaged reads at a fixed depth of 50. */
 const FIXED_READ_LIMIT = 50;
+
+const DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
+
+export interface LikeResult {
+  readonly message: string;
+  readonly liked: boolean;
+  readonly totalLikes: number;
+  readonly post: PostView;
+}
+
+export interface BookmarkResult {
+  readonly message: string;
+  readonly bookmarked: boolean;
+  readonly totalBookmarks: number;
+}
+
+export interface SharedStatusView {
+  readonly id: string;
+  readonly userId: string;
+  readonly content: string;
+  readonly sharedPostId: string | null;
+  readonly expiresAt: string;
+  readonly createdAt: string;
+}
 
 export interface VideoQuery {
   readonly effect?: string | undefined;
@@ -287,6 +314,199 @@ export class PostsService {
     });
   }
 
+  like(principal: AuthenticatedPrincipal, postId: string): Promise<LikeResult> {
+    return this.interact(principal, postId, async (transaction, record) => {
+      const likes = likeIds(record.likes);
+      const isLiked = likes.includes(principal.userId);
+      const next = isLiked
+        ? likes.filter((id) => id !== principal.userId)
+        : [...likes, principal.userId];
+      const updated = await transaction.update(postId, {
+        likes: Object.freeze(next),
+        engagement: Object.freeze({
+          ...asJsonObject(record.engagement),
+          totalLikes: next.length,
+        }),
+      });
+      return Object.freeze({
+        message: isLiked
+          ? 'Post unliked successfully'
+          : 'Post liked successfully',
+        liked: !isLiked,
+        totalLikes: next.length,
+        post: projectPost(updated, principal.userId),
+      });
+    });
+  }
+
+  bookmark(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+  ): Promise<BookmarkResult> {
+    return this.interact(principal, postId, async (transaction, record) => {
+      const existing = await transaction.findBookmark(principal.userId, postId);
+      if (existing === null) {
+        await transaction.createBookmark(principal.userId, postId);
+      } else {
+        await transaction.deleteBookmark(existing);
+      }
+      const totalBookmarks = await transaction.countBookmarks(postId);
+      await transaction.update(postId, {
+        engagement: Object.freeze({
+          ...asJsonObject(record.engagement),
+          totalBookmarks,
+        }),
+      });
+      return Object.freeze({
+        message:
+          existing === null
+            ? 'Post bookmarked successfully'
+            : 'Bookmark removed successfully',
+        bookmarked: existing === null,
+        totalBookmarks,
+      });
+    });
+  }
+
+  view(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+  ): Promise<{ readonly success: true; readonly views: number }> {
+    return this.interact(principal, postId, async (transaction) => {
+      const updated = await transaction.update(postId, {
+        views: { increment: 1 },
+      });
+      return Object.freeze({ success: true as const, views: updated.views });
+    });
+  }
+
+  async notInterested(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+  ): Promise<{ readonly success: true; readonly message: string }> {
+    const current = await this.posts.readNotInterested(principal.userId);
+    if (!current.includes(postId)) {
+      await this.posts.writeNotInterested(principal.userId, [
+        ...current,
+        postId,
+      ]);
+    }
+    return Object.freeze({
+      success: true as const,
+      message: 'Post marked as not interested',
+    });
+  }
+
+  async repost(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+  ): Promise<PostView> {
+    const record = await this.requireVisible(principal, postId);
+    const created = await this.posts.create({
+      userId: principal.userId,
+      originalPostId: record.id,
+      type: record.type,
+      text: record.text ?? '',
+      media: record.media,
+    });
+    return projectPost(created, principal.userId);
+  }
+
+  /**
+   * Legacy shared any post to a status with an explicit "allow sharing"
+   * comment and no access check, copying a private post's content into a
+   * status document. Visibility is now required.
+   */
+  async shareToStatus(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+    body: unknown,
+  ): Promise<SharedStatusView> {
+    const share = parseShareToStatus(body);
+    const record = await this.requireVisible(principal, postId);
+    const now = new Date();
+    const status = await this.posts.createSharedStatus({
+      userId: principal.userId,
+      type: 'shared_post',
+      content: share.additionalContent,
+      sharedPostId: record.id,
+      expiresAt: new Date(now.getTime() + DAY_IN_MILLISECONDS),
+      originalContent: Object.freeze({
+        creator: record.author === null ? null : { ...record.author },
+        post: Object.freeze({
+          id: record.id,
+          text: record.text,
+          type: record.type,
+          media: record.media,
+        }),
+      }),
+    });
+    return Object.freeze({
+      id: status.id,
+      userId: status.userId,
+      content: status.content,
+      sharedPostId: status.sharedPostId,
+      expiresAt: status.expiresAt.toISOString(),
+      createdAt: status.createdAt.toISOString(),
+    });
+  }
+
+  async promote(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+    body: unknown,
+  ): Promise<PostView> {
+    const promotion = parsePromotion(body);
+    const record = await this.requireOwned(principal, postId);
+    const current = asJsonObject(record.ad);
+    const updated = await this.posts.update(postId, {
+      ad: Object.freeze({
+        ...current,
+        isPromoted: true,
+        ...(promotion.budget === null ? {} : { budget: promotion.budget }),
+        ...(promotion.target === null ? {} : { target: promotion.target }),
+        ...(promotion.startDate === null
+          ? {}
+          : { startDate: promotion.startDate }),
+        ...(promotion.endDate === null ? {} : { endDate: promotion.endDate }),
+      }),
+    });
+    return projectPost(updated, principal.userId);
+  }
+
+  /**
+   * Every write interaction resolves visibility first, then runs inside one
+   * serializable transaction that re-reads the row it is about to change.
+   */
+  private async interact<T>(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+    operation: (
+      transaction: PostTransactionClient,
+      record: PostRecord,
+    ) => Promise<T>,
+  ): Promise<T> {
+    await this.requireVisible(principal, postId);
+    return this.posts.runSerializable(async (transaction) => {
+      const record = await transaction.findById(postId);
+      if (record === null) throw notFound();
+      return operation(transaction, record);
+    });
+  }
+
+  private async requireVisible(
+    principal: AuthenticatedPrincipal,
+    postId: string,
+  ): Promise<PostRecord> {
+    const record = await this.posts.findById(postId);
+    if (record === null) throw notFound();
+    const viewer = await this.posts.readViewer(principal.userId);
+    if (!(await this.isVisible(record, principal.userId, viewer))) {
+      throw notFound();
+    }
+    return record;
+  }
+
   private async requireOwned(
     principal: AuthenticatedPrincipal,
     postId: string,
@@ -322,6 +542,11 @@ const page = (
       limit: query.limit,
     }),
   });
+
+const likeIds = (likes: JsonValue): readonly string[] =>
+  Array.isArray(likes)
+    ? likes.filter((entry): entry is string => typeof entry === 'string')
+    : [];
 
 function notFound(): DomainError {
   return new DomainError('NOT_FOUND', 'Post not found.');

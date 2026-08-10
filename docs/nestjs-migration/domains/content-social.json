@@ -69,6 +69,7 @@
   ],
   "providerPorts": [],
   "corrections": [
+    "correction:post-interaction-integrity",
     "correction:post-invalid-author-include",
     "correction:post-read-privacy-bypass",
     "correction:raw-error-disclosure",
