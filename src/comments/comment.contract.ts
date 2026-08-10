@@ -28,6 +28,7 @@ export interface CommentView {
   readonly likesCount: number;
   readonly isLiked: boolean;
   readonly repliesCount: number;
+  readonly replies: readonly CommentView[];
   readonly createdAt: string;
   readonly updatedAt: string;
 }

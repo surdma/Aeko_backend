@@ -608,5 +608,70 @@
     "replacementBehavior": "Every write interaction resolves visibility first and runs in a Serializable transaction with bounded P2034 retry; promotion input is validated.",
     "reason": "Interaction counts drive ranking and billing, and a private post must not be republishable by a stranger.",
     "status": "approved"
+  },
+  {
+    "id": "correction:comment-post-visibility",
+    "capabilityIds": [
+      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9",
+      "rest:POST:/api/comments/reply/:commentId:routes/commentRoutes.js:126",
+      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204",
+      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
+      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 9
+      },
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 333
+      }
+    ],
+    "legacyBehavior": "Comment routes applied a blocking middleware but never checked that the parent post was visible, so a private post's thread could be read and written by anyone holding the post id.",
+    "replacementBehavior": "Every comment read and write resolves the shared post visibility policy first and reports NOT_FOUND when denied.",
+    "reason": "A private post's discussion is as sensitive as the post.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:comment-unbounded-reads",
+    "capabilityIds": [
+      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333",
+      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
+      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 333
+      },
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 14
+      }
+    ],
+    "legacyBehavior": "Both comment reads fetched every comment and every nested reply with no limit, and creating a comment selected the entire comments relation only to size a counter.",
+    "replacementBehavior": "Both reads are bounded by a page query and the counter uses a count query; the response stays a bare array.",
+    "reason": "An unbounded thread read is an availability risk on a popular post.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:comment-like-dual-write",
+    "capabilityIds": [
+      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 228
+      }
+    ],
+    "legacyBehavior": "Comment likes read the likes JSON array and wrote it back whole with no transaction, losing concurrent likes.",
+    "replacementBehavior": "The like runs in a Serializable transaction with bounded P2034 retry and dual-writes the CommentLike row, per Plan C step 3. Liking stays idempotent: there is no unlike route in the legacy API.",
+    "reason": "Like counts must not be lost, and the relational table must stay in step during the dual-write window.",
+    "status": "approved"
   }
 ]

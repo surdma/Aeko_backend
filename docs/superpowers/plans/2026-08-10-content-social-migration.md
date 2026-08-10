@@ -179,9 +179,27 @@ Counter and toggle transitions use serializable transactions with bounded P2034 
 
 **Interfaces:** Produces `create`, `reply`, `like`, `listForPost`, and `listReplies`, each honouring the post visibility policy and the blocking rules the legacy `BlockingMiddleware.checkPostInteraction` applied.
 
-- [ ] **Step 1: Write RED, implement, then run GREEN**
+> **Revised 2026-08-10** after the generated-client refactor (`2ad284b`) and the
+> social graph normalization (`2872ab5`) landed. Three constraints changed:
+>
+> 1. **Boundaries are typed against the generated client.** `comment-prisma.client.ts`
+>    takes `PrismaClient` and uses `Prisma.CommentInclude` / `GetPayload`; the
+>    reflection-and-`Reflect.get` style used through Task 5 is gone. Services
+>    reach it through `PrismaService.db`.
+> 2. **Comment likes dual-write.** `CommentLike(userId, commentId)` now exists,
+>    but Plan C is at the dual-write stage: nothing reads the relational tables
+>    while the legacy Express service still writes JSON. So `like` updates the
+>    `comments.likes` JSON array **and** upserts `CommentLike` inside the same
+>    serializable transaction, exactly as `setPostLike` does for posts. Reads
+>    stay on the JSON column until Plan C step 4.
+> 3. **Liking is idempotent, not a toggle.** Legacy `POST /like/:commentId`
+>    only ever adds; a repeat call returns the unchanged comment with
+>    `isLiked: true`. That is successful client behavior and is preserved. No
+>    unlike route exists to migrate.
 
-Register exact routes `POST /api/comments/:postId`, `POST /api/comments/reply/:commentId`, `POST /api/comments/like/:commentId`, `GET /api/comments/replies/:commentId`, `GET /api/comments/:postId`. Bound reply depth and page size.
+- [x] **Step 1: Write RED, implement, then run GREEN**
+
+Register exact routes `POST /api/comments/:postId`, `POST /api/comments/reply/:commentId`, `POST /api/comments/like/:commentId`, `GET /api/comments/replies/:commentId`, `GET /api/comments/:postId`. Both reads return bare arrays, as Express did, but bounded by a page query; legacy fetched every comment and every reply with no limit. Comment reads and writes require the parent post to be visible, which Express never checked.
 
 ### Task 7: Migrate ephemeral status
 
