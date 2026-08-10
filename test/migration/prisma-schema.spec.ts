@@ -100,7 +100,7 @@ describe('Aeko Prisma domain preservation', () => {
 
   test('uses Prisma 7 client generation without embedding a datasource URL', () => {
     expect(target).toMatch(
-      /generator client\s*\{\s*provider\s*=\s*"prisma-client"\s*output\s*=\s*"\.\/generated"\s*\}/s,
+      /generator client\s*\{\s*provider\s*=\s*"prisma-client"\s*output\s*=\s*"\.\.\/src\/generated\/prisma"\s*\}/s,
     );
     expect(target).toMatch(
       /datasource db\s*\{\s*provider\s*=\s*"postgresql"\s*\}/s,

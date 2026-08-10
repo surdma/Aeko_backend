@@ -2,7 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 
 import { DomainError } from '../common/errors/domain.error';
 import type { PageMeta, PageQuery } from '../common/pagination/page-query';
-import type { PrismaClient } from '../../prisma/generated/client';
+import type { PrismaClient } from '../generated/prisma/client';
 import { PrismaService } from '../database/prisma/prisma.service';
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import type { RequestAuditContext } from '../common/http/request-audit/request-audit.decorator';

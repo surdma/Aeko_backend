@@ -145,9 +145,13 @@ describe('auth users security cutover', () => {
   });
 
   it('contains no legacy auth stack, second runtime client, or unsafe domain syntax', () => {
-    const files = sourceFiles(join(root, 'src'));
-    // No exemption: the schema-generation config now lives in `prisma/`, so
-    // every file under `src/` is genuinely runtime.
+    // `src/generated` is Prisma CLI output, not hand-written runtime code.
+    const files = sourceFiles(join(root, 'src')).filter(
+      (path) =>
+        !relative(root, path)
+          .replaceAll('\\', '/')
+          .startsWith('src/generated/'),
+    );
     const runtimeFiles = files.map((path) => ({
       path,
       source: readFileSync(path, 'utf8'),
@@ -200,7 +204,9 @@ describe('auth users security cutover', () => {
       expect(documentation).toContain(contract);
     }
     expect(
-      existsSync(join(root, 'prisma', 'better-auth.generated.prisma')),
+      existsSync(
+        join(root, 'docs', 'nestjs-migration', 'better-auth.generated.prisma'),
+      ),
     ).toBe(true);
   });
 });

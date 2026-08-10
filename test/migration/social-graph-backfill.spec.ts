@@ -11,15 +11,15 @@ import { resolve } from 'node:path';
 
 const workspace = process.cwd();
 
-const migrationSql = (name: string): string =>
+const cutoverSql = (): string =>
   readFileSync(
-    resolve(workspace, 'prisma', 'migrations', name, 'migration.sql'),
+    resolve(workspace, 'prisma', 'data-migrations', 'legacy-cutover.sql'),
     'utf8',
   );
 
 /**
- * The subset of the legacy schema the backfill touches, as it exists before
- * either migration runs — no `age`, no `user_interests`.
+ * The subset of the legacy schema the cutover touches, as an Express-created
+ * database has it: no `age`, no `user_interests`, no relational graph tables.
  */
 const BASE_DDL = `
 CREATE TABLE "users" (
@@ -141,15 +141,14 @@ const metric = async (db: PGlite, name: string): Promise<number> => {
   return Number(rows[0]?.count ?? -1);
 };
 
-describe('social graph backfill', () => {
+describe('legacy cutover backfill', () => {
   let db: PGlite;
 
   beforeAll(async () => {
     db = new PGlite();
     await db.exec(BASE_DDL);
     await db.exec(SEED);
-    await db.exec(migrationSql('20260810_relational_integrity_pass'));
-    await db.exec(migrationSql('20260810_social_graph_tables'));
+    await db.exec(cutoverSql());
   }, 120_000);
 
   afterAll(async () => {
@@ -248,7 +247,7 @@ describe('social graph backfill', () => {
 
   it('is idempotent when re-run', async () => {
     const before = await rowsOf(db, 'SELECT count(*)::int AS n FROM "follows"');
-    await db.exec(migrationSql('20260810_social_graph_tables'));
+    await db.exec(cutoverSql());
     const after = await rowsOf(db, 'SELECT count(*)::int AS n FROM "follows"');
     expect(after[0]?.n).toBe(before[0]?.n);
   }, 120_000);

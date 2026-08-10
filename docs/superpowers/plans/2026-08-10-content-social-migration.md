@@ -83,10 +83,15 @@ Expected: 52 assigned, zero missing, zero duplicate, six modules imported by `Ap
 - [x] **Step 1: Write contracts RED**
 
 ```ts
-expect(parsePostListQuery({ page: '0', limit: '500' })).toEqual({ page: 1, limit: 50 });
+expect(parsePostListQuery({ page: '0', limit: '500' })).toEqual({
+  page: 1,
+  limit: 50,
+});
 expect(() => parsePostCreate({})).toThrow('content');
 expect(() => parsePostUpdate({ authorId: 'victim' })).toThrow('authorId');
-expect(canViewPost({ privacy: 'followers' }, { isFollower: false, isOwner: false })).toBe(false);
+expect(
+  canViewPost({ privacy: 'followers' }, { isFollower: false, isOwner: false }),
+).toBe(false);
 ```
 
 - [x] **Step 2: Run RED**
@@ -110,9 +115,16 @@ Expected: all contracts return explicit values with no `undefined` and reject ow
 - [x] **Step 1: Write lifecycle RED**
 
 ```ts
-await expect(service.update(other, postId, update)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
-await expect(service.remove(other, postId)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
-expect(await service.create(owner, input)).not.toHaveProperty('authorId', 'victim');
+await expect(service.update(other, postId, update)).rejects.toMatchObject({
+  code: 'AUTHORIZATION_DENIED',
+});
+await expect(service.remove(other, postId)).rejects.toMatchObject({
+  code: 'AUTHORIZATION_DENIED',
+});
+expect(await service.create(owner, input)).not.toHaveProperty(
+  'authorId',
+  'victim',
+);
 ```
 
 - [x] **Step 2: Run RED, implement, then run GREEN**
@@ -130,7 +142,9 @@ Register exact routes `POST /api/posts/create`, `PUT /api/posts/:postId`, `PUT /
 ```ts
 expect(routeOrder.indexOf('mixed')).toBeLessThan(routeOrder.indexOf(':postId'));
 expect(await service.mixed(viewer, query)).toBeDefined();
-expect((await service.feed(viewer, query)).posts).not.toContainEqual(expect.objectContaining({ id: blockedPostId }));
+expect((await service.feed(viewer, query)).posts).not.toContainEqual(
+  expect.objectContaining({ id: blockedPostId }),
+);
 ```
 
 - [x] **Step 2: Run RED, implement, then run GREEN**
@@ -146,7 +160,9 @@ expect((await service.feed(viewer, query)).posts).not.toContainEqual(expect.obje
 - [x] **Step 1: Write interactions RED**
 
 ```ts
-await expect(Promise.all([service.like(viewer, postId), service.like(viewer, postId)])).resolves.toEqual([
+await expect(
+  Promise.all([service.like(viewer, postId), service.like(viewer, postId)]),
+).resolves.toEqual([
   expect.objectContaining({ liked: true }),
   expect.objectContaining({ liked: false }),
 ]);
@@ -207,7 +223,12 @@ Register exact routes `POST /api/reports`, `GET /api/reports`, `POST /api/report
 
 ```ts
 expect(routeSet).toEqual(expectedFortySixRoutes);
-expect(coverage).toEqual({ assigned: 52, missing: 0, duplicate: 0, unresolved: 0 });
+expect(coverage).toEqual({
+  assigned: 52,
+  missing: 0,
+  duplicate: 0,
+  unresolved: 0,
+});
 expect(source).not.toMatch(/req\.body|catch \(error\) \{[^}]*error\.message/);
 ```
 

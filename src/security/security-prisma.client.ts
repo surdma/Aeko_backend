@@ -1,5 +1,5 @@
-import type { PrismaClient } from '../../prisma/generated/client';
-import type { Prisma } from '../../prisma/generated/client';
+import type { PrismaClient } from '../generated/prisma/client';
+import type { Prisma } from '../generated/prisma/client';
 import type { PrismaTransaction } from '../database/prisma/prisma.service';
 
 export interface SocialUserRecord {

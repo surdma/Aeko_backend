@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AppConfig } from '../../src/configuration/configuration/configuration.service';
 import {
@@ -161,12 +161,27 @@ describe('native Aeko Better Auth configuration', () => {
       resolve(workspace, 'src/database/database.module.ts'),
       'utf8',
     );
-    expect(databaseSource).toContain(
-      "import('../../prisma/generated/client.js')",
+    expect(databaseSource).toContain("import('../generated/prisma/client.js')");
+    // The generated client must live under src/ so the production build emits
+    // it; the old prisma/generated path shipped TypeScript that `node dist`
+    // could not resolve.
+    expect(databaseSource).not.toContain('prisma/generated');
+  });
+
+  it('generates the Prisma client where the production build can emit it', () => {
+    // `prisma-client` emits TypeScript. With the output outside src/, `nest
+    // build` never compiled it and `node dist/main.js` failed to resolve
+    // ../../prisma/generated/client.js at startup, while dev worked because
+    // swc resolved the .ts. The output has to sit inside the compiled tree.
+    const schema = readFileSync(
+      resolve(workspace, 'prisma/schema.prisma'),
+      'utf8',
     );
-    expect(databaseSource).not.toContain(
-      "import('../../../prisma/generated/client.js')",
-    );
+    expect(schema).toMatch(/output\s*=\s*"\.\.\/src\/generated\/prisma"/);
+    expect(
+      existsSync(resolve(workspace, 'src/generated/prisma/client.ts')),
+    ).toBe(true);
+    expect(existsSync(resolve(workspace, 'prisma/generated'))).toBe(false);
   });
 
   it('contains no legacy or compatibility auth implementation', () => {

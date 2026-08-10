@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient } from '../../prisma/generated/client';
+import type { Prisma, PrismaClient } from '../generated/prisma/client';
 import { DomainError } from '../common/errors/domain.error';
 import type { AdStatus, JsonValue } from './ad.contract';
 import { AD_STATUSES } from './ad.contract';

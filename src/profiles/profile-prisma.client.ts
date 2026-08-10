@@ -1,4 +1,4 @@
-import type { Prisma } from '../../prisma/generated/client';
+import type { Prisma } from '../generated/prisma/client';
 import { DomainError } from '../common/errors/domain.error';
 import type { PrismaTransaction } from '../database/prisma/prisma.service';
 import type { ProfileUpdate } from './profile.contract';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { UserModel } from '../../prisma/generated/models/User';
+import type { UserModel } from '../generated/prisma/models/User';
 import { DomainError } from '../common/errors/domain.error';
 import type { PageMeta, PageQuery } from '../common/pagination/page-query';
 

@@ -7,23 +7,23 @@ model. AdminJS and all UI remain out of scope.
 
 Every legacy path, method, and field name is preserved.
 
-| Route                                  | Notes                                                   |
-| -------------------------------------- | ------------------------------------------------------- |
-| `POST /api/ads`                        | Created as `pending`, unchanged                          |
-| `GET /api/ads`                         | Newest-first owner page, `ads` + `pagination`             |
-| `GET /api/ads/targeted`                | Bid-ordered eligible ads, `ads` + `count`                 |
-| `GET /api/ads/dashboard`               | `timeRange` still accepted                                |
-| `POST /api/ads/track/impression`       | Response `{ impressions, ctr, reach }`                    |
-| `POST /api/ads/track/click`            | Response `{ clicks, ctr, budgetSpent, remainingBudget }`  |
-| `POST /api/ads/track/conversion`       | Response `{ conversions, conversionRate, budgetSpent }`   |
-| `POST /api/ads/track-view`             | Retained alias; identical to `track/impression`           |
-| `GET /api/ads/:adId/analytics`         | Owner only                                                |
-| `PUT /api/ads/:adId`                   | Allowlisted fields only                                   |
-| `DELETE /api/ads/:adId`                | Requires a confirmed two-factor session                   |
-| `GET /api/ads/admin/review`            | Defaults to `pending`, 20 per page                        |
-| `POST /api/ads/admin/review/:adId`     | Accepts `rejectionReason` and `feedback`                  |
-| `POST /api/photo/edit`                 | Field `photo`; **now requires a session**                 |
-| `POST /api/video/edit`                 | Field `video`; **now requires a session**                 |
+| Route                              | Notes                                                    |
+| ---------------------------------- | -------------------------------------------------------- |
+| `POST /api/ads`                    | Created as `pending`, unchanged                          |
+| `GET /api/ads`                     | Newest-first owner page, `ads` + `pagination`            |
+| `GET /api/ads/targeted`            | Bid-ordered eligible ads, `ads` + `count`                |
+| `GET /api/ads/dashboard`           | `timeRange` still accepted                               |
+| `POST /api/ads/track/impression`   | Response `{ impressions, ctr, reach }`                   |
+| `POST /api/ads/track/click`        | Response `{ clicks, ctr, budgetSpent, remainingBudget }` |
+| `POST /api/ads/track/conversion`   | Response `{ conversions, conversionRate, budgetSpent }`  |
+| `POST /api/ads/track-view`         | Retained alias; identical to `track/impression`          |
+| `GET /api/ads/:adId/analytics`     | Owner only                                               |
+| `PUT /api/ads/:adId`               | Allowlisted fields only                                  |
+| `DELETE /api/ads/:adId`            | Requires a confirmed two-factor session                  |
+| `GET /api/ads/admin/review`        | Defaults to `pending`, 20 per page                       |
+| `POST /api/ads/admin/review/:adId` | Accepts `rejectionReason` and `feedback`                 |
+| `POST /api/photo/edit`             | Field `photo`; **now requires a session**                |
+| `POST /api/video/edit`             | Field `video`; **now requires a session**                |
 
 The API field is `status` on every request and response. The canonical database
 column `Status` never appears in a response body and is confined to

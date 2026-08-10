@@ -12,4 +12,7 @@ The legacy `users.password`, `users.oauthId`, `users.oauthProvider`, `users.emai
 
 ## Better Auth schema provenance
 
-The installed auth runtime is Better Auth 1.6.26 and the official CLI package used for generation is 1.4.21. The CLI output is preserved unedited at `prisma/better-auth.generated.prisma` with SHA-256 `521D97AEE1640295F5A8CA2EF19E6925EF7BE618D3E960052BDD00359C12E1EC`. It generated `User`, `Session`, `Account`, `Verification`, and plugin model `TwoFactor`; bearer added no table. The merged canonical `User` retains `@@map("users")` and all Aeko domain relations while using the generated Better Auth field nullability and relation names.
+The installed auth runtime is Better Auth 1.6.26 and the official CLI package used for generation is 1.4.21. The CLI output is preserved unedited at
+`docs/nestjs-migration/better-auth.generated.prisma` — deliberately outside
+`prisma/`, because Prisma's schema-folder mode would otherwise load it as a
+second datamodel and redefine every auth model — with SHA-256 `521D97AEE1640295F5A8CA2EF19E6925EF7BE618D3E960052BDD00359C12E1EC`. It generated `User`, `Session`, `Account`, `Verification`, and plugin model `TwoFactor`; bearer added no table. The merged canonical `User` retains `@@map("users")` and all Aeko domain relations while using the generated Better Auth field nullability and relation names.

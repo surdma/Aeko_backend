@@ -4,7 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import type { Prisma, PrismaClient } from '../../../prisma/generated/client';
+import type { Prisma, PrismaClient } from '../../generated/prisma/client';
 
 export const PRISMA_CLIENT = Symbol('PRISMA_CLIENT');
 

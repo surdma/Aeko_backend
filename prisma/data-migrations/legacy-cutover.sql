@@ -1,14 +1,66 @@
--- Social graph normalization, step 1 of the cutover: create the relational
--- tables and backfill them from the JSON columns.
+-- Legacy cutover: bring an EXISTING Aeko database created by the Express
+-- service up to the current schema, and backfill the relational social graph
+-- from the JSON columns.
 --
--- Nothing is dropped and nothing existing is rewritten. The JSON columns stay
+-- This is a DATA migration, not a Prisma schema migration, and it is outside
+-- prisma/migrations on purpose. A fresh database gets the whole schema from
+-- `0_init` and has nothing to backfill; only a database carrying legacy rows
+-- needs this. Run it once, by hand, during the cutover:
+--
+--   psql "$DATABASE_URL" -f prisma/data-migrations/legacy-cutover.sql
+--
+-- Nothing is dropped and no existing column is rewritten. The JSON columns stay
 -- authoritative for reads because the legacy Express service is still writing
--- them; these tables are dual-written from the NestJS service and are only
--- read from after the legacy service is retired.
+-- them; the relational tables are dual-written by the NestJS service and are
+-- only read from after the legacy service is retired.
 --
--- Every backfill statement is idempotent: each target has a unique constraint
--- on its natural key and every INSERT ends in ON CONFLICT DO NOTHING, so this
--- migration can be re-run, or run in batches, without duplicating edges.
+-- `ads."Status"` is deliberately NOT renamed. The Prisma field is `status` via
+-- `@map("Status")`, a client-side mapping only, so both services keep reading
+-- and writing the same physical column while they run side by side.
+--
+-- Every statement is idempotent: DDL is guarded with IF NOT EXISTS and every
+-- backfill INSERT ends in ON CONFLICT DO NOTHING, so a re-run or a batched run
+-- cannot duplicate an edge.
+
+-- ---------------------------------------------------------------------------
+-- Schema catch-up. These ship in `0_init` for a fresh database.
+-- ---------------------------------------------------------------------------
+
+-- 1. Interests were a standalone table with no way to reach a user. This join
+--    table is created empty; `users.interests` (JSON) remains authoritative
+--    until the social-graph backfill runs.
+CREATE TABLE IF NOT EXISTS "user_interests" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "interestId" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "user_interests_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "user_interests_userId_fkey" FOREIGN KEY ("userId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "user_interests_interestId_fkey" FOREIGN KEY ("interestId")
+    REFERENCES "interests"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "user_interests_userId_interestId_key"
+  ON "user_interests"("userId", "interestId");
+CREATE INDEX IF NOT EXISTS "user_interests_interestId_idx"
+  ON "user_interests"("interestId");
+
+-- 2. `verification_settings.updatedBy` held a user id with no foreign key, so
+--    deleting an admin left a dangling reference. Clear any id that no longer
+--    resolves before adding the constraint, otherwise the ALTER fails.
+UPDATE "verification_settings"
+  SET "updatedBy" = NULL
+  WHERE "updatedBy" IS NOT NULL
+    AND "updatedBy" NOT IN (SELECT "id" FROM "users");
+
+ALTER TABLE "verification_settings"
+  DROP CONSTRAINT IF EXISTS "verification_settings_updatedBy_fkey";
+
+ALTER TABLE "verification_settings"
+  ADD CONSTRAINT "verification_settings_updatedBy_fkey"
+  FOREIGN KEY ("updatedBy") REFERENCES "users"("id")
+  ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- Optional age, used by ad targeting. Null means "unknown", and the targeting
 -- matcher skips the age check rather than excluding the viewer.

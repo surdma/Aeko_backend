@@ -86,7 +86,11 @@ Expected: 16 assigned, zero missing, zero duplicate, modules imported by `AppMod
 - [x] **Step 1: Write contracts RED**
 
 ```ts
-expect(parseAdListQuery({ page: '0', limit: '500' })).toEqual({ page: 1, limit: 100, status: null });
+expect(parseAdListQuery({ page: '0', limit: '500' })).toEqual({
+  page: 1,
+  limit: 100,
+  status: null,
+});
 expect(() => parseAdCreate({ title: 'x' }, now)).toThrow('campaign');
 expect(() => parseAdUpdate({ advertiserId: 'victim' })).toThrow('advertiserId');
 expect(parseTrackEvent({ adId: ' a1 ', metadata: {} }).adId).toBe('a1');
@@ -115,9 +119,15 @@ Expected: all contracts return explicit values with no `undefined` and reject ow
 - [x] **Step 1: Write lifecycle RED**
 
 ```ts
-await expect(service.updateOwned(other, adId, update)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
-await expect(service.deleteOwned(ownerWithout2fa, adId)).rejects.toMatchObject({ code: 'TWO_FACTOR_REQUIRED' });
-expect((await service.listOwned(ownerId, query)).items[0]).not.toHaveProperty('Status');
+await expect(service.updateOwned(other, adId, update)).rejects.toMatchObject({
+  code: 'AUTHORIZATION_DENIED',
+});
+await expect(service.deleteOwned(ownerWithout2fa, adId)).rejects.toMatchObject({
+  code: 'TWO_FACTOR_REQUIRED',
+});
+expect((await service.listOwned(ownerId, query)).items[0]).not.toHaveProperty(
+  'Status',
+);
 expect(await service.targeted(userId, 5)).toEqual([highestEligibleBid]);
 ```
 
@@ -142,7 +152,12 @@ Expected: exact routes, ownership, 2FA deletion, targeting, dashboard, and safe 
 - [x] **Step 1: Write tracking RED**
 
 ```ts
-await expect(Promise.all([service.track('impression', input), service.track('impression', input)])).resolves.toEqual([
+await expect(
+  Promise.all([
+    service.track('impression', input),
+    service.track('impression', input),
+  ]),
+).resolves.toEqual([
   expect.objectContaining({ impressions: expect.any(Number) }),
   expect.objectContaining({ impressions: expect.any(Number) }),
 ]);
@@ -171,9 +186,15 @@ Expected: concurrent, retry, status, budget, malformed JSON, and sanitized failu
 - [x] **Step 1: Write privilege RED**
 
 ```ts
-await expect(service.review(member, adId, decision)).rejects.toMatchObject({ code: 'AUTHORIZATION_DENIED' });
-await expect(service.review(adminWithout2fa, adId, decision)).rejects.toMatchObject({ code: 'TWO_FACTOR_REQUIRED' });
-expect(await service.review(admin, adId, { status: 'approved', feedback: null })).toMatchObject({ status: 'running' });
+await expect(service.review(member, adId, decision)).rejects.toMatchObject({
+  code: 'AUTHORIZATION_DENIED',
+});
+await expect(
+  service.review(adminWithout2fa, adId, decision),
+).rejects.toMatchObject({ code: 'TWO_FACTOR_REQUIRED' });
+expect(
+  await service.review(admin, adId, { status: 'approved', feedback: null }),
+).toMatchObject({ status: 'running' });
 ```
 
 - [x] **Step 2: Run RED, implement, then run GREEN**
@@ -189,8 +210,12 @@ Register exact `GET /api/ads/admin/review` and `POST /api/ads/admin/review/:adId
 - [x] **Step 1: Write processing RED**
 
 ```ts
-await expect(service.editPhoto(executable, 'blur')).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
-await expect(service.editVideo(oversized, 'negate')).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+await expect(service.editPhoto(executable, 'blur')).rejects.toMatchObject({
+  code: 'VALIDATION_FAILED',
+});
+await expect(service.editVideo(oversized, 'negate')).rejects.toMatchObject({
+  code: 'VALIDATION_FAILED',
+});
 expect(photoRouteGuards).toContain(SessionGuard);
 expect(videoRouteGuards).toContain(SessionGuard);
 ```
@@ -219,7 +244,12 @@ Expected: authentication, limits, signatures, allowlists, cleanup, timeouts, pro
 
 ```ts
 expect(routeSet).toEqual(expectedFifteenRoutes);
-expect(coverage).toEqual({ assigned: 16, missing: 0, duplicate: 0, unresolved: 0 });
+expect(coverage).toEqual({
+  assigned: 16,
+  missing: 0,
+  duplicate: 0,
+  unresolved: 0,
+});
 expect(source).not.toMatch(/data:\s*\{[^}]*\bstatus\s*:/); // Prisma writes use Status through the boundary
 expect(source).not.toMatch(/writeFileSync|multer\(\{\s*dest|shell:\s*true/);
 ```

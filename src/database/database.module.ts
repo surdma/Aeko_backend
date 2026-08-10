@@ -32,7 +32,7 @@ async function createPrismaClient(
 ): Promise<PrismaLifecycleClient> {
   const [{ PrismaPg }, { PrismaClient }] = await Promise.all([
     import('@prisma/adapter-pg'),
-    import('../../prisma/generated/client.js'),
+    import('../generated/prisma/client.js'),
   ]);
   return new PrismaClient({
     adapter: new PrismaPg({ connectionString }),

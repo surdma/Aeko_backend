@@ -1,4 +1,4 @@
-import type { UserModel } from '../../prisma/generated/models/User';
+import type { UserModel } from '../generated/prisma/models/User';
 import {
   projectUser,
   type UserProjectionSource,

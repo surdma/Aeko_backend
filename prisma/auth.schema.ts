@@ -11,7 +11,7 @@ import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { betterAuth } from 'better-auth';
 import { bearer, twoFactor } from 'better-auth/plugins';
-import { PrismaClient } from './generated/client';
+import { PrismaClient } from '../src/generated/prisma/client';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
