@@ -306,7 +306,7 @@ today. This is documented, not worked around.
 
 **Interfaces:** Produces `create`, `listForReview`, `warn`, and `ban`, guarded by `SessionGuard`, `RoleGuard`, and `TwoFactorGuard` for moderation.
 
-- [ ] **Step 1: Write privilege RED, implement, then run GREEN**
+- [x] **Step 1: Write privilege RED, implement, then run GREEN**
 
 Register exact routes `POST /api/reports`, `GET /api/reports`, `POST /api/reports/:userId/warn`, `POST /api/reports/:userId/ban`. Moderation records the actor, time, and a bounded required reason, and returns no internal field names. A ban is idempotent.
 
@@ -316,7 +316,7 @@ Register exact routes `POST /api/reports`, `GET /api/reports`, `POST /api/report
 
 **Interfaces:** Produces auditable 52/52 closure and zero Express-style content implementation.
 
-- [ ] **Step 1: Write cutover RED**
+- [x] **Step 1: Write cutover RED**
 
 ```ts
 expect(routeSet).toEqual(expectedFortySixRoutes);
@@ -329,11 +329,11 @@ expect(coverage).toEqual({
 expect(source).not.toMatch(/req\.body|catch \(error\) \{[^}]*error\.message/);
 ```
 
-- [ ] **Step 2: Complete correction and client documentation**
+- [x] **Step 2: Complete correction and client documentation**
 
 Document the two newly reachable post routes, the bounded pagination defaults, the visibility policy, the moderation reason requirement, and the deferred `ContentChainPort` adapter. Mark the manifest implemented at 52/52 without claiming programme completion.
 
-- [ ] **Step 3: Run domain and preceding-domain gates**
+- [x] **Step 3: Run domain and preceding-domain gates**
 
 Run the content-social, ads-media, auth-users-security, and migration suites, full ESLint, strict source and test type checks, Prettier, `prisma validate --config prisma.config.ts`, and `nest build -b swc`.
 

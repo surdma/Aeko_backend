@@ -135,6 +135,13 @@
     "rest:PUT:/api/posts/:postId:routes/postRoutes.js:404"
   ],
   "risk": "high",
+  "migration": {
+    "status": "implemented-except-chain",
+    "assigned": 49,
+    "missing": 3,
+    "duplicate": 0,
+    "unresolved": 0
+  },
   "specialistReview": [
     "backend",
     "security"
