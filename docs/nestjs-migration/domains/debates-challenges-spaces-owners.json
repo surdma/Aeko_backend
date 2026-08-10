@@ -1,0 +1,50 @@
+{
+  "model:model:Challenge": [
+    "challenges"
+  ],
+  "model:model:Debate": [
+    "debates"
+  ],
+  "model:model:Space": [
+    "spaces"
+  ],
+  "rest:GET:/api/challenges:routes/challenges.js:118": [
+    "challenges"
+  ],
+  "rest:GET:/api/debates:routes/debates.js:116": [
+    "debates"
+  ],
+  "rest:PATCH:/api/spaces/:spaceId/end:routes/space.js:30": [
+    "spaces"
+  ],
+  "rest:POST:/api/challenges/create:routes/challenges.js:8": [
+    "challenges"
+  ],
+  "rest:POST:/api/debates/start:routes/debates.js:9": [
+    "debates"
+  ],
+  "rest:POST:/api/spaces/create:routes/space.js:9": [
+    "spaces"
+  ],
+  "rest:PUT:/api/challenges/:challengeId/duet:routes/challenges.js:30": [
+    "challenges"
+  ],
+  "rest:PUT:/api/challenges/:challengeId/end:routes/challenges.js:84": [
+    "challenges"
+  ],
+  "rest:PUT:/api/challenges/:challengeId/vote:routes/challenges.js:54": [
+    "challenges"
+  ],
+  "rest:PUT:/api/debates/:debateId/end:routes/debates.js:81": [
+    "debates"
+  ],
+  "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33": [
+    "debates"
+  ],
+  "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58": [
+    "debates"
+  ],
+  "rest:PUT:/api/spaces/:spaceId/highlight:routes/space.js:60": [
+    "spaces"
+  ]
+}

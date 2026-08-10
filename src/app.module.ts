@@ -21,6 +21,9 @@ import { StatusModule } from './status/status.module';
 import { ExploreModule } from './explore/explore.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReportsModule } from './reports/reports.module';
+import { DebatesModule } from './debates/debates.module';
+import { ChallengesModule } from './challenges/challenges.module';
+import { SpacesModule } from './spaces/spaces.module';
 
 @Module({
   imports: [
@@ -36,6 +39,9 @@ import { ReportsModule } from './reports/reports.module';
     ExploreModule,
     NotificationsModule,
     ReportsModule,
+    DebatesModule,
+    ChallengesModule,
+    SpacesModule,
   ],
 })
 export class AppModule {

@@ -62,7 +62,7 @@ Two behaviors that look like defects but are **preserved**, because clients depe
 
 **Interfaces:** Consumes the committed 16-ID manifest. Produces one owner tuple per capability and three AppModule-imported feature modules.
 
-- [ ] **Step 1: Write ownership RED**
+- [x] **Step 1: Write ownership RED**
 
 ```ts
 expect(manifest.capabilityIds).toHaveLength(16);
@@ -71,11 +71,11 @@ expect(Object.values(owners).every((value) => value.length === 1)).toBe(true);
 expect(ownerCounts).toEqual({ debates: 6, challenges: 6, spaces: 4 });
 ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Expected: FAIL because the owner map and generated modules do not exist.
 
-- [ ] **Step 3: Generate exact artifacts with Nest CLI, then run GREEN**
+- [x] **Step 3: Generate exact artifacts with Nest CLI, then run GREEN**
 
 Assign `Debate` to `debates`, `Challenge` to `challenges`, `Space` to `spaces`, and each route to the feature owning its path prefix.
 

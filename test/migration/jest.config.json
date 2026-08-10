@@ -9,7 +9,7 @@
     "<rootDir>/test/migration"
   ],
   "testEnvironment": "node",
-  "testRegex": "test/migration/(program-coverage|auth-users-security-coverage|ads-media-coverage|content-social-coverage|prisma-schema|social-graph-backfill)\\.spec\\.ts$",
+  "testRegex": "test/migration/(program-coverage|auth-users-security-coverage|ads-media-coverage|content-social-coverage|debates-challenges-spaces-coverage|prisma-schema|social-graph-backfill)\\.spec\\.ts$",
   "transform": {
     "^.+\\.(t|j)s$": [
       "<rootDir>/node_modules/.pnpm/ts-jest@29.4.12_@babel+core_c0aa02714c6df37fa81f3283809b63a8/node_modules/ts-jest",
