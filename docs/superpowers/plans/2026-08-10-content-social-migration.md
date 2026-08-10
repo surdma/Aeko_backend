@@ -217,7 +217,7 @@ Register exact routes `POST /api/status`, `GET /api/status`, `DELETE /api/status
 
 **Interfaces:** Produces `explore(viewer, query)` plus `settings`, `updateSettings`, `registerPushToken`, `list`, `unreadCount`, `markRead`, `markAllRead`, and `remove`.
 
-- [ ] **Step 1: Write RED, implement, then run GREEN**
+- [x] **Step 1: Write RED, implement, then run GREEN**
 
 Register the exact eight notification routes and `GET /api/explore`. Notification reads and mutations are strictly owner-scoped; a push token is validated and never logged. Explore ranking preserves the legacy ordering inputs under the shared visibility policy.
 
@@ -295,10 +295,10 @@ bearer-token clients cannot use the stream directly; cookie-session browser
 clients can. Bearer clients keep using `GET /api/notifications` exactly as
 today. This is documented, not worked around.
 
-- [ ] Assert the stream requires a session and rejects an anonymous connection.
-- [ ] Assert one recipient never receives another recipient's notification.
-- [ ] Assert a reconnect does not replay already-delivered ids.
-- [ ] Assert the eight REST routes are unchanged by the stream's presence.
+- [x] Assert the stream requires a session and rejects an anonymous connection.
+- [x] Assert one recipient never receives another recipient's notification.
+- [x] Assert a reconnect does not replay already-delivered ids.
+- [x] Assert the eight REST routes are unchanged by the stream's presence.
 
 ### Task 9: Migrate reporting and administrator moderation
 
