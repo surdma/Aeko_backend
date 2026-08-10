@@ -85,7 +85,7 @@ Assign `Debate` to `debates`, `Challenge` to `challenges`, `Space` to `spaces`, 
 
 **Interfaces:** Produces non-null `DebateView`, `DebateCreate`, `DebateScore`, `DebateVote`, `EndDecision`, `ChallengeView`, `ChallengeCreate`, `DuetEntry`, `SpaceView`, `SpaceCreate`, and `HighlightEntry` parsers plus a shared bounded list query.
 
-- [ ] **Step 1: Write contracts RED, implement, then run GREEN**
+- [x] **Step 1: Write contracts RED, implement, then run GREEN**
 
 Bound every page and text field, require HTTPS media URLs for duet and highlight videos, cap participant arrays, and reject unknown mutation keys rather than stripping them. The voter is never accepted from the request body.
 
