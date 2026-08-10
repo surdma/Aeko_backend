@@ -1,0 +1,303 @@
+-- Social graph normalization, step 1 of the cutover: create the relational
+-- tables and backfill them from the JSON columns.
+--
+-- Nothing is dropped and nothing existing is rewritten. The JSON columns stay
+-- authoritative for reads because the legacy Express service is still writing
+-- them; these tables are dual-written from the NestJS service and are only
+-- read from after the legacy service is retired.
+--
+-- Every backfill statement is idempotent: each target has a unique constraint
+-- on its natural key and every INSERT ends in ON CONFLICT DO NOTHING, so this
+-- migration can be re-run, or run in batches, without duplicating edges.
+
+-- Optional age, used by ad targeting. Null means "unknown", and the targeting
+-- matcher skips the age check rather than excluding the viewer.
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "age" INTEGER;
+
+CREATE TABLE IF NOT EXISTS "follows" (
+  "id" TEXT NOT NULL,
+  "followerId" TEXT NOT NULL,
+  "followeeId" TEXT NOT NULL,
+  "state" TEXT NOT NULL DEFAULT 'accepted',
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "follows_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "follows_followerId_fkey" FOREIGN KEY ("followerId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "follows_followeeId_fkey" FOREIGN KEY ("followeeId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "follows_followerId_followeeId_key"
+  ON "follows"("followerId", "followeeId");
+CREATE INDEX IF NOT EXISTS "follows_followeeId_state_idx"
+  ON "follows"("followeeId", "state");
+CREATE INDEX IF NOT EXISTS "follows_followerId_state_idx"
+  ON "follows"("followerId", "state");
+
+CREATE TABLE IF NOT EXISTS "blocks" (
+  "id" TEXT NOT NULL,
+  "blockerId" TEXT NOT NULL,
+  "blockedId" TEXT NOT NULL,
+  "reason" TEXT,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "blocks_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "blocks_blockerId_fkey" FOREIGN KEY ("blockerId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "blocks_blockedId_fkey" FOREIGN KEY ("blockedId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "blocks_blockerId_blockedId_key"
+  ON "blocks"("blockerId", "blockedId");
+CREATE INDEX IF NOT EXISTS "blocks_blockedId_idx" ON "blocks"("blockedId");
+
+CREATE TABLE IF NOT EXISTS "post_likes" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "postId" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "post_likes_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "post_likes_userId_fkey" FOREIGN KEY ("userId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "post_likes_postId_fkey" FOREIGN KEY ("postId")
+    REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "post_likes_userId_postId_key"
+  ON "post_likes"("userId", "postId");
+CREATE INDEX IF NOT EXISTS "post_likes_postId_idx" ON "post_likes"("postId");
+
+CREATE TABLE IF NOT EXISTS "comment_likes" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "commentId" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "comment_likes_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "comment_likes_userId_fkey" FOREIGN KEY ("userId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "comment_likes_commentId_fkey" FOREIGN KEY ("commentId")
+    REFERENCES "comments"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "comment_likes_userId_commentId_key"
+  ON "comment_likes"("userId", "commentId");
+CREATE INDEX IF NOT EXISTS "comment_likes_commentId_idx"
+  ON "comment_likes"("commentId");
+
+CREATE TABLE IF NOT EXISTS "not_interested" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "postId" TEXT NOT NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "not_interested_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "not_interested_userId_fkey" FOREIGN KEY ("userId")
+    REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT "not_interested_postId_fkey" FOREIGN KEY ("postId")
+    REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "not_interested_userId_postId_key"
+  ON "not_interested"("userId", "postId");
+CREATE INDEX IF NOT EXISTS "not_interested_postId_idx"
+  ON "not_interested"("postId");
+
+-- ---------------------------------------------------------------------------
+-- Backfill
+-- ---------------------------------------------------------------------------
+
+-- Accepted follows.
+--
+-- `users.following` and `users.followers` are two denormalized halves of the
+-- same relation and they disagree on some rows: A can list B in `following`
+-- while B does not list A in `followers`, or the reverse. Reconciliation is by
+-- UNION — an edge exists if either side recorded it.
+--
+-- Union is chosen deliberately over intersection. Both halves were written by
+-- the same non-transactional read-modify-write that lost concurrent updates,
+-- so a missing entry is far more likely to be a lost write than a deliberate
+-- unfollow. Intersection would silently drop real follows; union at worst
+-- resurrects an unfollow that half-failed, which the user can redo.
+-- `edge_disagreements` below reports exactly how many rows this affected.
+INSERT INTO "follows" ("id", "followerId", "followeeId", "state", "createdAt", "updatedAt")
+SELECT gen_random_uuid()::text, edge."followerId", edge."followeeId",
+       'accepted', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+FROM (
+  -- A lists B in its `following`.
+  SELECT u."id" AS "followerId", f.value #>> '{}' AS "followeeId"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."following"::jsonb) = 'array'
+         THEN u."following"::jsonb ELSE '[]'::jsonb END) AS f(value)
+  WHERE jsonb_typeof(f.value) = 'string'
+  UNION
+  -- B lists A in its `followers`, which is the same edge seen from the other end.
+  SELECT f.value #>> '{}' AS "followerId", u."id" AS "followeeId"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."followers"::jsonb) = 'array'
+         THEN u."followers"::jsonb ELSE '[]'::jsonb END) AS f(value)
+  WHERE jsonb_typeof(f.value) = 'string'
+) AS edge
+-- Drop edges pointing at users that no longer exist, and self-follows.
+JOIN "users" fr ON fr."id" = edge."followerId"
+JOIN "users" fe ON fe."id" = edge."followeeId"
+WHERE edge."followerId" <> edge."followeeId"
+ON CONFLICT ("followerId", "followeeId") DO NOTHING;
+
+-- Pending follow requests. `users.followRequests` holds objects
+-- {user, requestedAt, status}; only `pending` is a live edge. An accepted
+-- follow already inserted above wins, so this cannot downgrade a real follow.
+INSERT INTO "follows" ("id", "followerId", "followeeId", "state", "createdAt", "updatedAt")
+SELECT gen_random_uuid()::text, req."followerId", req."followeeId",
+       'requested', req."requestedAt", CURRENT_TIMESTAMP
+FROM (
+  SELECT r.value ->> 'user' AS "followerId",
+         u."id" AS "followeeId",
+         COALESCE((r.value ->> 'requestedAt')::timestamp, CURRENT_TIMESTAMP)
+           AS "requestedAt"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."followRequests"::jsonb) = 'array'
+         THEN u."followRequests"::jsonb ELSE '[]'::jsonb END) AS r(value)
+  WHERE jsonb_typeof(r.value) = 'object'
+    AND r.value ->> 'status' = 'pending'
+    AND r.value ->> 'user' IS NOT NULL
+) AS req
+JOIN "users" fr ON fr."id" = req."followerId"
+WHERE req."followerId" <> req."followeeId"
+ON CONFLICT ("followerId", "followeeId") DO NOTHING;
+
+-- Blocks. Entries accumulated several shapes over time: a bare string, or an
+-- object keyed `user` or `userId`, where that key may itself hold an object
+-- with an `id`. All four are read here; missing one silently unblocks someone.
+INSERT INTO "blocks" ("id", "blockerId", "blockedId", "reason", "createdAt")
+SELECT gen_random_uuid()::text, blk."blockerId", blk."blockedId",
+       NULLIF(blk."reason", ''), blk."createdAt"
+FROM (
+  SELECT u."id" AS "blockerId",
+         CASE
+           WHEN jsonb_typeof(b.value) = 'string' THEN b.value #>> '{}'
+           WHEN jsonb_typeof(b.value -> 'user') = 'string' THEN b.value ->> 'user'
+           WHEN jsonb_typeof(b.value -> 'user') = 'object' THEN b.value #>> '{user,id}'
+           WHEN jsonb_typeof(b.value -> 'userId') = 'string' THEN b.value ->> 'userId'
+           WHEN jsonb_typeof(b.value -> 'userId') = 'object' THEN b.value #>> '{userId,id}'
+           ELSE NULL
+         END AS "blockedId",
+         CASE WHEN jsonb_typeof(b.value) = 'object'
+              THEN b.value ->> 'reason' ELSE NULL END AS "reason",
+         COALESCE(
+           CASE WHEN jsonb_typeof(b.value) = 'object'
+                THEN (b.value ->> 'blockedAt')::timestamp ELSE NULL END,
+           CURRENT_TIMESTAMP) AS "createdAt"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."blockedUsers"::jsonb) = 'array'
+         THEN u."blockedUsers"::jsonb ELSE '[]'::jsonb END) AS b(value)
+) AS blk
+JOIN "users" bd ON bd."id" = blk."blockedId"
+WHERE blk."blockedId" IS NOT NULL
+  AND blk."blockerId" <> blk."blockedId"
+ON CONFLICT ("blockerId", "blockedId") DO NOTHING;
+
+-- Post likes.
+INSERT INTO "post_likes" ("id", "userId", "postId", "createdAt")
+SELECT gen_random_uuid()::text, lk."userId", lk."postId", CURRENT_TIMESTAMP
+FROM (
+  SELECT l.value #>> '{}' AS "userId", p."id" AS "postId"
+  FROM "posts" p
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(p."likes"::jsonb) = 'array'
+         THEN p."likes"::jsonb ELSE '[]'::jsonb END) AS l(value)
+  WHERE jsonb_typeof(l.value) = 'string'
+) AS lk
+JOIN "users" u ON u."id" = lk."userId"
+ON CONFLICT ("userId", "postId") DO NOTHING;
+
+-- Comment likes.
+INSERT INTO "comment_likes" ("id", "userId", "commentId", "createdAt")
+SELECT gen_random_uuid()::text, lk."userId", lk."commentId", CURRENT_TIMESTAMP
+FROM (
+  SELECT l.value #>> '{}' AS "userId", c."id" AS "commentId"
+  FROM "comments" c
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(c."likes"::jsonb) = 'array'
+         THEN c."likes"::jsonb ELSE '[]'::jsonb END) AS l(value)
+  WHERE jsonb_typeof(l.value) = 'string'
+) AS lk
+JOIN "users" u ON u."id" = lk."userId"
+ON CONFLICT ("userId", "commentId") DO NOTHING;
+
+-- Not-interested. Stored as an object with a `posts` array, not a bare array.
+INSERT INTO "not_interested" ("id", "userId", "postId", "createdAt")
+SELECT gen_random_uuid()::text, ni."userId", ni."postId", CURRENT_TIMESTAMP
+FROM (
+  SELECT u."id" AS "userId", n.value #>> '{}' AS "postId"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."notInterested"::jsonb -> 'posts') = 'array'
+         THEN u."notInterested"::jsonb -> 'posts' ELSE '[]'::jsonb END) AS n(value)
+  WHERE jsonb_typeof(n.value) = 'string'
+) AS ni
+JOIN "posts" p ON p."id" = ni."postId"
+ON CONFLICT ("userId", "postId") DO NOTHING;
+
+-- Interests, into the join table created empty by the previous migration.
+INSERT INTO "user_interests" ("id", "userId", "interestId", "createdAt")
+SELECT gen_random_uuid()::text, ui."userId", i."id", CURRENT_TIMESTAMP
+FROM (
+  SELECT u."id" AS "userId", n.value #>> '{}' AS "interest"
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."interests"::jsonb) = 'array'
+         THEN u."interests"::jsonb ELSE '[]'::jsonb END) AS n(value)
+  WHERE jsonb_typeof(n.value) = 'string'
+) AS ui
+-- Stored entries are interest names in some rows and ids in others.
+JOIN "interests" i ON i."name" = ui."interest" OR i."id" = ui."interest"
+ON CONFLICT ("userId", "interestId") DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- Reconciliation report
+-- ---------------------------------------------------------------------------
+-- A record of what the union above actually resolved, so the disagreement
+-- count is auditable after the fact instead of being lost with the JSON.
+CREATE TABLE IF NOT EXISTS "social_graph_backfill_report" (
+  "id" TEXT NOT NULL,
+  "metric" TEXT NOT NULL,
+  "count" BIGINT NOT NULL,
+  "recordedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "social_graph_backfill_report_pkey" PRIMARY KEY ("id")
+);
+
+WITH forward AS (
+  SELECT u."id" AS a, f.value #>> '{}' AS b
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."following"::jsonb) = 'array'
+         THEN u."following"::jsonb ELSE '[]'::jsonb END) AS f(value)
+  WHERE jsonb_typeof(f.value) = 'string'
+),
+reverse AS (
+  SELECT f.value #>> '{}' AS a, u."id" AS b
+  FROM "users" u
+  CROSS JOIN LATERAL jsonb_array_elements(
+    CASE WHEN jsonb_typeof(u."followers"::jsonb) = 'array'
+         THEN u."followers"::jsonb ELSE '[]'::jsonb END) AS f(value)
+  WHERE jsonb_typeof(f.value) = 'string'
+)
+INSERT INTO "social_graph_backfill_report" ("id", "metric", "count")
+SELECT gen_random_uuid()::text, m.metric, m.count FROM (
+  SELECT 'follow_edges_total' AS metric, count(*)::bigint AS count FROM "follows"
+  UNION ALL
+  SELECT 'follow_only_in_following',
+         (SELECT count(*) FROM (SELECT a, b FROM forward EXCEPT SELECT a, b FROM reverse) x)
+  UNION ALL
+  SELECT 'follow_only_in_followers',
+         (SELECT count(*) FROM (SELECT a, b FROM reverse EXCEPT SELECT a, b FROM forward) x)
+  UNION ALL
+  SELECT 'block_edges_total', (SELECT count(*) FROM "blocks")
+  UNION ALL
+  SELECT 'post_like_edges_total', (SELECT count(*) FROM "post_likes")
+  UNION ALL
+  SELECT 'comment_like_edges_total', (SELECT count(*) FROM "comment_likes")
+  UNION ALL
+  SELECT 'not_interested_edges_total', (SELECT count(*) FROM "not_interested")
+  UNION ALL
+  SELECT 'user_interest_edges_total', (SELECT count(*) FROM "user_interests")
+) AS m;

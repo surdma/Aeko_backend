@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit --pretty false",
     "test": "jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "test:migration": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config test/migration/jest.config.json --runInBand",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",
     "prisma:dev": "prisma migrate dev",
@@ -53,6 +54,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.4.3",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@mrleebo/prisma-ast": "^0.12.1",

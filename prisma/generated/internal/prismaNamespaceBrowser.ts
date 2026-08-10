@@ -77,6 +77,11 @@ export const ModelName = {
   Transaction: 'Transaction',
   SubscriptionPlan: 'SubscriptionPlan',
   User: 'User',
+  Follow: 'Follow',
+  Block: 'Block',
+  PostLike: 'PostLike',
+  CommentLike: 'CommentLike',
+  NotInterested: 'NotInterested',
   Report: 'Report',
   SupportTicket: 'SupportTicket',
   SupportMessage: 'SupportMessage',
@@ -604,12 +609,66 @@ export const UserScalarFieldEnum = {
   interests: 'interests',
   twoFactorEnabled: 'twoFactorEnabled',
   location: 'location',
+  age: 'age',
   warningCount: 'warningCount',
   notInterested: 'notInterested',
   coinBalance: 'coinBalance'
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const FollowScalarFieldEnum = {
+  id: 'id',
+  followerId: 'followerId',
+  followeeId: 'followeeId',
+  state: 'state',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type FollowScalarFieldEnum = (typeof FollowScalarFieldEnum)[keyof typeof FollowScalarFieldEnum]
+
+
+export const BlockScalarFieldEnum = {
+  id: 'id',
+  blockerId: 'blockerId',
+  blockedId: 'blockedId',
+  reason: 'reason',
+  createdAt: 'createdAt'
+} as const
+
+export type BlockScalarFieldEnum = (typeof BlockScalarFieldEnum)[keyof typeof BlockScalarFieldEnum]
+
+
+export const PostLikeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  postId: 'postId',
+  createdAt: 'createdAt'
+} as const
+
+export type PostLikeScalarFieldEnum = (typeof PostLikeScalarFieldEnum)[keyof typeof PostLikeScalarFieldEnum]
+
+
+export const CommentLikeScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  commentId: 'commentId',
+  createdAt: 'createdAt'
+} as const
+
+export type CommentLikeScalarFieldEnum = (typeof CommentLikeScalarFieldEnum)[keyof typeof CommentLikeScalarFieldEnum]
+
+
+export const NotInterestedScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  postId: 'postId',
+  createdAt: 'createdAt'
+} as const
+
+export type NotInterestedScalarFieldEnum = (typeof NotInterestedScalarFieldEnum)[keyof typeof NotInterestedScalarFieldEnum]
 
 
 export const ReportScalarFieldEnum = {

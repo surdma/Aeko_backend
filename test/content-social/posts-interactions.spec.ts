@@ -90,6 +90,9 @@ interface Harness {
   readonly statuses: unknown[];
   readonly transactionOptions: unknown[];
   notInterested: string[];
+  /** Relational dual-write targets, keyed `userId:postId`. */
+  readonly postLikes: Set<string>;
+  readonly notInterestedRows: Set<string>;
 }
 
 const createHarness = (rows: readonly Row[]): Harness => {
@@ -105,6 +108,8 @@ const createHarness = (rows: readonly Row[]): Harness => {
     statuses: [],
     transactionOptions: [],
     notInterested: [],
+    postLikes: new Set<string>(),
+    notInterestedRows: new Set<string>(),
   };
 
   let queue: Promise<unknown> = Promise.resolve();
@@ -192,6 +197,61 @@ const createHarness = (rows: readonly Row[]): Harness => {
       findMany: (): Promise<readonly unknown[]> => Promise.resolve([]),
       count: (): Promise<number> => Promise.resolve(bookmarks.size),
     },
+    postLike: {
+      upsert: (input: unknown): Promise<unknown> => {
+        const where = readObject(input, 'where');
+        const composite = readObject(where, 'userId_postId');
+        harness.postLikes.add(
+          `${asText(readObject(composite, 'userId'))}:${asText(
+            readObject(composite, 'postId'),
+          )}`,
+        );
+        return Promise.resolve({});
+      },
+      deleteMany: (input: unknown): Promise<unknown> => {
+        const where = readObject(input, 'where');
+        harness.postLikes.delete(
+          `${asText(readObject(where, 'userId'))}:${asText(
+            readObject(where, 'postId'),
+          )}`,
+        );
+        return Promise.resolve({ count: 1 });
+      },
+    },
+    notInterested: {
+      deleteMany: (input: unknown): Promise<unknown> => {
+        const where = readObject(input, 'where');
+        const userId = asText(readObject(where, 'userId'));
+        const postId = readObject(where, 'postId');
+        const keep =
+          typeof postId === 'object' && postId !== null
+            ? readObject(postId, 'notIn')
+            : null;
+        const retained = Array.isArray(keep)
+          ? keep.filter((entry): entry is string => typeof entry === 'string')
+          : [];
+        for (const key of [...harness.notInterestedRows]) {
+          const [owner, post] = key.split(':');
+          if (owner === userId && !retained.includes(post ?? '')) {
+            harness.notInterestedRows.delete(key);
+          }
+        }
+        return Promise.resolve({ count: 0 });
+      },
+      createMany: (input: unknown): Promise<unknown> => {
+        const data = readObject(input, 'data');
+        if (Array.isArray(data)) {
+          for (const entry of data) {
+            harness.notInterestedRows.add(
+              `${asText(readObject(entry, 'userId'))}:${asText(
+                readObject(entry, 'postId'),
+              )}`,
+            );
+          }
+        }
+        return Promise.resolve({ count: 0 });
+      },
+    },
     status: {
       create: (input: unknown): Promise<unknown> => {
         const data = readObject(input, 'data');
@@ -246,8 +306,12 @@ describe('post interactions', () => {
       isolationLevel: 'Serializable',
     });
 
+    // Dual-write: the relational row is created alongside the JSON array.
+    expect([...harness.postLikes]).toEqual(['viewer:post-1']);
+
     const unliked = await harness.service.like(viewer, 'post-1');
     expect(unliked).toMatchObject({ liked: false, totalLikes: 0 });
+    expect([...harness.postLikes]).toEqual([]);
   });
 
   it('does not lose concurrent likes from different users', async () => {
@@ -259,6 +323,10 @@ describe('post interactions', () => {
 
     const stored = harness.rows.get('post-1');
     expect(Array.isArray(stored?.likes) ? stored.likes : []).toHaveLength(2);
+    expect([...harness.postLikes].sort()).toEqual([
+      'second:post-1',
+      'viewer:post-1',
+    ]);
   });
 
   it('mirrors the like count onto engagement without dropping other keys', async () => {
@@ -289,6 +357,7 @@ describe('post interactions', () => {
     await harness.service.notInterested(viewer, 'post-1');
     await harness.service.notInterested(viewer, 'post-1');
     expect(harness.notInterested).toEqual(['post-1']);
+    expect([...harness.notInterestedRows]).toEqual(['viewer:post-1']);
   });
 
   it('counts a view and returns the new total', async () => {

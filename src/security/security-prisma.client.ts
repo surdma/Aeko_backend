@@ -22,6 +22,8 @@ export interface SocialUserRecord {
   readonly following: unknown;
 }
 
+export type FollowState = 'accepted' | 'requested';
+
 export interface SocialTransaction {
   findUser(id: string): Promise<SocialUserRecord | null>;
   updateUser(id: string, data: Prisma.UserUpdateInput): Promise<void>;
@@ -29,6 +31,27 @@ export interface SocialTransaction {
     ids: readonly string[],
     search: string,
   ): Promise<readonly SocialUserRecord[]>;
+
+  /**
+   * Relational half of the dual-write. These run inside the same transaction
+   * as the JSON column updates above, so the two representations cannot drift
+   * apart within a single request.
+   *
+   * The JSON columns stay authoritative for reads until the legacy Express
+   * service stops writing them; nothing reads these tables yet.
+   */
+  setFollow(
+    followerId: string,
+    followeeId: string,
+    state: FollowState,
+  ): Promise<void>;
+  removeFollow(followerId: string, followeeId: string): Promise<void>;
+  setBlock(
+    blockerId: string,
+    blockedId: string,
+    reason: string | null,
+  ): Promise<void>;
+  removeBlock(blockerId: string, blockedId: string): Promise<void>;
 }
 
 export interface SocialPrismaClient extends SocialTransaction {
@@ -73,6 +96,29 @@ const createTransaction = (db: PrismaTransaction): SocialTransaction => ({
         : { username: { contains: search, mode: 'insensitive' } }),
     };
     return db.user.findMany({ where, select: selection });
+  },
+
+  async setFollow(followerId, followeeId, state) {
+    if (followerId === followeeId) return;
+    await db.follow.upsert({
+      where: { followerId_followeeId: { followerId, followeeId } },
+      create: { followerId, followeeId, state },
+      update: { state },
+    });
+  },
+  async removeFollow(followerId, followeeId) {
+    await db.follow.deleteMany({ where: { followerId, followeeId } });
+  },
+  async setBlock(blockerId, blockedId, reason) {
+    if (blockerId === blockedId) return;
+    await db.block.upsert({
+      where: { blockerId_blockedId: { blockerId, blockedId } },
+      create: { blockerId, blockedId, reason },
+      update: { reason },
+    });
+  },
+  async removeBlock(blockerId, blockedId) {
+    await db.block.deleteMany({ where: { blockerId, blockedId } });
   },
 });
 

@@ -174,6 +174,38 @@ export type SubscriptionPlan = Prisma.SubscriptionPlanModel
  */
 export type User = Prisma.UserModel
 /**
+ * Model Follow
+ * Replaces the `users.followers`, `users.following` and `users.followRequests`
+ * JSON columns. Those three are two denormalized halves of one relation plus a
+ * pending queue; here they are one row per edge.
+ * 
+ * The JSON columns remain authoritative for reads while the legacy Express
+ * service is still writing them. This table is dual-written and is not read
+ * from until that cutover.
+ */
+export type Follow = Prisma.FollowModel
+/**
+ * Model Block
+ * Replaces the `users.blockedUsers` JSON column.
+ */
+export type Block = Prisma.BlockModel
+/**
+ * Model PostLike
+ * Replaces the `posts.likes` JSON array. A like is an insert guarded by a
+ * unique constraint, so concurrent likes no longer contend on one row.
+ */
+export type PostLike = Prisma.PostLikeModel
+/**
+ * Model CommentLike
+ * Replaces the `comments.likes` JSON array.
+ */
+export type CommentLike = Prisma.CommentLikeModel
+/**
+ * Model NotInterested
+ * Replaces the `posts` array inside the `users.notInterested` JSON object.
+ */
+export type NotInterested = Prisma.NotInterestedModel
+/**
  * Model Report
  * 
  */

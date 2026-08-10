@@ -78,6 +78,11 @@ const DIVERGENCES: Readonly<
       'updatedByUser User? @relation("verificationSettingsUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)',
     ],
   },
+  // Back-relations for the normalized social graph. The legacy JSON columns
+  // (`posts.likes`, `comments.likes`) are still present and authoritative;
+  // these are the dual-written relational tables alongside them.
+  Post: { add: ['postLikes PostLike[]', 'notInterestedBy NotInterested[]'] },
+  Comment: { add: ['commentLikes CommentLike[]'] },
 };
 
 function applyDivergences(name: string, lines: string[]): string[] {

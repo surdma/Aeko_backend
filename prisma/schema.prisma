@@ -150,6 +150,7 @@ model Comment {
   parentId String?
   parent Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
   replies Comment[] @relation("CommentReplies")
+  commentLikes CommentLike[]
 }
 
 model Community {
@@ -394,6 +395,8 @@ model Post {
   other_posts Post[] @relation("postsToposts")
   users_posts_userIdTouser User @relation("posts_userIdTousers", fields: [userId], references: [id], onDelete: Cascade)
   statuses Status[]
+  postLikes PostLike[]
+  notInterestedBy NotInterested[]
 }
 
 model SecurityEvent {
@@ -575,6 +578,9 @@ model User {
   supportTickets SupportTicket[]
   supportMessages SupportMessage[]
   location String?
+  /// Optional: most accounts never supply one, and ad age targeting treats a
+  /// null age as "unknown" and skips the age check rather than excluding.
+  age Int?
   warningCount Int @default(0)
   notInterested Json?
   coinBalance Float @default(0)
@@ -582,6 +588,101 @@ model User {
   sentGifts LiveStreamGift[] @relation("sentGifts")
   interestLinks UserInterest[]
   verificationSettingsUpdated VerificationSettings[] @relation("verificationSettingsUpdatedBy")
+  followsSent Follow[] @relation("followFollower")
+  followsReceived Follow[] @relation("followFollowee")
+  blocksMade Block[] @relation("blockBlocker")
+  blocksReceived Block[] @relation("blockBlocked")
+  postLikes PostLike[]
+  commentLikes CommentLike[]
+  notInterestedPosts NotInterested[]
+}
+
+/// Replaces the `users.followers`, `users.following` and `users.followRequests`
+/// JSON columns. Those three are two denormalized halves of one relation plus a
+/// pending queue; here they are one row per edge.
+///
+/// The JSON columns remain authoritative for reads while the legacy Express
+/// service is still writing them. This table is dual-written and is not read
+/// from until that cutover.
+model Follow {
+  @@map("follows")
+  id String @id @default(uuid())
+  followerId String
+  followeeId String
+  /// `accepted` is a live follow; `requested` is a pending request against a
+  /// private account, which is what `users.followRequests` held.
+  state String @default("accepted")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  follower User @relation("followFollower", fields: [followerId], references: [id], onDelete: Cascade)
+  followee User @relation("followFollowee", fields: [followeeId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followeeId])
+  @@index([followeeId, state])
+  @@index([followerId, state])
+}
+
+/// Replaces the `users.blockedUsers` JSON column.
+model Block {
+  @@map("blocks")
+  id String @id @default(uuid())
+  blockerId String
+  blockedId String
+  reason String?
+  createdAt DateTime @default(now())
+
+  blocker User @relation("blockBlocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("blockBlocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+/// Replaces the `posts.likes` JSON array. A like is an insert guarded by a
+/// unique constraint, so concurrent likes no longer contend on one row.
+model PostLike {
+  @@map("post_likes")
+  id String @id @default(uuid())
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+/// Replaces the `comments.likes` JSON array.
+model CommentLike {
+  @@map("comment_likes")
+  id String @id @default(uuid())
+  userId String
+  commentId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+  @@index([commentId])
+}
+
+/// Replaces the `posts` array inside the `users.notInterested` JSON object.
+model NotInterested {
+  @@map("not_interested")
+  id String @id @default(uuid())
+  userId String
+  postId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
 }
 
 model Report {

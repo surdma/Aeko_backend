@@ -307,15 +307,14 @@ export const createAdPrismaClient = (db: PrismaClient): AdPrismaClient => ({
   async findViewer(id) {
     const row = await db.user.findUnique({
       where: { id },
-      select: { id: true, location: true, followers: true },
+      select: { id: true, age: true, location: true, followers: true },
     });
     if (row === null) return null;
     return {
       id: row.id,
-      // `users` has no age column. The previous boundary selected `age`, which
-      // made every call fail Prisma validation; age targeting is skipped for a
-      // null age, which is the behaviour the matcher already handles.
-      age: null,
+      // Optional. A null age means the viewer never supplied one, and the
+      // targeting matcher skips the age check rather than excluding them.
+      age: row.age,
       location: row.location,
       followerCount: countFollowers(row.followers),
     };

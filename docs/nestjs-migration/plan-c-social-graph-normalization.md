@@ -1,6 +1,31 @@
 # Plan C — Social graph normalization and enum conversion
 
-Status: **not started**. Written 2026-08-10, after passes A and B landed.
+Status: **steps 1-3 shipped** (tables, backfill, dual-write). Steps 4-6 (read
+cutover, verification, dropping the JSON columns) remain — they are gated on
+the legacy Express service being retired, not on more code.
+
+Written 2026-08-10, after passes A and B landed; revised the same day once C1
+shipped.
+
+## Shipped
+
+- `Follow`, `Block`, `PostLike`, `CommentLike`, `NotInterested` tables, plus
+  `users.age` as a nullable column. Migration
+  `20260810_social_graph_tables`.
+- Backfill from every JSON column, reconciling `followers`/`following`
+  disagreements by union, reading all four historical `blockedUsers` shapes,
+  and skipping self-edges and references to deleted rows. Idempotent.
+- Dual-write from the NestJS service: follow, request, approve, reject,
+  unfollow, block, unblock, post likes and not-interested all write the
+  relational table inside the same transaction as the JSON update.
+- `test/migration/social-graph-backfill.spec.ts` runs the real migration
+  against a real Postgres (PGlite, in memory) seeded with the awkward shapes,
+  and asserts the reconciliation outcome. Run with `pnpm test:migration`.
+- Ad age targeting is live again against the new `users.age`.
+
+## Still to do
+
+Steps 4-6 of the sequencing below. Nothing reads the relational tables yet.
 
 This plan covers every schema flaw that could not be fixed without touching
 existing rows. Passes A and B deliberately stopped at the point where a change
@@ -18,7 +43,7 @@ still serving. They need staging runs and a dual-write window, not a refactor.
 
 ## Scope
 
-### C1 — Social graph tables
+### C1 — Social graph tables (shipped)
 
 Seven JSON columns currently hold relationships. They cannot be indexed,
 joined, filtered in SQL, or written concurrently without a `Serializable`
@@ -34,15 +59,21 @@ transaction and retry.
 | `posts.likes`          | `PostLike(userId, postId)`           | many-many   |
 | `comments.likes`       | `CommentLike(userId, commentId)`     | many-many   |
 
-`users.interests` is already covered: pass B created the empty
-`user_interests` table, so C1 only has to backfill it.
+`users.interests` is covered too: pass B created the empty `user_interests`
+table and C1 backfills it, matching stored entries against both `interests.name`
+and `interests.id` because rows use each.
 
 Notes that matter for the backfill:
 
 - `users.followers` and `users.following` are two denormalized halves of one
-  relation and **will disagree** on some rows. Decide the reconciliation rule
-  before writing the backfill — union is the safe default, but it needs to be
-  a stated decision, not an accident.
+  relation and **do disagree** on some rows. **Resolved by union**: an edge
+  exists if either side recorded it. Both halves were written by the same
+  non-transactional read-modify-write that lost concurrent updates, so a
+  missing entry is far more likely to be a lost write than a deliberate
+  unfollow. Intersection would silently drop real follows; union at worst
+  resurrects an unfollow that half-failed, which the user can redo. The
+  `social_graph_backfill_report` table records how many edges each half was
+  missing.
 - `blockedUsers` has at least three historical entry shapes: a bare string, and
   objects keyed `user`, `userId`, or `id`. `blockedIds()` in
   `src/posts/post-prisma.client.ts` is the existing reader and is the reference
@@ -50,7 +81,7 @@ Notes that matter for the backfill:
   someone, so this needs a reconciliation report, not just a migration.
 - `notInterested` is an object with a `posts` array, not a bare array.
 
-### C2 — Enum conversion
+### C2 — Enum conversion (not started)
 
 Intended for pass B, moved here. Converting `status String` to a Postgres enum
 is `ALTER TABLE ... TYPE ... USING`, which **hard-fails** if any stored value
@@ -133,12 +164,10 @@ exactly as they are.
 
 ## Known issues found during A/B, not yet addressed
 
-- `src/ads/ad-prisma.client.ts` `findViewer` selected `users.age`, a column
-  that does not exist. Under the old reflection boundary this made every call
-  fail Prisma validation. Pass A hardcodes `age: null`, which is what the
-  targeting matcher already handles, but **age targeting is therefore inert**.
-  Either add an `age` or `dateOfBirth` column, or remove age from the ad
-  targeting contract. Needs a product decision.
+- ~~`findViewer` selected a non-existent `users.age`.~~ Resolved: `age` is now
+  a real nullable column and targeting reads it. Nothing populates it yet — no
+  endpoint accepts an age — so every viewer is still `null` and the matcher
+  skips the age check. Exposing it needs a profile-contract change.
 - `AdWriteData` and `PostWriteData` are still index-signature types assembled
   from contracts rather than Prisma input types. The update path now
   type-checks against Prisma; `create` still needs a cast because required

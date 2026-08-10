@@ -208,6 +208,11 @@ export class SecurityService {
           withoutRequest(parseRequests(target.followRequests), actorId),
         ),
       });
+      // Blocking severs the follow relation in both directions and drops any
+      // pending request, which is what the JSON writes above encode.
+      await tx.setBlock(actorId, targetId, reason);
+      await tx.removeFollow(actorId, targetId);
+      await tx.removeFollow(targetId, actorId);
     });
     return Object.freeze({ state: 'blocked' });
   }
@@ -222,6 +227,7 @@ export class SecurityService {
           ),
         ),
       });
+      await tx.removeBlock(actorId, targetId);
     });
     return Object.freeze({ state: 'unblocked' });
   }
@@ -303,6 +309,7 @@ export class SecurityService {
             withoutRequest(parseRequests(target.followRequests), actorId),
           ),
         });
+        await tx.setFollow(actorId, targetId, 'accepted');
         return 'following';
       }
       if (!privacy.allowFollowRequests)
@@ -323,6 +330,7 @@ export class SecurityService {
             },
           ]),
         });
+        await tx.setFollow(actorId, targetId, 'requested');
       }
       return 'requested';
     });
@@ -376,6 +384,13 @@ export class SecurityService {
         await tx.updateUser(requesterId, {
           following: unique(parseIds(requester.following), recipientId),
         });
+      // Approval promotes the pending edge; rejection removes it entirely,
+      // matching the JSON queue where a rejected request stops being live.
+      if (action === 'approve') {
+        await tx.setFollow(requesterId, recipientId, 'accepted');
+      } else {
+        await tx.removeFollow(requesterId, recipientId);
+      }
       return status;
     });
     if (result !== 'approved' && result !== 'rejected') internal();
@@ -470,6 +485,7 @@ export class SecurityService {
       await tx.updateUser(targetId, {
         followers: without(parseIds(target.followers), actorId),
       });
+      await tx.removeFollow(actorId, targetId);
     });
     return Object.freeze({ state: 'not-following' });
   }

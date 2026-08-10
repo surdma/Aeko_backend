@@ -45,6 +45,8 @@ let providerFailure = false;
 
 const seed = (): void => {
   users.clear();
+  follows.clear();
+  blocks.clear();
   for (const [id, isPrivate] of [
     ['a', false],
     ['b', false],
@@ -106,6 +108,18 @@ const readInIds = (input: unknown): readonly string[] => {
     : [];
 };
 
+/** Relational dual-write targets. `follows` is keyed `follower->followee`. */
+const follows = new Map<string, string>();
+const blocks = new Set<string>();
+
+const readObject = (input: unknown, key: string): unknown =>
+  typeof input === 'object' && input !== null
+    ? Reflect.get(input, key)
+    : undefined;
+
+const asText = (value: unknown): string =>
+  typeof value === 'string' ? value : '';
+
 const client = {
   $connect: (): Promise<void> => Promise.resolve(),
   $disconnect: (): Promise<void> => Promise.resolve(),
@@ -122,6 +136,50 @@ const client = {
     }
     if (typeof operation !== 'function') throw new Error('callback required');
     return Reflect.apply(operation, client, [client]);
+  },
+  follow: {
+    upsert: (input: unknown): Promise<unknown> => {
+      const where = readObject(input, 'where');
+      const composite = readObject(where, 'followerId_followeeId');
+      const state = readObject(readObject(input, 'create'), 'state');
+      follows.set(
+        `${asText(readObject(composite, 'followerId'))}->${asText(
+          readObject(composite, 'followeeId'),
+        )}`,
+        asText(state),
+      );
+      return Promise.resolve({});
+    },
+    deleteMany: (input: unknown): Promise<unknown> => {
+      const where = readObject(input, 'where');
+      follows.delete(
+        `${asText(readObject(where, 'followerId'))}->${asText(
+          readObject(where, 'followeeId'),
+        )}`,
+      );
+      return Promise.resolve({ count: 1 });
+    },
+  },
+  block: {
+    upsert: (input: unknown): Promise<unknown> => {
+      const where = readObject(input, 'where');
+      const composite = readObject(where, 'blockerId_blockedId');
+      blocks.add(
+        `${asText(readObject(composite, 'blockerId'))}->${asText(
+          readObject(composite, 'blockedId'),
+        )}`,
+      );
+      return Promise.resolve({});
+    },
+    deleteMany: (input: unknown): Promise<unknown> => {
+      const where = readObject(input, 'where');
+      blocks.delete(
+        `${asText(readObject(where, 'blockerId'))}->${asText(
+          readObject(where, 'blockedId'),
+        )}`,
+      );
+      return Promise.resolve({ count: 1 });
+    },
   },
   user: {
     findUnique: (input: unknown): Promise<StoredUser | null> =>
@@ -326,6 +384,54 @@ describe('social security migration', () => {
     expect(users.get('a')?.following).toEqual(
       expect.arrayContaining(['b', 'private']),
     );
+    // Dual-write: a public follow lands as `accepted`; a request against a
+    // private account lands as `requested` and is promoted on approval.
+    expect([...follows.entries()].sort()).toEqual([
+      ['a->b', 'accepted'],
+      ['a->private', 'accepted'],
+    ]);
+  });
+
+  it('dual-writes a pending follow request as a requested edge', async () => {
+    const { security } = services();
+    await expect(security.requestFollow('a', 'private')).resolves.toEqual({
+      state: 'requested',
+    });
+    expect([...follows.entries()]).toEqual([['a->private', 'requested']]);
+  });
+
+  it('removes the relational edge when a follow request is rejected', async () => {
+    const { security } = services();
+    await security.requestFollow('a', 'private');
+    await security.resolveFollowRequest('private', 'a', 'reject');
+    expect([...follows.keys()]).toEqual([]);
+  });
+
+  it('dual-writes a block, severs both follow edges, and clears on unblock', async () => {
+    const { security } = services();
+    await security.follow('a', 'b');
+    await security.follow('b', 'a');
+    expect([...follows.keys()].sort()).toEqual(['a->b', 'b->a']);
+
+    await expect(security.block('a', 'b', 'spam')).resolves.toEqual({
+      state: 'blocked',
+    });
+    expect([...blocks]).toEqual(['a->b']);
+    // Blocking severs the relation in both directions.
+    expect([...follows.keys()]).toEqual([]);
+
+    await expect(security.unblock('a', 'b')).resolves.toEqual({
+      state: 'unblocked',
+    });
+    expect([...blocks]).toEqual([]);
+  });
+
+  it('removes the relational edge on unfollow', async () => {
+    const { security } = services();
+    await security.follow('a', 'b');
+    expect([...follows.keys()]).toEqual(['a->b']);
+    await security.unfollow('a', 'b');
+    expect([...follows.keys()]).toEqual([]);
   });
 
   it('makes rejection deterministic and hides stale requests from blocked requesters', async () => {

@@ -70,6 +70,12 @@ export interface PostTransactionClient {
   findBookmark(userId: string, postId: string): Promise<string | null>;
   createBookmark(userId: string, postId: string): Promise<void>;
   deleteBookmark(id: string): Promise<void>;
+  /**
+   * Relational half of the dual-write for `posts.likes`, run inside the same
+   * transaction as the JSON update. The JSON column is still authoritative for
+   * reads while the legacy Express service writes it.
+   */
+  setPostLike(userId: string, postId: string, liked: boolean): Promise<void>;
 }
 
 export const SERIALIZABLE_ATTEMPTS = 3;
@@ -253,6 +259,17 @@ const transactionOps = (
   async deleteBookmark(id) {
     await transaction.bookmark.delete({ where: { id } });
   },
+  async setPostLike(userId, postId, liked) {
+    if (liked) {
+      await transaction.postLike.upsert({
+        where: { userId_postId: { userId, postId } },
+        create: { userId, postId },
+        update: {},
+      });
+      return;
+    }
+    await transaction.postLike.deleteMany({ where: { userId, postId } });
+  },
 });
 
 export const createPostPrismaClient = (db: PrismaClient): PostPrismaClient => ({
@@ -310,9 +327,23 @@ export const createPostPrismaClient = (db: PrismaClient): PostPrismaClient => ({
   },
 
   async writeNotInterested(userId, postIds) {
-    await db.user.update({
-      where: { id: userId },
-      data: { notInterested: { posts: [...postIds] } },
+    // The JSON column is replaced wholesale, so the relational set is synced
+    // to match rather than diffed. Both writes share one transaction so the
+    // two representations cannot diverge partway through.
+    await db.$transaction(async (transaction) => {
+      await transaction.user.update({
+        where: { id: userId },
+        data: { notInterested: { posts: [...postIds] } },
+      });
+      await transaction.notInterested.deleteMany({
+        where: { userId, postId: { notIn: [...postIds] } },
+      });
+      if (postIds.length > 0) {
+        await transaction.notInterested.createMany({
+          data: postIds.map((postId) => ({ userId, postId })),
+          skipDuplicates: true,
+        });
+      }
     });
   },
 

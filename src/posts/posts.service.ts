@@ -328,6 +328,7 @@ export class PostsService {
           totalLikes: next.length,
         }),
       });
+      await transaction.setPostLike(principal.userId, postId, !isLiked);
       return Object.freeze({
         message: isLiked
           ? 'Post unliked successfully'
