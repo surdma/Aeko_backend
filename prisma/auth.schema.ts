@@ -1,8 +1,17 @@
+/**
+ * Schema-generation input for the Better Auth CLI, whose unedited output is
+ * `prisma/better-auth.generated.prisma`.
+ *
+ * This is NOT the runtime auth configuration — that is
+ * `src/lib/auth/auth.config.ts`, which receives the application's single
+ * Prisma client. This file constructs its own client and a placeholder secret
+ * at import time, so it lives outside `src/` and never reaches the build.
+ */
 import { prismaAdapter } from '@better-auth/prisma-adapter';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { betterAuth } from 'better-auth';
 import { bearer, twoFactor } from 'better-auth/plugins';
-import { PrismaClient } from '../../../prisma/generated/client';
+import { PrismaClient } from './generated/client';
 
 const googleClientId = process.env.GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;

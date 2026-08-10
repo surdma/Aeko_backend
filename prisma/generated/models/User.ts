@@ -488,6 +488,8 @@ export type UserWhereInput = {
   supportMessages?: Prisma.SupportMessageListRelationFilter
   coinTransactions?: Prisma.CoinTransactionListRelationFilter
   sentGifts?: Prisma.LiveStreamGiftListRelationFilter
+  interestLinks?: Prisma.UserInterestListRelationFilter
+  verificationSettingsUpdated?: Prisma.VerificationSettingsListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -567,6 +569,8 @@ export type UserOrderByWithRelationInput = {
   supportMessages?: Prisma.SupportMessageOrderByRelationAggregateInput
   coinTransactions?: Prisma.CoinTransactionOrderByRelationAggregateInput
   sentGifts?: Prisma.LiveStreamGiftOrderByRelationAggregateInput
+  interestLinks?: Prisma.UserInterestOrderByRelationAggregateInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -649,6 +653,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   supportMessages?: Prisma.SupportMessageListRelationFilter
   coinTransactions?: Prisma.CoinTransactionListRelationFilter
   sentGifts?: Prisma.LiveStreamGiftListRelationFilter
+  interestLinks?: Prisma.UserInterestListRelationFilter
+  verificationSettingsUpdated?: Prisma.VerificationSettingsListRelationFilter
 }, "id" | "username" | "email" | "walletAddress">
 
 export type UserOrderByWithAggregationInput = {
@@ -821,6 +827,8 @@ export type UserCreateInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -899,6 +907,8 @@ export type UserUncheckedCreateInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUpdateInput = {
@@ -977,6 +987,8 @@ export type UserUpdateInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -1055,6 +1067,8 @@ export type UserUncheckedUpdateInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -1522,6 +1536,20 @@ export type UserUpdateOneRequiredWithoutEnhanced_messages_enhanced_messages_send
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput, Prisma.UserUpdateWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput>, Prisma.UserUncheckedUpdateWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput>
 }
 
+export type UserCreateNestedOneWithoutInterestLinksInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutInterestLinksInput, Prisma.UserUncheckedCreateWithoutInterestLinksInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutInterestLinksInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutInterestLinksNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutInterestLinksInput, Prisma.UserUncheckedCreateWithoutInterestLinksInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutInterestLinksInput
+  upsert?: Prisma.UserUpsertWithoutInterestLinksInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutInterestLinksInput, Prisma.UserUpdateWithoutInterestLinksInput>, Prisma.UserUncheckedUpdateWithoutInterestLinksInput>
+}
+
 export type UserCreateNestedOneWithoutLive_streamsInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutLive_streamsInput, Prisma.UserUncheckedCreateWithoutLive_streamsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutLive_streamsInput
@@ -1680,6 +1708,22 @@ export type UserUpdateOneRequiredWithoutStatusNestedInput = {
   upsert?: Prisma.UserUpsertWithoutStatusInput
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutStatusInput, Prisma.UserUpdateWithoutStatusInput>, Prisma.UserUncheckedUpdateWithoutStatusInput>
+}
+
+export type UserCreateNestedOneWithoutVerificationSettingsUpdatedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedCreateWithoutVerificationSettingsUpdatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerificationSettingsUpdatedInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneWithoutVerificationSettingsUpdatedNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedCreateWithoutVerificationSettingsUpdatedInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutVerificationSettingsUpdatedInput
+  upsert?: Prisma.UserUpsertWithoutVerificationSettingsUpdatedInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutVerificationSettingsUpdatedInput, Prisma.UserUpdateWithoutVerificationSettingsUpdatedInput>, Prisma.UserUncheckedUpdateWithoutVerificationSettingsUpdatedInput>
 }
 
 export type UserCreateNestedOneWithoutTransactionsInput = {
@@ -1945,6 +1989,8 @@ export type UserCreateWithoutAdsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutAdsInput = {
@@ -2022,6 +2068,8 @@ export type UserUncheckedCreateWithoutAdsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutAdsInput = {
@@ -2115,6 +2163,8 @@ export type UserUpdateWithoutAdsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAdsInput = {
@@ -2192,6 +2242,8 @@ export type UserUncheckedUpdateWithoutAdsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutBookmarksInput = {
@@ -2269,6 +2321,8 @@ export type UserCreateWithoutBookmarksInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutBookmarksInput = {
@@ -2346,6 +2400,8 @@ export type UserUncheckedCreateWithoutBookmarksInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutBookmarksInput = {
@@ -2439,6 +2495,8 @@ export type UserUpdateWithoutBookmarksInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBookmarksInput = {
@@ -2516,6 +2574,8 @@ export type UserUncheckedUpdateWithoutBookmarksInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutBot_conversationsInput = {
@@ -2593,6 +2653,8 @@ export type UserCreateWithoutBot_conversationsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutBot_conversationsInput = {
@@ -2670,6 +2732,8 @@ export type UserUncheckedCreateWithoutBot_conversationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutBot_conversationsInput = {
@@ -2763,6 +2827,8 @@ export type UserUpdateWithoutBot_conversationsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBot_conversationsInput = {
@@ -2840,6 +2906,8 @@ export type UserUncheckedUpdateWithoutBot_conversationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutBot_settingsInput = {
@@ -2917,6 +2985,8 @@ export type UserCreateWithoutBot_settingsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutBot_settingsInput = {
@@ -2994,6 +3064,8 @@ export type UserUncheckedCreateWithoutBot_settingsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutBot_settingsInput = {
@@ -3087,6 +3159,8 @@ export type UserUpdateWithoutBot_settingsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutBot_settingsInput = {
@@ -3164,6 +3238,8 @@ export type UserUncheckedUpdateWithoutBot_settingsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutChallengesInput = {
@@ -3241,6 +3317,8 @@ export type UserCreateWithoutChallengesInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutChallengesInput = {
@@ -3318,6 +3396,8 @@ export type UserUncheckedCreateWithoutChallengesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutChallengesInput = {
@@ -3411,6 +3491,8 @@ export type UserUpdateWithoutChallengesInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChallengesInput = {
@@ -3488,6 +3570,8 @@ export type UserUncheckedUpdateWithoutChallengesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutChat_membersInput = {
@@ -3565,6 +3649,8 @@ export type UserCreateWithoutChat_membersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutChat_membersInput = {
@@ -3642,6 +3728,8 @@ export type UserUncheckedCreateWithoutChat_membersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutChat_membersInput = {
@@ -3735,6 +3823,8 @@ export type UserUpdateWithoutChat_membersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChat_membersInput = {
@@ -3812,6 +3902,8 @@ export type UserUncheckedUpdateWithoutChat_membersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutChatsInput = {
@@ -3889,6 +3981,8 @@ export type UserCreateWithoutChatsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutChatsInput = {
@@ -3966,6 +4060,8 @@ export type UserUncheckedCreateWithoutChatsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutChatsInput = {
@@ -4059,6 +4155,8 @@ export type UserUpdateWithoutChatsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutChatsInput = {
@@ -4136,6 +4234,8 @@ export type UserUncheckedUpdateWithoutChatsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutCommentsInput = {
@@ -4213,6 +4313,8 @@ export type UserCreateWithoutCommentsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutCommentsInput = {
@@ -4290,6 +4392,8 @@ export type UserUncheckedCreateWithoutCommentsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutCommentsInput = {
@@ -4383,6 +4487,8 @@ export type UserUpdateWithoutCommentsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCommentsInput = {
@@ -4460,6 +4566,8 @@ export type UserUncheckedUpdateWithoutCommentsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutCommunityMembershipsInput = {
@@ -4537,6 +4645,8 @@ export type UserCreateWithoutCommunityMembershipsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutCommunityMembershipsInput = {
@@ -4614,6 +4724,8 @@ export type UserUncheckedCreateWithoutCommunityMembershipsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutCommunityMembershipsInput = {
@@ -4707,6 +4819,8 @@ export type UserUpdateWithoutCommunityMembershipsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCommunityMembershipsInput = {
@@ -4784,6 +4898,8 @@ export type UserUncheckedUpdateWithoutCommunityMembershipsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutCommunity_followersInput = {
@@ -4861,6 +4977,8 @@ export type UserCreateWithoutCommunity_followersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutCommunity_followersInput = {
@@ -4938,6 +5056,8 @@ export type UserUncheckedCreateWithoutCommunity_followersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutCommunity_followersInput = {
@@ -5031,6 +5151,8 @@ export type UserUpdateWithoutCommunity_followersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCommunity_followersInput = {
@@ -5108,6 +5230,8 @@ export type UserUncheckedUpdateWithoutCommunity_followersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutCommunity_membersInput = {
@@ -5185,6 +5309,8 @@ export type UserCreateWithoutCommunity_membersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutCommunity_membersInput = {
@@ -5262,6 +5388,8 @@ export type UserUncheckedCreateWithoutCommunity_membersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutCommunity_membersInput = {
@@ -5355,6 +5483,8 @@ export type UserUpdateWithoutCommunity_membersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCommunity_membersInput = {
@@ -5432,6 +5562,8 @@ export type UserUncheckedUpdateWithoutCommunity_membersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutDebatesInput = {
@@ -5509,6 +5641,8 @@ export type UserCreateWithoutDebatesInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutDebatesInput = {
@@ -5586,6 +5720,8 @@ export type UserUncheckedCreateWithoutDebatesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutDebatesInput = {
@@ -5679,6 +5815,8 @@ export type UserUpdateWithoutDebatesInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutDebatesInput = {
@@ -5756,6 +5894,8 @@ export type UserUncheckedUpdateWithoutDebatesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutEnhanced_messages_enhanced_messages_receiverIdTousersInput = {
@@ -5833,6 +5973,8 @@ export type UserCreateWithoutEnhanced_messages_enhanced_messages_receiverIdTouse
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutEnhanced_messages_enhanced_messages_receiverIdTousersInput = {
@@ -5910,6 +6052,8 @@ export type UserUncheckedCreateWithoutEnhanced_messages_enhanced_messages_receiv
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutEnhanced_messages_enhanced_messages_receiverIdTousersInput = {
@@ -5992,6 +6136,8 @@ export type UserCreateWithoutEnhanced_messages_enhanced_messages_senderIdTousers
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput = {
@@ -6069,6 +6215,8 @@ export type UserUncheckedCreateWithoutEnhanced_messages_enhanced_messages_sender
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput = {
@@ -6162,6 +6310,8 @@ export type UserUpdateWithoutEnhanced_messages_enhanced_messages_receiverIdTouse
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEnhanced_messages_enhanced_messages_receiverIdTousersInput = {
@@ -6239,6 +6389,8 @@ export type UserUncheckedUpdateWithoutEnhanced_messages_enhanced_messages_receiv
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput = {
@@ -6327,6 +6479,8 @@ export type UserUpdateWithoutEnhanced_messages_enhanced_messages_senderIdTousers
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutEnhanced_messages_enhanced_messages_senderIdTousersInput = {
@@ -6404,6 +6558,340 @@ export type UserUncheckedUpdateWithoutEnhanced_messages_enhanced_messages_sender
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+}
+
+export type UserCreateWithoutInterestLinksInput = {
+  id?: string
+  username: string
+  email: string
+  emailVerified?: boolean
+  name: string
+  image?: string | null
+  avatar?: string | null
+  profilePicture?: string | null
+  coverPicture?: string | null
+  bio?: string | null
+  blueTick?: boolean
+  goldenTick?: boolean
+  subscriptionStatus?: string
+  subscriptionExpiry?: Date | string | null
+  banned?: boolean
+  isAdmin?: boolean
+  botEnabled?: boolean
+  botPersonality?: string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLoginAt?: Date | string | null
+  walletAddress?: string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: boolean | null
+  location?: string | null
+  warningCount?: number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: number
+  subscriptionPlan?: Prisma.SubscriptionPlanCreateNestedOneWithoutUsersInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  ads?: Prisma.AdCreateNestedManyWithoutUserInput
+  bookmarks?: Prisma.BookmarkCreateNestedManyWithoutUserInput
+  bot_conversations?: Prisma.BotConversationCreateNestedManyWithoutUserInput
+  bot_settings?: Prisma.BotSettingsCreateNestedOneWithoutUserInput
+  challenges?: Prisma.ChallengeCreateNestedManyWithoutUserInput
+  chat_members?: Prisma.ChatMemberCreateNestedManyWithoutUserInput
+  chats?: Prisma.ChatCreateNestedManyWithoutUsersInput
+  comments?: Prisma.CommentCreateNestedManyWithoutUserInput
+  communityMemberships?: Prisma.CommunityCreateNestedManyWithoutUsersInput
+  community_followers?: Prisma.CommunityFollowerCreateNestedManyWithoutUserInput
+  community_members?: Prisma.CommunityMemberCreateNestedManyWithoutUserInput
+  debates?: Prisma.DebateCreateNestedManyWithoutUserInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageCreateNestedManyWithoutReceiverInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageCreateNestedManyWithoutSenderInput
+  live_streams?: Prisma.LiveStreamCreateNestedManyWithoutUserInput
+  messages_messages_receiverIdTousers?: Prisma.MessageCreateNestedManyWithoutUsers_messages_receiverIdTouserInput
+  messages_messages_senderIdTousers?: Prisma.MessageCreateNestedManyWithoutUsers_messages_senderIdTouserInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostCreateNestedManyWithoutUsers_posts_originalOwnerIdTousersInput
+  posts_posts_userIdTousers?: Prisma.PostCreateNestedManyWithoutUsers_posts_userIdTouserInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventCreateNestedManyWithoutUsers_security_events_targetUserIdTousersInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventCreateNestedManyWithoutUsers_security_events_userIdTouserInput
+  receivedNotifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  sentNotifications?: Prisma.NotificationCreateNestedManyWithoutSenderInput
+  spaces?: Prisma.SpaceCreateNestedManyWithoutUserInput
+  status?: Prisma.StatusCreateNestedManyWithoutUsersInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  reporterReports?: Prisma.ReportCreateNestedManyWithoutReporterInput
+  reportedReports?: Prisma.ReportCreateNestedManyWithoutReportedInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
+  coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
+  sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
+}
+
+export type UserUncheckedCreateWithoutInterestLinksInput = {
+  id?: string
+  username: string
+  email: string
+  emailVerified?: boolean
+  name: string
+  image?: string | null
+  avatar?: string | null
+  profilePicture?: string | null
+  coverPicture?: string | null
+  bio?: string | null
+  blueTick?: boolean
+  goldenTick?: boolean
+  subscriptionStatus?: string
+  subscriptionExpiry?: Date | string | null
+  subscriptionPlanId?: string | null
+  banned?: boolean
+  isAdmin?: boolean
+  botEnabled?: boolean
+  botPersonality?: string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLoginAt?: Date | string | null
+  walletAddress?: string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: boolean | null
+  location?: string | null
+  warningCount?: number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: number
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  ads?: Prisma.AdUncheckedCreateNestedManyWithoutUserInput
+  bookmarks?: Prisma.BookmarkUncheckedCreateNestedManyWithoutUserInput
+  bot_conversations?: Prisma.BotConversationUncheckedCreateNestedManyWithoutUserInput
+  bot_settings?: Prisma.BotSettingsUncheckedCreateNestedOneWithoutUserInput
+  challenges?: Prisma.ChallengeUncheckedCreateNestedManyWithoutUserInput
+  chat_members?: Prisma.ChatMemberUncheckedCreateNestedManyWithoutUserInput
+  chats?: Prisma.ChatUncheckedCreateNestedManyWithoutUsersInput
+  comments?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
+  communityMemberships?: Prisma.CommunityUncheckedCreateNestedManyWithoutUsersInput
+  community_followers?: Prisma.CommunityFollowerUncheckedCreateNestedManyWithoutUserInput
+  community_members?: Prisma.CommunityMemberUncheckedCreateNestedManyWithoutUserInput
+  debates?: Prisma.DebateUncheckedCreateNestedManyWithoutUserInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUncheckedCreateNestedManyWithoutReceiverInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUncheckedCreateNestedManyWithoutSenderInput
+  live_streams?: Prisma.LiveStreamUncheckedCreateNestedManyWithoutUserInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUncheckedCreateNestedManyWithoutUsers_messages_receiverIdTouserInput
+  messages_messages_senderIdTousers?: Prisma.MessageUncheckedCreateNestedManyWithoutUsers_messages_senderIdTouserInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUncheckedCreateNestedManyWithoutUsers_posts_originalOwnerIdTousersInput
+  posts_posts_userIdTousers?: Prisma.PostUncheckedCreateNestedManyWithoutUsers_posts_userIdTouserInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUsers_security_events_targetUserIdTousersInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUsers_security_events_userIdTouserInput
+  receivedNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  sentNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSenderInput
+  spaces?: Prisma.SpaceUncheckedCreateNestedManyWithoutUserInput
+  status?: Prisma.StatusUncheckedCreateNestedManyWithoutUsersInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  reporterReports?: Prisma.ReportUncheckedCreateNestedManyWithoutReporterInput
+  reportedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutReportedInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
+  coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
+  sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
+}
+
+export type UserCreateOrConnectWithoutInterestLinksInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutInterestLinksInput, Prisma.UserUncheckedCreateWithoutInterestLinksInput>
+}
+
+export type UserUpsertWithoutInterestLinksInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutInterestLinksInput, Prisma.UserUncheckedUpdateWithoutInterestLinksInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutInterestLinksInput, Prisma.UserUncheckedCreateWithoutInterestLinksInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutInterestLinksInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutInterestLinksInput, Prisma.UserUncheckedUpdateWithoutInterestLinksInput>
+}
+
+export type UserUpdateWithoutInterestLinksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverPicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blueTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goldenTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  subscriptionStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  subscriptionExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botPersonality?: Prisma.StringFieldUpdateOperationsInput | string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  warningCount?: Prisma.IntFieldUpdateOperationsInput | number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  subscriptionPlan?: Prisma.SubscriptionPlanUpdateOneWithoutUsersNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  ads?: Prisma.AdUpdateManyWithoutUserNestedInput
+  bookmarks?: Prisma.BookmarkUpdateManyWithoutUserNestedInput
+  bot_conversations?: Prisma.BotConversationUpdateManyWithoutUserNestedInput
+  bot_settings?: Prisma.BotSettingsUpdateOneWithoutUserNestedInput
+  challenges?: Prisma.ChallengeUpdateManyWithoutUserNestedInput
+  chat_members?: Prisma.ChatMemberUpdateManyWithoutUserNestedInput
+  chats?: Prisma.ChatUpdateManyWithoutUsersNestedInput
+  comments?: Prisma.CommentUpdateManyWithoutUserNestedInput
+  communityMemberships?: Prisma.CommunityUpdateManyWithoutUsersNestedInput
+  community_followers?: Prisma.CommunityFollowerUpdateManyWithoutUserNestedInput
+  community_members?: Prisma.CommunityMemberUpdateManyWithoutUserNestedInput
+  debates?: Prisma.DebateUpdateManyWithoutUserNestedInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUpdateManyWithoutReceiverNestedInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUpdateManyWithoutSenderNestedInput
+  live_streams?: Prisma.LiveStreamUpdateManyWithoutUserNestedInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUpdateManyWithoutUsers_messages_receiverIdTouserNestedInput
+  messages_messages_senderIdTousers?: Prisma.MessageUpdateManyWithoutUsers_messages_senderIdTouserNestedInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUpdateManyWithoutUsers_posts_originalOwnerIdTousersNestedInput
+  posts_posts_userIdTousers?: Prisma.PostUpdateManyWithoutUsers_posts_userIdTouserNestedInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUpdateManyWithoutUsers_security_events_targetUserIdTousersNestedInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUpdateManyWithoutUsers_security_events_userIdTouserNestedInput
+  receivedNotifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  sentNotifications?: Prisma.NotificationUpdateManyWithoutSenderNestedInput
+  spaces?: Prisma.SpaceUpdateManyWithoutUserNestedInput
+  status?: Prisma.StatusUpdateManyWithoutUsersNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  reporterReports?: Prisma.ReportUpdateManyWithoutReporterNestedInput
+  reportedReports?: Prisma.ReportUpdateManyWithoutReportedNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
+  coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
+  sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutInterestLinksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverPicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blueTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goldenTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  subscriptionStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  subscriptionExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  subscriptionPlanId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botPersonality?: Prisma.StringFieldUpdateOperationsInput | string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  warningCount?: Prisma.IntFieldUpdateOperationsInput | number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  ads?: Prisma.AdUncheckedUpdateManyWithoutUserNestedInput
+  bookmarks?: Prisma.BookmarkUncheckedUpdateManyWithoutUserNestedInput
+  bot_conversations?: Prisma.BotConversationUncheckedUpdateManyWithoutUserNestedInput
+  bot_settings?: Prisma.BotSettingsUncheckedUpdateOneWithoutUserNestedInput
+  challenges?: Prisma.ChallengeUncheckedUpdateManyWithoutUserNestedInput
+  chat_members?: Prisma.ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+  chats?: Prisma.ChatUncheckedUpdateManyWithoutUsersNestedInput
+  comments?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
+  communityMemberships?: Prisma.CommunityUncheckedUpdateManyWithoutUsersNestedInput
+  community_followers?: Prisma.CommunityFollowerUncheckedUpdateManyWithoutUserNestedInput
+  community_members?: Prisma.CommunityMemberUncheckedUpdateManyWithoutUserNestedInput
+  debates?: Prisma.DebateUncheckedUpdateManyWithoutUserNestedInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUncheckedUpdateManyWithoutReceiverNestedInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUncheckedUpdateManyWithoutSenderNestedInput
+  live_streams?: Prisma.LiveStreamUncheckedUpdateManyWithoutUserNestedInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUncheckedUpdateManyWithoutUsers_messages_receiverIdTouserNestedInput
+  messages_messages_senderIdTousers?: Prisma.MessageUncheckedUpdateManyWithoutUsers_messages_senderIdTouserNestedInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUncheckedUpdateManyWithoutUsers_posts_originalOwnerIdTousersNestedInput
+  posts_posts_userIdTousers?: Prisma.PostUncheckedUpdateManyWithoutUsers_posts_userIdTouserNestedInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUncheckedUpdateManyWithoutUsers_security_events_targetUserIdTousersNestedInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUncheckedUpdateManyWithoutUsers_security_events_userIdTouserNestedInput
+  receivedNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  sentNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutSenderNestedInput
+  spaces?: Prisma.SpaceUncheckedUpdateManyWithoutUserNestedInput
+  status?: Prisma.StatusUncheckedUpdateManyWithoutUsersNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  reporterReports?: Prisma.ReportUncheckedUpdateManyWithoutReporterNestedInput
+  reportedReports?: Prisma.ReportUncheckedUpdateManyWithoutReportedNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
+  coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
+  sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutLive_streamsInput = {
@@ -6481,6 +6969,8 @@ export type UserCreateWithoutLive_streamsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutLive_streamsInput = {
@@ -6558,6 +7048,8 @@ export type UserUncheckedCreateWithoutLive_streamsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutLive_streamsInput = {
@@ -6651,6 +7143,8 @@ export type UserUpdateWithoutLive_streamsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLive_streamsInput = {
@@ -6728,6 +7222,8 @@ export type UserUncheckedUpdateWithoutLive_streamsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutMessages_messages_receiverIdTousersInput = {
@@ -6805,6 +7301,8 @@ export type UserCreateWithoutMessages_messages_receiverIdTousersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutMessages_messages_receiverIdTousersInput = {
@@ -6882,6 +7380,8 @@ export type UserUncheckedCreateWithoutMessages_messages_receiverIdTousersInput =
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutMessages_messages_receiverIdTousersInput = {
@@ -6964,6 +7464,8 @@ export type UserCreateWithoutMessages_messages_senderIdTousersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutMessages_messages_senderIdTousersInput = {
@@ -7041,6 +7543,8 @@ export type UserUncheckedCreateWithoutMessages_messages_senderIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutMessages_messages_senderIdTousersInput = {
@@ -7134,6 +7638,8 @@ export type UserUpdateWithoutMessages_messages_receiverIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMessages_messages_receiverIdTousersInput = {
@@ -7211,6 +7717,8 @@ export type UserUncheckedUpdateWithoutMessages_messages_receiverIdTousersInput =
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutMessages_messages_senderIdTousersInput = {
@@ -7299,6 +7807,8 @@ export type UserUpdateWithoutMessages_messages_senderIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutMessages_messages_senderIdTousersInput = {
@@ -7376,6 +7886,8 @@ export type UserUncheckedUpdateWithoutMessages_messages_senderIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutReceivedNotificationsInput = {
@@ -7453,6 +7965,8 @@ export type UserCreateWithoutReceivedNotificationsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutReceivedNotificationsInput = {
@@ -7530,6 +8044,8 @@ export type UserUncheckedCreateWithoutReceivedNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutReceivedNotificationsInput = {
@@ -7612,6 +8128,8 @@ export type UserCreateWithoutSentNotificationsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSentNotificationsInput = {
@@ -7689,6 +8207,8 @@ export type UserUncheckedCreateWithoutSentNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSentNotificationsInput = {
@@ -7782,6 +8302,8 @@ export type UserUpdateWithoutReceivedNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReceivedNotificationsInput = {
@@ -7859,6 +8381,8 @@ export type UserUncheckedUpdateWithoutReceivedNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutSentNotificationsInput = {
@@ -7947,6 +8471,8 @@ export type UserUpdateWithoutSentNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSentNotificationsInput = {
@@ -8024,6 +8550,8 @@ export type UserUncheckedUpdateWithoutSentNotificationsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutPosts_posts_originalOwnerIdTousersInput = {
@@ -8101,6 +8629,8 @@ export type UserCreateWithoutPosts_posts_originalOwnerIdTousersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutPosts_posts_originalOwnerIdTousersInput = {
@@ -8178,6 +8708,8 @@ export type UserUncheckedCreateWithoutPosts_posts_originalOwnerIdTousersInput = 
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutPosts_posts_originalOwnerIdTousersInput = {
@@ -8260,6 +8792,8 @@ export type UserCreateWithoutPosts_posts_userIdTousersInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutPosts_posts_userIdTousersInput = {
@@ -8337,6 +8871,8 @@ export type UserUncheckedCreateWithoutPosts_posts_userIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutPosts_posts_userIdTousersInput = {
@@ -8430,6 +8966,8 @@ export type UserUpdateWithoutPosts_posts_originalOwnerIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPosts_posts_originalOwnerIdTousersInput = {
@@ -8507,6 +9045,8 @@ export type UserUncheckedUpdateWithoutPosts_posts_originalOwnerIdTousersInput = 
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutPosts_posts_userIdTousersInput = {
@@ -8595,6 +9135,8 @@ export type UserUpdateWithoutPosts_posts_userIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPosts_posts_userIdTousersInput = {
@@ -8672,6 +9214,8 @@ export type UserUncheckedUpdateWithoutPosts_posts_userIdTousersInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSecurity_events_security_events_targetUserIdTousersInput = {
@@ -8749,6 +9293,8 @@ export type UserCreateWithoutSecurity_events_security_events_targetUserIdTousers
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSecurity_events_security_events_targetUserIdTousersInput = {
@@ -8826,6 +9372,8 @@ export type UserUncheckedCreateWithoutSecurity_events_security_events_targetUser
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSecurity_events_security_events_targetUserIdTousersInput = {
@@ -8908,6 +9456,8 @@ export type UserCreateWithoutSecurity_events_security_events_userIdTousersInput 
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSecurity_events_security_events_userIdTousersInput = {
@@ -8985,6 +9535,8 @@ export type UserUncheckedCreateWithoutSecurity_events_security_events_userIdTous
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSecurity_events_security_events_userIdTousersInput = {
@@ -9078,6 +9630,8 @@ export type UserUpdateWithoutSecurity_events_security_events_targetUserIdTousers
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSecurity_events_security_events_targetUserIdTousersInput = {
@@ -9155,6 +9709,8 @@ export type UserUncheckedUpdateWithoutSecurity_events_security_events_targetUser
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutSecurity_events_security_events_userIdTousersInput = {
@@ -9243,6 +9799,8 @@ export type UserUpdateWithoutSecurity_events_security_events_userIdTousersInput 
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSecurity_events_security_events_userIdTousersInput = {
@@ -9320,6 +9878,8 @@ export type UserUncheckedUpdateWithoutSecurity_events_security_events_userIdTous
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSpacesInput = {
@@ -9397,6 +9957,8 @@ export type UserCreateWithoutSpacesInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSpacesInput = {
@@ -9474,6 +10036,8 @@ export type UserUncheckedCreateWithoutSpacesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSpacesInput = {
@@ -9567,6 +10131,8 @@ export type UserUpdateWithoutSpacesInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSpacesInput = {
@@ -9644,6 +10210,8 @@ export type UserUncheckedUpdateWithoutSpacesInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutStatusInput = {
@@ -9721,6 +10289,8 @@ export type UserCreateWithoutStatusInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutStatusInput = {
@@ -9798,6 +10368,8 @@ export type UserUncheckedCreateWithoutStatusInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutStatusInput = {
@@ -9891,6 +10463,8 @@ export type UserUpdateWithoutStatusInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutStatusInput = {
@@ -9968,6 +10542,340 @@ export type UserUncheckedUpdateWithoutStatusInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
+}
+
+export type UserCreateWithoutVerificationSettingsUpdatedInput = {
+  id?: string
+  username: string
+  email: string
+  emailVerified?: boolean
+  name: string
+  image?: string | null
+  avatar?: string | null
+  profilePicture?: string | null
+  coverPicture?: string | null
+  bio?: string | null
+  blueTick?: boolean
+  goldenTick?: boolean
+  subscriptionStatus?: string
+  subscriptionExpiry?: Date | string | null
+  banned?: boolean
+  isAdmin?: boolean
+  botEnabled?: boolean
+  botPersonality?: string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLoginAt?: Date | string | null
+  walletAddress?: string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: boolean | null
+  location?: string | null
+  warningCount?: number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: number
+  subscriptionPlan?: Prisma.SubscriptionPlanCreateNestedOneWithoutUsersInput
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorCreateNestedManyWithoutUserInput
+  ads?: Prisma.AdCreateNestedManyWithoutUserInput
+  bookmarks?: Prisma.BookmarkCreateNestedManyWithoutUserInput
+  bot_conversations?: Prisma.BotConversationCreateNestedManyWithoutUserInput
+  bot_settings?: Prisma.BotSettingsCreateNestedOneWithoutUserInput
+  challenges?: Prisma.ChallengeCreateNestedManyWithoutUserInput
+  chat_members?: Prisma.ChatMemberCreateNestedManyWithoutUserInput
+  chats?: Prisma.ChatCreateNestedManyWithoutUsersInput
+  comments?: Prisma.CommentCreateNestedManyWithoutUserInput
+  communityMemberships?: Prisma.CommunityCreateNestedManyWithoutUsersInput
+  community_followers?: Prisma.CommunityFollowerCreateNestedManyWithoutUserInput
+  community_members?: Prisma.CommunityMemberCreateNestedManyWithoutUserInput
+  debates?: Prisma.DebateCreateNestedManyWithoutUserInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageCreateNestedManyWithoutReceiverInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageCreateNestedManyWithoutSenderInput
+  live_streams?: Prisma.LiveStreamCreateNestedManyWithoutUserInput
+  messages_messages_receiverIdTousers?: Prisma.MessageCreateNestedManyWithoutUsers_messages_receiverIdTouserInput
+  messages_messages_senderIdTousers?: Prisma.MessageCreateNestedManyWithoutUsers_messages_senderIdTouserInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostCreateNestedManyWithoutUsers_posts_originalOwnerIdTousersInput
+  posts_posts_userIdTousers?: Prisma.PostCreateNestedManyWithoutUsers_posts_userIdTouserInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventCreateNestedManyWithoutUsers_security_events_targetUserIdTousersInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventCreateNestedManyWithoutUsers_security_events_userIdTouserInput
+  receivedNotifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  sentNotifications?: Prisma.NotificationCreateNestedManyWithoutSenderInput
+  spaces?: Prisma.SpaceCreateNestedManyWithoutUserInput
+  status?: Prisma.StatusCreateNestedManyWithoutUsersInput
+  transactions?: Prisma.TransactionCreateNestedManyWithoutUserInput
+  reporterReports?: Prisma.ReportCreateNestedManyWithoutReporterInput
+  reportedReports?: Prisma.ReportCreateNestedManyWithoutReportedInput
+  supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
+  supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
+  coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
+  sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+}
+
+export type UserUncheckedCreateWithoutVerificationSettingsUpdatedInput = {
+  id?: string
+  username: string
+  email: string
+  emailVerified?: boolean
+  name: string
+  image?: string | null
+  avatar?: string | null
+  profilePicture?: string | null
+  coverPicture?: string | null
+  bio?: string | null
+  blueTick?: boolean
+  goldenTick?: boolean
+  subscriptionStatus?: string
+  subscriptionExpiry?: Date | string | null
+  subscriptionPlanId?: string | null
+  banned?: boolean
+  isAdmin?: boolean
+  botEnabled?: boolean
+  botPersonality?: string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  lastLoginAt?: Date | string | null
+  walletAddress?: string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: boolean | null
+  location?: string | null
+  warningCount?: number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: number
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  twofactors?: Prisma.TwoFactorUncheckedCreateNestedManyWithoutUserInput
+  ads?: Prisma.AdUncheckedCreateNestedManyWithoutUserInput
+  bookmarks?: Prisma.BookmarkUncheckedCreateNestedManyWithoutUserInput
+  bot_conversations?: Prisma.BotConversationUncheckedCreateNestedManyWithoutUserInput
+  bot_settings?: Prisma.BotSettingsUncheckedCreateNestedOneWithoutUserInput
+  challenges?: Prisma.ChallengeUncheckedCreateNestedManyWithoutUserInput
+  chat_members?: Prisma.ChatMemberUncheckedCreateNestedManyWithoutUserInput
+  chats?: Prisma.ChatUncheckedCreateNestedManyWithoutUsersInput
+  comments?: Prisma.CommentUncheckedCreateNestedManyWithoutUserInput
+  communityMemberships?: Prisma.CommunityUncheckedCreateNestedManyWithoutUsersInput
+  community_followers?: Prisma.CommunityFollowerUncheckedCreateNestedManyWithoutUserInput
+  community_members?: Prisma.CommunityMemberUncheckedCreateNestedManyWithoutUserInput
+  debates?: Prisma.DebateUncheckedCreateNestedManyWithoutUserInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUncheckedCreateNestedManyWithoutReceiverInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUncheckedCreateNestedManyWithoutSenderInput
+  live_streams?: Prisma.LiveStreamUncheckedCreateNestedManyWithoutUserInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUncheckedCreateNestedManyWithoutUsers_messages_receiverIdTouserInput
+  messages_messages_senderIdTousers?: Prisma.MessageUncheckedCreateNestedManyWithoutUsers_messages_senderIdTouserInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUncheckedCreateNestedManyWithoutUsers_posts_originalOwnerIdTousersInput
+  posts_posts_userIdTousers?: Prisma.PostUncheckedCreateNestedManyWithoutUsers_posts_userIdTouserInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUsers_security_events_targetUserIdTousersInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUncheckedCreateNestedManyWithoutUsers_security_events_userIdTouserInput
+  receivedNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  sentNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutSenderInput
+  spaces?: Prisma.SpaceUncheckedCreateNestedManyWithoutUserInput
+  status?: Prisma.StatusUncheckedCreateNestedManyWithoutUsersInput
+  transactions?: Prisma.TransactionUncheckedCreateNestedManyWithoutUserInput
+  reporterReports?: Prisma.ReportUncheckedCreateNestedManyWithoutReporterInput
+  reportedReports?: Prisma.ReportUncheckedCreateNestedManyWithoutReportedInput
+  supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
+  supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
+  coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
+  sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+}
+
+export type UserCreateOrConnectWithoutVerificationSettingsUpdatedInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedCreateWithoutVerificationSettingsUpdatedInput>
+}
+
+export type UserUpsertWithoutVerificationSettingsUpdatedInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedUpdateWithoutVerificationSettingsUpdatedInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedCreateWithoutVerificationSettingsUpdatedInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutVerificationSettingsUpdatedInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutVerificationSettingsUpdatedInput, Prisma.UserUncheckedUpdateWithoutVerificationSettingsUpdatedInput>
+}
+
+export type UserUpdateWithoutVerificationSettingsUpdatedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverPicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blueTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goldenTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  subscriptionStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  subscriptionExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botPersonality?: Prisma.StringFieldUpdateOperationsInput | string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  warningCount?: Prisma.IntFieldUpdateOperationsInput | number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  subscriptionPlan?: Prisma.SubscriptionPlanUpdateOneWithoutUsersNestedInput
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUpdateManyWithoutUserNestedInput
+  ads?: Prisma.AdUpdateManyWithoutUserNestedInput
+  bookmarks?: Prisma.BookmarkUpdateManyWithoutUserNestedInput
+  bot_conversations?: Prisma.BotConversationUpdateManyWithoutUserNestedInput
+  bot_settings?: Prisma.BotSettingsUpdateOneWithoutUserNestedInput
+  challenges?: Prisma.ChallengeUpdateManyWithoutUserNestedInput
+  chat_members?: Prisma.ChatMemberUpdateManyWithoutUserNestedInput
+  chats?: Prisma.ChatUpdateManyWithoutUsersNestedInput
+  comments?: Prisma.CommentUpdateManyWithoutUserNestedInput
+  communityMemberships?: Prisma.CommunityUpdateManyWithoutUsersNestedInput
+  community_followers?: Prisma.CommunityFollowerUpdateManyWithoutUserNestedInput
+  community_members?: Prisma.CommunityMemberUpdateManyWithoutUserNestedInput
+  debates?: Prisma.DebateUpdateManyWithoutUserNestedInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUpdateManyWithoutReceiverNestedInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUpdateManyWithoutSenderNestedInput
+  live_streams?: Prisma.LiveStreamUpdateManyWithoutUserNestedInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUpdateManyWithoutUsers_messages_receiverIdTouserNestedInput
+  messages_messages_senderIdTousers?: Prisma.MessageUpdateManyWithoutUsers_messages_senderIdTouserNestedInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUpdateManyWithoutUsers_posts_originalOwnerIdTousersNestedInput
+  posts_posts_userIdTousers?: Prisma.PostUpdateManyWithoutUsers_posts_userIdTouserNestedInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUpdateManyWithoutUsers_security_events_targetUserIdTousersNestedInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUpdateManyWithoutUsers_security_events_userIdTouserNestedInput
+  receivedNotifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  sentNotifications?: Prisma.NotificationUpdateManyWithoutSenderNestedInput
+  spaces?: Prisma.SpaceUpdateManyWithoutUserNestedInput
+  status?: Prisma.StatusUpdateManyWithoutUsersNestedInput
+  transactions?: Prisma.TransactionUpdateManyWithoutUserNestedInput
+  reporterReports?: Prisma.ReportUpdateManyWithoutReporterNestedInput
+  reportedReports?: Prisma.ReportUpdateManyWithoutReportedNestedInput
+  supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
+  supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
+  coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
+  sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+}
+
+export type UserUncheckedUpdateWithoutVerificationSettingsUpdatedInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  username?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  profilePicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  coverPicture?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blueTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  goldenTick?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  subscriptionStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  subscriptionExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  subscriptionPlanId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botEnabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  botPersonality?: Prisma.StringFieldUpdateOperationsInput | string
+  botPreferences?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  botAnalytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  profileCompletion?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  privacy?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  notificationSettings?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  pushToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  lastLoginAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  walletAddress?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  blockedUsers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  communities?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followRequests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  followers?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  following?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  interests?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  twoFactorEnabled?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  warningCount?: Prisma.IntFieldUpdateOperationsInput | number
+  notInterested?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  coinBalance?: Prisma.FloatFieldUpdateOperationsInput | number
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  twofactors?: Prisma.TwoFactorUncheckedUpdateManyWithoutUserNestedInput
+  ads?: Prisma.AdUncheckedUpdateManyWithoutUserNestedInput
+  bookmarks?: Prisma.BookmarkUncheckedUpdateManyWithoutUserNestedInput
+  bot_conversations?: Prisma.BotConversationUncheckedUpdateManyWithoutUserNestedInput
+  bot_settings?: Prisma.BotSettingsUncheckedUpdateOneWithoutUserNestedInput
+  challenges?: Prisma.ChallengeUncheckedUpdateManyWithoutUserNestedInput
+  chat_members?: Prisma.ChatMemberUncheckedUpdateManyWithoutUserNestedInput
+  chats?: Prisma.ChatUncheckedUpdateManyWithoutUsersNestedInput
+  comments?: Prisma.CommentUncheckedUpdateManyWithoutUserNestedInput
+  communityMemberships?: Prisma.CommunityUncheckedUpdateManyWithoutUsersNestedInput
+  community_followers?: Prisma.CommunityFollowerUncheckedUpdateManyWithoutUserNestedInput
+  community_members?: Prisma.CommunityMemberUncheckedUpdateManyWithoutUserNestedInput
+  debates?: Prisma.DebateUncheckedUpdateManyWithoutUserNestedInput
+  enhanced_messages_enhanced_messages_receiverIdTousers?: Prisma.EnhancedMessageUncheckedUpdateManyWithoutReceiverNestedInput
+  enhanced_messages_enhanced_messages_senderIdTousers?: Prisma.EnhancedMessageUncheckedUpdateManyWithoutSenderNestedInput
+  live_streams?: Prisma.LiveStreamUncheckedUpdateManyWithoutUserNestedInput
+  messages_messages_receiverIdTousers?: Prisma.MessageUncheckedUpdateManyWithoutUsers_messages_receiverIdTouserNestedInput
+  messages_messages_senderIdTousers?: Prisma.MessageUncheckedUpdateManyWithoutUsers_messages_senderIdTouserNestedInput
+  posts_posts_originalOwnerIdTousers?: Prisma.PostUncheckedUpdateManyWithoutUsers_posts_originalOwnerIdTousersNestedInput
+  posts_posts_userIdTousers?: Prisma.PostUncheckedUpdateManyWithoutUsers_posts_userIdTouserNestedInput
+  security_events_security_events_targetUserIdTousers?: Prisma.SecurityEventUncheckedUpdateManyWithoutUsers_security_events_targetUserIdTousersNestedInput
+  security_events_security_events_userIdTousers?: Prisma.SecurityEventUncheckedUpdateManyWithoutUsers_security_events_userIdTouserNestedInput
+  receivedNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  sentNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutSenderNestedInput
+  spaces?: Prisma.SpaceUncheckedUpdateManyWithoutUserNestedInput
+  status?: Prisma.StatusUncheckedUpdateManyWithoutUsersNestedInput
+  transactions?: Prisma.TransactionUncheckedUpdateManyWithoutUserNestedInput
+  reporterReports?: Prisma.ReportUncheckedUpdateManyWithoutReporterNestedInput
+  reportedReports?: Prisma.ReportUncheckedUpdateManyWithoutReportedNestedInput
+  supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
+  supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
+  coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
+  sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
 }
 
 export type UserCreateWithoutTransactionsInput = {
@@ -10045,6 +10953,8 @@ export type UserCreateWithoutTransactionsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutTransactionsInput = {
@@ -10122,6 +11032,8 @@ export type UserUncheckedCreateWithoutTransactionsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutTransactionsInput = {
@@ -10215,6 +11127,8 @@ export type UserUpdateWithoutTransactionsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTransactionsInput = {
@@ -10292,6 +11206,8 @@ export type UserUncheckedUpdateWithoutTransactionsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSubscriptionPlanInput = {
@@ -10369,6 +11285,8 @@ export type UserCreateWithoutSubscriptionPlanInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSubscriptionPlanInput = {
@@ -10446,6 +11364,8 @@ export type UserUncheckedCreateWithoutSubscriptionPlanInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSubscriptionPlanInput = {
@@ -10595,6 +11515,8 @@ export type UserCreateWithoutReporterReportsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutReporterReportsInput = {
@@ -10672,6 +11594,8 @@ export type UserUncheckedCreateWithoutReporterReportsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutReporterReportsInput = {
@@ -10754,6 +11678,8 @@ export type UserCreateWithoutReportedReportsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutReportedReportsInput = {
@@ -10831,6 +11757,8 @@ export type UserUncheckedCreateWithoutReportedReportsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutReportedReportsInput = {
@@ -10924,6 +11852,8 @@ export type UserUpdateWithoutReporterReportsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReporterReportsInput = {
@@ -11001,6 +11931,8 @@ export type UserUncheckedUpdateWithoutReporterReportsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUpsertWithoutReportedReportsInput = {
@@ -11089,6 +12021,8 @@ export type UserUpdateWithoutReportedReportsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutReportedReportsInput = {
@@ -11166,6 +12100,8 @@ export type UserUncheckedUpdateWithoutReportedReportsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSupportTicketsInput = {
@@ -11243,6 +12179,8 @@ export type UserCreateWithoutSupportTicketsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSupportTicketsInput = {
@@ -11320,6 +12258,8 @@ export type UserUncheckedCreateWithoutSupportTicketsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSupportTicketsInput = {
@@ -11413,6 +12353,8 @@ export type UserUpdateWithoutSupportTicketsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupportTicketsInput = {
@@ -11490,6 +12432,8 @@ export type UserUncheckedUpdateWithoutSupportTicketsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSupportMessagesInput = {
@@ -11567,6 +12511,8 @@ export type UserCreateWithoutSupportMessagesInput = {
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSupportMessagesInput = {
@@ -11644,6 +12590,8 @@ export type UserUncheckedCreateWithoutSupportMessagesInput = {
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSupportMessagesInput = {
@@ -11737,6 +12685,8 @@ export type UserUpdateWithoutSupportMessagesInput = {
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSupportMessagesInput = {
@@ -11814,6 +12764,8 @@ export type UserUncheckedUpdateWithoutSupportMessagesInput = {
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutCoinTransactionsInput = {
@@ -11891,6 +12843,8 @@ export type UserCreateWithoutCoinTransactionsInput = {
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutCoinTransactionsInput = {
@@ -11968,6 +12922,8 @@ export type UserUncheckedCreateWithoutCoinTransactionsInput = {
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutCoinTransactionsInput = {
@@ -12061,6 +13017,8 @@ export type UserUpdateWithoutCoinTransactionsInput = {
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCoinTransactionsInput = {
@@ -12138,6 +13096,8 @@ export type UserUncheckedUpdateWithoutCoinTransactionsInput = {
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSentGiftsInput = {
@@ -12215,6 +13175,8 @@ export type UserCreateWithoutSentGiftsInput = {
   supportTickets?: Prisma.SupportTicketCreateNestedManyWithoutUserInput
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSentGiftsInput = {
@@ -12292,6 +13254,8 @@ export type UserUncheckedCreateWithoutSentGiftsInput = {
   supportTickets?: Prisma.SupportTicketUncheckedCreateNestedManyWithoutUserInput
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSentGiftsInput = {
@@ -12385,6 +13349,8 @@ export type UserUpdateWithoutSentGiftsInput = {
   supportTickets?: Prisma.SupportTicketUpdateManyWithoutUserNestedInput
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSentGiftsInput = {
@@ -12462,6 +13428,8 @@ export type UserUncheckedUpdateWithoutSentGiftsInput = {
   supportTickets?: Prisma.SupportTicketUncheckedUpdateManyWithoutUserNestedInput
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutSessionsInput = {
@@ -12539,6 +13507,8 @@ export type UserCreateWithoutSessionsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -12616,6 +13586,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -12709,6 +13681,8 @@ export type UserUpdateWithoutSessionsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -12786,6 +13760,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -12863,6 +13839,8 @@ export type UserCreateWithoutAccountsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -12940,6 +13918,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -13033,6 +14013,8 @@ export type UserUpdateWithoutAccountsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -13110,6 +14092,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateWithoutTwofactorsInput = {
@@ -13187,6 +14171,8 @@ export type UserCreateWithoutTwofactorsInput = {
   supportMessages?: Prisma.SupportMessageCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserUncheckedCreateWithoutTwofactorsInput = {
@@ -13264,6 +14250,8 @@ export type UserUncheckedCreateWithoutTwofactorsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedCreateNestedManyWithoutSenderInput
   coinTransactions?: Prisma.CoinTransactionUncheckedCreateNestedManyWithoutUserInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedCreateNestedManyWithoutSenderInput
+  interestLinks?: Prisma.UserInterestUncheckedCreateNestedManyWithoutUserInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput
 }
 
 export type UserCreateOrConnectWithoutTwofactorsInput = {
@@ -13357,6 +14345,8 @@ export type UserUpdateWithoutTwofactorsInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTwofactorsInput = {
@@ -13434,6 +14424,8 @@ export type UserUncheckedUpdateWithoutTwofactorsInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserCreateManySubscriptionPlanInput = {
@@ -13553,6 +14545,8 @@ export type UserUpdateWithoutSubscriptionPlanInput = {
   supportMessages?: Prisma.SupportMessageUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSubscriptionPlanInput = {
@@ -13630,6 +14624,8 @@ export type UserUncheckedUpdateWithoutSubscriptionPlanInput = {
   supportMessages?: Prisma.SupportMessageUncheckedUpdateManyWithoutSenderNestedInput
   coinTransactions?: Prisma.CoinTransactionUncheckedUpdateManyWithoutUserNestedInput
   sentGifts?: Prisma.LiveStreamGiftUncheckedUpdateManyWithoutSenderNestedInput
+  interestLinks?: Prisma.UserInterestUncheckedUpdateManyWithoutUserNestedInput
+  verificationSettingsUpdated?: Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutSubscriptionPlanInput = {
@@ -13714,6 +14710,8 @@ export type UserCountOutputType = {
   supportMessages: number
   coinTransactions: number
   sentGifts: number
+  interestLinks: number
+  verificationSettingsUpdated: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -13751,6 +14749,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   supportMessages?: boolean | UserCountOutputTypeCountSupportMessagesArgs
   coinTransactions?: boolean | UserCountOutputTypeCountCoinTransactionsArgs
   sentGifts?: boolean | UserCountOutputTypeCountSentGiftsArgs
+  interestLinks?: boolean | UserCountOutputTypeCountInterestLinksArgs
+  verificationSettingsUpdated?: boolean | UserCountOutputTypeCountVerificationSettingsUpdatedArgs
 }
 
 /**
@@ -14001,6 +15001,20 @@ export type UserCountOutputTypeCountSentGiftsArgs<ExtArgs extends runtime.Types.
   where?: Prisma.LiveStreamGiftWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountInterestLinksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserInterestWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountVerificationSettingsUpdatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.VerificationSettingsWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -14079,6 +15093,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
   coinTransactions?: boolean | Prisma.User$coinTransactionsArgs<ExtArgs>
   sentGifts?: boolean | Prisma.User$sentGiftsArgs<ExtArgs>
+  interestLinks?: boolean | Prisma.User$interestLinksArgs<ExtArgs>
+  verificationSettingsUpdated?: boolean | Prisma.User$verificationSettingsUpdatedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -14251,6 +15267,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   supportMessages?: boolean | Prisma.User$supportMessagesArgs<ExtArgs>
   coinTransactions?: boolean | Prisma.User$coinTransactionsArgs<ExtArgs>
   sentGifts?: boolean | Prisma.User$sentGiftsArgs<ExtArgs>
+  interestLinks?: boolean | Prisma.User$interestLinksArgs<ExtArgs>
+  verificationSettingsUpdated?: boolean | Prisma.User$verificationSettingsUpdatedArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -14299,6 +15317,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     supportMessages: Prisma.$SupportMessagePayload<ExtArgs>[]
     coinTransactions: Prisma.$CoinTransactionPayload<ExtArgs>[]
     sentGifts: Prisma.$LiveStreamGiftPayload<ExtArgs>[]
+    interestLinks: Prisma.$UserInterestPayload<ExtArgs>[]
+    verificationSettingsUpdated: Prisma.$VerificationSettingsPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -14771,6 +15791,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   supportMessages<T extends Prisma.User$supportMessagesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$supportMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SupportMessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   coinTransactions<T extends Prisma.User$coinTransactionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$coinTransactionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CoinTransactionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   sentGifts<T extends Prisma.User$sentGiftsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$sentGiftsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LiveStreamGiftPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  interestLinks<T extends Prisma.User$interestLinksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$interestLinksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserInterestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  verificationSettingsUpdated<T extends Prisma.User$verificationSettingsUpdatedArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$verificationSettingsUpdatedArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VerificationSettingsPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -16092,6 +17114,54 @@ export type User$sentGiftsArgs<ExtArgs extends runtime.Types.Extensions.Internal
   take?: number
   skip?: number
   distinct?: Prisma.LiveStreamGiftScalarFieldEnum | Prisma.LiveStreamGiftScalarFieldEnum[]
+}
+
+/**
+ * User.interestLinks
+ */
+export type User$interestLinksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserInterest
+   */
+  select?: Prisma.UserInterestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserInterest
+   */
+  omit?: Prisma.UserInterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInterestInclude<ExtArgs> | null
+  where?: Prisma.UserInterestWhereInput
+  orderBy?: Prisma.UserInterestOrderByWithRelationInput | Prisma.UserInterestOrderByWithRelationInput[]
+  cursor?: Prisma.UserInterestWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserInterestScalarFieldEnum | Prisma.UserInterestScalarFieldEnum[]
+}
+
+/**
+ * User.verificationSettingsUpdated
+ */
+export type User$verificationSettingsUpdatedArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the VerificationSettings
+   */
+  select?: Prisma.VerificationSettingsSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the VerificationSettings
+   */
+  omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  where?: Prisma.VerificationSettingsWhereInput
+  orderBy?: Prisma.VerificationSettingsOrderByWithRelationInput | Prisma.VerificationSettingsOrderByWithRelationInput[]
+  cursor?: Prisma.VerificationSettingsWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.VerificationSettingsScalarFieldEnum | Prisma.VerificationSettingsScalarFieldEnum[]
 }
 
 /**

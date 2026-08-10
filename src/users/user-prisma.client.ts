@@ -1,3 +1,4 @@
+import type { Prisma, PrismaClient } from '../../prisma/generated/client';
 import { DomainError } from '../common/errors/domain.error';
 
 export interface UserRecord {
@@ -38,88 +39,6 @@ export interface UserPrismaClient {
   ): Promise<string>;
 }
 
-export const createUserPrismaClient = (client: object): UserPrismaClient => {
-  const userDelegate = readObject(client, 'user');
-  requireMethod(userDelegate, 'findUnique');
-  requireMethod(userDelegate, 'findMany');
-  requireMethod(userDelegate, 'count');
-  requireMethod(userDelegate, 'delete');
-  requireMethod(client, '$transaction');
-
-  return {
-    async findUnique(id) {
-      const value = await invoke(userDelegate, 'findUnique', [
-        { where: { id }, select: userSelection },
-      ]);
-      return value === null ? null : parseUserRecord(value);
-    },
-    async findMany({ search, skip, take, ids }) {
-      const where = ids
-        ? { id: { in: [...ids] } }
-        : search.length > 0
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { username: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {};
-      const value = await invoke(userDelegate, 'findMany', [
-        {
-          where,
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take,
-          select: userSelection,
-        },
-      ]);
-      if (!Array.isArray(value)) invalidResult('findMany');
-      return value.map(parseUserRecord);
-    },
-    async count(search) {
-      const where =
-        search.length > 0
-          ? {
-              OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { username: { contains: search, mode: 'insensitive' } },
-              ],
-            }
-          : {};
-      const value = await invoke(userDelegate, 'count', [{ where }]);
-      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
-        invalidResult('count');
-      }
-      return value;
-    },
-    async deleteInTransaction(id) {
-      await invoke(client, '$transaction', [
-        async (transaction: unknown) => {
-          const transactionObject = requireObject(transaction, 'transaction');
-          const transactionUser = readObject(transactionObject, 'user');
-          requireMethod(transactionUser, 'delete');
-          await invoke(transactionUser, 'delete', [{ where: { id } }]);
-        },
-      ]);
-    },
-    async updatePicture(id, purpose, url) {
-      requireMethod(userDelegate, 'update');
-      const field = purpose === 'profile' ? 'profilePicture' : 'coverPicture';
-      const value = await invoke(userDelegate, 'update', [
-        {
-          where: { id },
-          data: { [field]: url },
-          select: { [field]: true },
-        },
-      ]);
-      const record = requireObject(value, 'update result');
-      const storedUrl = readString(record, field);
-      if (storedUrl !== url) invalidResult(field);
-      return storedUrl;
-    },
-  };
-};
-
 const userSelection = {
   id: true,
   username: true,
@@ -137,92 +56,64 @@ const userSelection = {
   blockedUsers: true,
   followers: true,
   following: true,
-} as const;
+} satisfies Prisma.UserSelect;
 
-const invoke = async (
-  target: object,
-  method: string,
-  args: readonly unknown[],
-): Promise<unknown> => {
-  const candidate: unknown = Reflect.get(target, method);
-  if (typeof candidate !== 'function') missingBoundary(method);
-  return Promise.resolve(Reflect.apply(candidate, target, args));
-};
+const searchWhere = (search: string): Prisma.UserWhereInput =>
+  search.length > 0
+    ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { username: { contains: search, mode: 'insensitive' } },
+        ],
+      }
+    : {};
 
-const requireMethod = (target: object, method: string): void => {
-  if (typeof Reflect.get(target, method) !== 'function')
-    missingBoundary(method);
-};
+export const createUserPrismaClient = (db: PrismaClient): UserPrismaClient => ({
+  async findUnique(id) {
+    return db.user.findUnique({ where: { id }, select: userSelection });
+  },
 
-const readObject = (target: object, key: string): object =>
-  requireObject(Reflect.get(target, key), key);
+  async findMany({ search, skip, take, ids }) {
+    return db.user.findMany({
+      where: ids ? { id: { in: [...ids] } } : searchWhere(search),
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      select: userSelection,
+    });
+  },
 
-const requireObject = (value: unknown, key: string): object => {
-  if (typeof value !== 'object' || value === null) missingBoundary(key);
-  return value;
-};
+  async count(search) {
+    return db.user.count({ where: searchWhere(search) });
+  },
 
-const parseUserRecord = (value: unknown): UserRecord => {
-  const record = requireObject(value, 'user result');
-  return {
-    id: readString(record, 'id'),
-    username: readString(record, 'username'),
-    name: readString(record, 'name'),
-    image: readNullableString(record, 'image'),
-    avatar: readNullableString(record, 'avatar'),
-    profilePicture: readNullableString(record, 'profilePicture'),
-    coverPicture: readNullableString(record, 'coverPicture'),
-    bio: readNullableString(record, 'bio'),
-    location: readNullableString(record, 'location'),
-    blueTick: readBoolean(record, 'blueTick'),
-    goldenTick: readBoolean(record, 'goldenTick'),
-    createdAt: readDate(record, 'createdAt'),
-    privacy: Reflect.get(record, 'privacy'),
-    blockedUsers: Reflect.get(record, 'blockedUsers'),
-    followers: Reflect.get(record, 'followers'),
-    following: Reflect.get(record, 'following'),
-  };
-};
+  async deleteInTransaction(id) {
+    await db.$transaction(async (transaction) => {
+      await transaction.user.delete({ where: { id } });
+    });
+  },
 
-const readString = (value: object, key: string): string => {
-  const property: unknown = Reflect.get(value, key);
-  if (typeof property !== 'string') invalidResult(key);
-  return property;
-};
-
-const readNullableString = (value: object, key: string): string | null => {
-  const property: unknown = Reflect.get(value, key);
-  if (property === null || property === undefined) return null;
-  if (typeof property !== 'string') invalidResult(key);
-  return property;
-};
-
-const readBoolean = (value: object, key: string): boolean => {
-  const property: unknown = Reflect.get(value, key);
-  if (typeof property !== 'boolean') invalidResult(key);
-  return property;
-};
-
-const readDate = (value: object, key: string): Date => {
-  const property: unknown = Reflect.get(value, key);
-  if (!(property instanceof Date) || Number.isNaN(property.getTime())) {
-    invalidResult(key);
-  }
-  return property;
-};
-
-function missingBoundary(member: string): never {
-  void member;
-  throw new DomainError(
-    'INTERNAL_ERROR',
-    'The user data service is unavailable.',
-  );
-}
-
-function invalidResult(member: string): never {
-  void member;
-  throw new DomainError(
-    'INTERNAL_ERROR',
-    'The user data service is unavailable.',
-  );
-}
+  async updatePicture(id, purpose, url) {
+    const row =
+      purpose === 'profile'
+        ? await db.user.update({
+            where: { id },
+            data: { profilePicture: url },
+            select: { profilePicture: true },
+          })
+        : await db.user.update({
+            where: { id },
+            data: { coverPicture: url },
+            select: { coverPicture: true },
+          });
+    const storedUrl =
+      'profilePicture' in row ? row.profilePicture : row.coverPicture;
+    if (storedUrl !== url) {
+      throw new DomainError(
+        'INTERNAL_ERROR',
+        'The user data service is unavailable.',
+      );
+    }
+    return storedUrl;
+  },
+});

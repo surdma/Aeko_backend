@@ -411,6 +411,7 @@ export const ModelName = {
   Debate: 'Debate',
   EnhancedMessage: 'EnhancedMessage',
   Interest: 'Interest',
+  UserInterest: 'UserInterest',
   LiveStream: 'LiveStream',
   Message: 'Message',
   Notification: 'Notification',
@@ -447,7 +448,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "ad" | "bookmark" | "botConversation" | "botSettings" | "challenge" | "chatMember" | "chat" | "comment" | "community" | "communityFollower" | "communityMember" | "debate" | "enhancedMessage" | "interest" | "liveStream" | "message" | "notification" | "post" | "securityEvent" | "space" | "status" | "verificationSettings" | "transaction" | "subscriptionPlan" | "user" | "report" | "supportTicket" | "supportMessage" | "waitlistEntry" | "coinTransaction" | "liveStreamGift" | "session" | "account" | "verification" | "twoFactor"
+    modelProps: "ad" | "bookmark" | "botConversation" | "botSettings" | "challenge" | "chatMember" | "chat" | "comment" | "community" | "communityFollower" | "communityMember" | "debate" | "enhancedMessage" | "interest" | "userInterest" | "liveStream" | "message" | "notification" | "post" | "securityEvent" | "space" | "status" | "verificationSettings" | "transaction" | "subscriptionPlan" | "user" | "report" | "supportTicket" | "supportMessage" | "waitlistEntry" | "coinTransaction" | "liveStreamGift" | "session" | "account" | "verification" | "twoFactor"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1484,6 +1485,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.InterestCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.InterestCountAggregateOutputType> | number
+        }
+      }
+    }
+    UserInterest: {
+      payload: Prisma.$UserInterestPayload<ExtArgs>
+      fields: Prisma.UserInterestFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.UserInterestFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.UserInterestFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        findFirst: {
+          args: Prisma.UserInterestFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.UserInterestFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        findMany: {
+          args: Prisma.UserInterestFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>[]
+        }
+        create: {
+          args: Prisma.UserInterestCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        createMany: {
+          args: Prisma.UserInterestCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.UserInterestCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>[]
+        }
+        delete: {
+          args: Prisma.UserInterestDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        update: {
+          args: Prisma.UserInterestUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        deleteMany: {
+          args: Prisma.UserInterestDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.UserInterestUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.UserInterestUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>[]
+        }
+        upsert: {
+          args: Prisma.UserInterestUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$UserInterestPayload>
+        }
+        aggregate: {
+          args: Prisma.UserInterestAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateUserInterest>
+        }
+        groupBy: {
+          args: Prisma.UserInterestGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserInterestGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.UserInterestCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.UserInterestCountAggregateOutputType> | number
         }
       }
     }
@@ -3092,7 +3167,7 @@ export const AdScalarFieldEnum = {
   pricing: 'pricing',
   campaign: 'campaign',
   advertiserId: 'advertiserId',
-  Status: 'Status',
+  status: 'status',
   callToAction: 'callToAction',
   analytics: 'analytics',
   review: 'review',
@@ -3319,6 +3394,16 @@ export const InterestScalarFieldEnum = {
 } as const
 
 export type InterestScalarFieldEnum = (typeof InterestScalarFieldEnum)[keyof typeof InterestScalarFieldEnum]
+
+
+export const UserInterestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  interestId: 'interestId',
+  createdAt: 'createdAt'
+} as const
+
+export type UserInterestScalarFieldEnum = (typeof UserInterestScalarFieldEnum)[keyof typeof UserInterestScalarFieldEnum]
 
 
 export const LiveStreamScalarFieldEnum = {
@@ -4014,6 +4099,7 @@ export type GlobalOmitConfig = {
   debate?: Prisma.DebateOmit
   enhancedMessage?: Prisma.EnhancedMessageOmit
   interest?: Prisma.InterestOmit
+  userInterest?: Prisma.UserInterestOmit
   liveStream?: Prisma.LiveStreamOmit
   message?: Prisma.MessageOmit
   notification?: Prisma.NotificationOmit

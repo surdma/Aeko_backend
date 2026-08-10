@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 const workspace = process.cwd();
 const paths = {
-  config: resolve(workspace, 'src', 'lib', 'auth', 'auth.schema.ts'),
+  config: resolve(workspace, 'prisma', 'auth.schema.ts'),
   generated: resolve(workspace, 'prisma', 'better-auth.generated.prisma'),
   target: resolve(workspace, 'prisma', 'schema.prisma'),
   migration: resolve(

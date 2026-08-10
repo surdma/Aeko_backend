@@ -64,7 +64,7 @@ export class PostsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private get posts(): PostPrismaClient {
-    return createPostPrismaClient(this.prisma.adapterClient);
+    return createPostPrismaClient(this.prisma.db);
   }
 
   async create(

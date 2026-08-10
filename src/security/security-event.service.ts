@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
 import { DomainError } from '../common/errors/domain.error';
-import { PrismaService } from '../database/prisma/prisma.service';
+import {
+  PrismaService,
+  type PrismaTransaction,
+} from '../database/prisma/prisma.service';
 import type {
   SecurityEventPage,
   SecurityEventQuery,
@@ -29,10 +32,10 @@ export interface RecordSecurityEventInput {
 
 @Injectable()
 export class SecurityEventService {
-  private readonly adapterClient: object;
+  private readonly db: PrismaTransaction;
 
   constructor(prisma: PrismaService) {
-    this.adapterClient = prisma.adapterClient;
+    this.db = prisma.db;
   }
 
   async record(input: RecordSecurityEventInput): Promise<void> {
@@ -102,7 +105,7 @@ export class SecurityEventService {
   }
 
   private client(): SecurityEventPrismaClient {
-    return createSecurityEventPrismaClient(this.adapterClient);
+    return createSecurityEventPrismaClient(this.db);
   }
 }
 

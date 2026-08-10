@@ -32,7 +32,7 @@ export class UsersService {
   ) {}
 
   private get users(): UserPrismaClient {
-    return createUserPrismaClient(this.prisma.adapterClient);
+    return createUserPrismaClient(this.prisma.db);
   }
 
   updateProfilePicture(

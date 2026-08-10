@@ -140,17 +140,18 @@ describe('ads-media cutover', () => {
     }
   });
 
-  it('writes ad status only through the canonical column', () => {
+  it('confines the mixed-case ads column to the Prisma schema mapping', () => {
+    // `ads."Status"` is now reached through `status @map("Status")`, so the
+    // legacy spelling must not appear as a field or key anywhere in src/.
     for (const path of ADS_SOURCES) {
       const source = readSource(...path);
-      // A Prisma write must never carry the lowercase legacy field.
-      expect(source).not.toMatch(/data:\s*\{[^}]*\bstatus\s*:/u);
+      expect(source).not.toMatch(/\bStatus\s*:/u);
+      expect(source).not.toMatch(/['"]Status['"]/u);
+      expect(source).not.toMatch(/\.Status\b/u);
     }
-    // The internal column name is confined to the boundary file.
-    expect(readSource('src', 'ads', 'ads.service.ts')).not.toContain(
-      "'Status'",
-    );
-    expect(readSource('src', 'ads', 'ad-prisma.client.ts')).toContain('Status');
+    // The one place the physical column name is allowed to exist.
+    const schema = readSource('prisma', 'schema.prisma');
+    expect(schema).toContain('status String @default("draft") @map("Status")');
   });
 
   it('keeps no Express-era upload or shell patterns', () => {

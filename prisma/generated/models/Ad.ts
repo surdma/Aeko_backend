@@ -31,7 +31,7 @@ export type AdMinAggregateOutputType = {
   mediaType: string | null
   mediaUrl: string | null
   advertiserId: string | null
-  Status: string | null
+  status: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -43,7 +43,7 @@ export type AdMaxAggregateOutputType = {
   mediaType: string | null
   mediaUrl: string | null
   advertiserId: string | null
-  Status: string | null
+  status: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -60,7 +60,7 @@ export type AdCountAggregateOutputType = {
   pricing: number
   campaign: number
   advertiserId: number
-  Status: number
+  status: number
   callToAction: number
   analytics: number
   review: number
@@ -79,7 +79,7 @@ export type AdMinAggregateInputType = {
   mediaType?: true
   mediaUrl?: true
   advertiserId?: true
-  Status?: true
+  status?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -91,7 +91,7 @@ export type AdMaxAggregateInputType = {
   mediaType?: true
   mediaUrl?: true
   advertiserId?: true
-  Status?: true
+  status?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -108,7 +108,7 @@ export type AdCountAggregateInputType = {
   pricing?: true
   campaign?: true
   advertiserId?: true
-  Status?: true
+  status?: true
   callToAction?: true
   analytics?: true
   review?: true
@@ -203,7 +203,7 @@ export type AdGroupByOutputType = {
   pricing: runtime.JsonValue
   campaign: runtime.JsonValue
   advertiserId: string
-  Status: string
+  status: string
   callToAction: runtime.JsonValue | null
   analytics: runtime.JsonValue | null
   review: runtime.JsonValue | null
@@ -246,7 +246,7 @@ export type AdWhereInput = {
   pricing?: Prisma.JsonFilter<"Ad">
   campaign?: Prisma.JsonFilter<"Ad">
   advertiserId?: Prisma.StringFilter<"Ad"> | string
-  Status?: Prisma.StringFilter<"Ad"> | string
+  status?: Prisma.StringFilter<"Ad"> | string
   callToAction?: Prisma.JsonNullableFilter<"Ad">
   analytics?: Prisma.JsonNullableFilter<"Ad">
   review?: Prisma.JsonNullableFilter<"Ad">
@@ -269,7 +269,7 @@ export type AdOrderByWithRelationInput = {
   pricing?: Prisma.SortOrder
   campaign?: Prisma.SortOrder
   advertiserId?: Prisma.SortOrder
-  Status?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   callToAction?: Prisma.SortOrderInput | Prisma.SortOrder
   analytics?: Prisma.SortOrderInput | Prisma.SortOrder
   review?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -295,7 +295,7 @@ export type AdWhereUniqueInput = Prisma.AtLeast<{
   pricing?: Prisma.JsonFilter<"Ad">
   campaign?: Prisma.JsonFilter<"Ad">
   advertiserId?: Prisma.StringFilter<"Ad"> | string
-  Status?: Prisma.StringFilter<"Ad"> | string
+  status?: Prisma.StringFilter<"Ad"> | string
   callToAction?: Prisma.JsonNullableFilter<"Ad">
   analytics?: Prisma.JsonNullableFilter<"Ad">
   review?: Prisma.JsonNullableFilter<"Ad">
@@ -318,7 +318,7 @@ export type AdOrderByWithAggregationInput = {
   pricing?: Prisma.SortOrder
   campaign?: Prisma.SortOrder
   advertiserId?: Prisma.SortOrder
-  Status?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   callToAction?: Prisma.SortOrderInput | Prisma.SortOrder
   analytics?: Prisma.SortOrderInput | Prisma.SortOrder
   review?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -346,7 +346,7 @@ export type AdScalarWhereWithAggregatesInput = {
   pricing?: Prisma.JsonWithAggregatesFilter<"Ad">
   campaign?: Prisma.JsonWithAggregatesFilter<"Ad">
   advertiserId?: Prisma.StringWithAggregatesFilter<"Ad"> | string
-  Status?: Prisma.StringWithAggregatesFilter<"Ad"> | string
+  status?: Prisma.StringWithAggregatesFilter<"Ad"> | string
   callToAction?: Prisma.JsonNullableWithAggregatesFilter<"Ad">
   analytics?: Prisma.JsonNullableWithAggregatesFilter<"Ad">
   review?: Prisma.JsonNullableWithAggregatesFilter<"Ad">
@@ -367,7 +367,7 @@ export type AdCreateInput = {
   budget: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -390,7 +390,7 @@ export type AdUncheckedCreateInput = {
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
   advertiserId: string
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -411,7 +411,7 @@ export type AdUpdateInput = {
   budget?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -434,7 +434,7 @@ export type AdUncheckedUpdateInput = {
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   advertiserId?: Prisma.StringFieldUpdateOperationsInput | string
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -456,7 +456,7 @@ export type AdCreateManyInput = {
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
   advertiserId: string
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -477,7 +477,7 @@ export type AdUpdateManyMutationInput = {
   budget?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -499,7 +499,7 @@ export type AdUncheckedUpdateManyInput = {
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   advertiserId?: Prisma.StringFieldUpdateOperationsInput | string
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -529,7 +529,7 @@ export type AdCountOrderByAggregateInput = {
   pricing?: Prisma.SortOrder
   campaign?: Prisma.SortOrder
   advertiserId?: Prisma.SortOrder
-  Status?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   callToAction?: Prisma.SortOrder
   analytics?: Prisma.SortOrder
   review?: Prisma.SortOrder
@@ -546,7 +546,7 @@ export type AdMaxOrderByAggregateInput = {
   mediaType?: Prisma.SortOrder
   mediaUrl?: Prisma.SortOrder
   advertiserId?: Prisma.SortOrder
-  Status?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -558,7 +558,7 @@ export type AdMinOrderByAggregateInput = {
   mediaType?: Prisma.SortOrder
   mediaUrl?: Prisma.SortOrder
   advertiserId?: Prisma.SortOrder
-  Status?: Prisma.SortOrder
+  status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -647,7 +647,7 @@ export type AdCreateWithoutUserInput = {
   budget: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -668,7 +668,7 @@ export type AdUncheckedCreateWithoutUserInput = {
   budget: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -719,7 +719,7 @@ export type AdScalarWhereInput = {
   pricing?: Prisma.JsonFilter<"Ad">
   campaign?: Prisma.JsonFilter<"Ad">
   advertiserId?: Prisma.StringFilter<"Ad"> | string
-  Status?: Prisma.StringFilter<"Ad"> | string
+  status?: Prisma.StringFilter<"Ad"> | string
   callToAction?: Prisma.JsonNullableFilter<"Ad">
   analytics?: Prisma.JsonNullableFilter<"Ad">
   review?: Prisma.JsonNullableFilter<"Ad">
@@ -740,7 +740,7 @@ export type AdCreateManyUserInput = {
   budget: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: string
+  status?: string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -761,7 +761,7 @@ export type AdUpdateWithoutUserInput = {
   budget?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -782,7 +782,7 @@ export type AdUncheckedUpdateWithoutUserInput = {
   budget?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -803,7 +803,7 @@ export type AdUncheckedUpdateManyWithoutUserInput = {
   budget?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   pricing?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   campaign?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  Status?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
   callToAction?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   analytics?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   review?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -827,7 +827,7 @@ export type AdSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = run
   pricing?: boolean
   campaign?: boolean
   advertiserId?: boolean
-  Status?: boolean
+  status?: boolean
   callToAction?: boolean
   analytics?: boolean
   review?: boolean
@@ -850,7 +850,7 @@ export type AdSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions
   pricing?: boolean
   campaign?: boolean
   advertiserId?: boolean
-  Status?: boolean
+  status?: boolean
   callToAction?: boolean
   analytics?: boolean
   review?: boolean
@@ -873,7 +873,7 @@ export type AdSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions
   pricing?: boolean
   campaign?: boolean
   advertiserId?: boolean
-  Status?: boolean
+  status?: boolean
   callToAction?: boolean
   analytics?: boolean
   review?: boolean
@@ -896,7 +896,7 @@ export type AdSelectScalar = {
   pricing?: boolean
   campaign?: boolean
   advertiserId?: boolean
-  Status?: boolean
+  status?: boolean
   callToAction?: boolean
   analytics?: boolean
   review?: boolean
@@ -906,7 +906,7 @@ export type AdSelectScalar = {
   updatedAt?: boolean
 }
 
-export type AdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "mediaType" | "mediaUrl" | "mediaUrls" | "targetAudience" | "budget" | "pricing" | "campaign" | "advertiserId" | "Status" | "callToAction" | "analytics" | "review" | "placement" | "frequency" | "createdAt" | "updatedAt", ExtArgs["result"]["ad"]>
+export type AdOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "description" | "mediaType" | "mediaUrl" | "mediaUrls" | "targetAudience" | "budget" | "pricing" | "campaign" | "advertiserId" | "status" | "callToAction" | "analytics" | "review" | "placement" | "frequency" | "createdAt" | "updatedAt", ExtArgs["result"]["ad"]>
 export type AdInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -934,7 +934,11 @@ export type $AdPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
     pricing: runtime.JsonValue
     campaign: runtime.JsonValue
     advertiserId: string
-    Status: string
+    /**
+     * The database column is the legacy mixed-case `Status`; the Prisma field is
+     * `status` so no code above this schema has to know that.
+     */
+    status: string
     callToAction: runtime.JsonValue | null
     analytics: runtime.JsonValue | null
     review: runtime.JsonValue | null
@@ -1377,7 +1381,7 @@ export interface AdFieldRefs {
   readonly pricing: Prisma.FieldRef<"Ad", 'Json'>
   readonly campaign: Prisma.FieldRef<"Ad", 'Json'>
   readonly advertiserId: Prisma.FieldRef<"Ad", 'String'>
-  readonly Status: Prisma.FieldRef<"Ad", 'String'>
+  readonly status: Prisma.FieldRef<"Ad", 'String'>
   readonly callToAction: Prisma.FieldRef<"Ad", 'Json'>
   readonly analytics: Prisma.FieldRef<"Ad", 'Json'>
   readonly review: Prisma.FieldRef<"Ad", 'Json'>

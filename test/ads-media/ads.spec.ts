@@ -27,7 +27,7 @@ interface FixtureAd {
   readonly pricing: unknown;
   readonly campaign: unknown;
   readonly advertiserId: string;
-  readonly Status: string;
+  readonly status: string;
   readonly callToAction: unknown;
   readonly analytics: unknown;
   readonly review: unknown;
@@ -64,7 +64,7 @@ const baseAd: FixtureAd = {
     },
   },
   advertiserId: 'owner',
-  Status: 'paused',
+  status: 'paused',
   callToAction: { type: 'learn_more', url: null },
   analytics: {
     impressions: 1000,
@@ -89,14 +89,14 @@ const baseAd: FixtureAd = {
 const runningOwned: FixtureAd = {
   ...baseAd,
   id: 'ad-running',
-  Status: 'running',
+  status: 'running',
 };
 
 const highBid: FixtureAd = {
   ...baseAd,
   id: 'ad-high-bid',
   advertiserId: 'other',
-  Status: 'running',
+  status: 'running',
   pricing: { model: 'cpm', bidAmount: 90, maxBid: null },
   targetAudience: { age: null, location: ['Lagos'], followersRange: null },
 };
@@ -105,7 +105,7 @@ const lowBid: FixtureAd = {
   ...baseAd,
   id: 'ad-low-bid',
   advertiserId: 'other',
-  Status: 'running',
+  status: 'running',
   pricing: { model: 'cpm', bidAmount: 5, maxBid: null },
 };
 
@@ -113,7 +113,7 @@ const exhausted: FixtureAd = {
   ...baseAd,
   id: 'ad-exhausted',
   advertiserId: 'other',
-  Status: 'running',
+  status: 'running',
   budget: { total: 100, daily: 10, spent: 100, currency: 'NGN' },
 };
 
@@ -121,7 +121,7 @@ const expired: FixtureAd = {
   ...baseAd,
   id: 'ad-expired',
   advertiserId: 'other',
-  Status: 'running',
+  status: 'running',
   campaign: {
     objective: 'awareness',
     schedule: {
@@ -137,7 +137,7 @@ const mismatchedLocation: FixtureAd = {
   ...baseAd,
   id: 'ad-elsewhere',
   advertiserId: 'other',
-  Status: 'running',
+  status: 'running',
   pricing: { model: 'cpm', bidAmount: 95, maxBid: null },
   targetAudience: { age: null, location: ['Nairobi'], followersRange: null },
 };
@@ -212,7 +212,7 @@ const adDelegate = {
     return Promise.resolve({
       ...baseAd,
       id: 'ad-created',
-      Status: 'pending',
+      status: 'pending',
     });
   },
   findUnique: (input: unknown): Promise<FixtureAd | null> =>
@@ -220,12 +220,12 @@ const adDelegate = {
   findMany: (input: unknown): Promise<readonly FixtureAd[]> => {
     lastFindManyArgs = input;
     const where = readObject(input, 'where');
-    const status = readObject(where, 'Status');
+    const status = readObject(where, 'status');
     const advertiserId = readObject(where, 'advertiserId');
     const matches = [...ads.values()].filter((ad) => {
       if (typeof advertiserId === 'string' && ad.advertiserId !== advertiserId)
         return false;
-      if (typeof status === 'string' && ad.Status !== status) return false;
+      if (typeof status === 'string' && ad.status !== status) return false;
       return true;
     });
     return Promise.resolve(
@@ -278,7 +278,7 @@ describe('ads lifecycle', () => {
     jest.useRealTimers();
   });
 
-  it('creates ads as pending against the canonical Status column', async () => {
+  it('creates ads as pending against the canonical status column', async () => {
     const service = createService();
     const created = await service.create(ownerPrincipal, {
       title: 'Campaign',
@@ -296,8 +296,8 @@ describe('ads lifecycle', () => {
       },
     });
 
-    expect(readObject(lastCreateData, 'Status')).toBe('pending');
-    expect(readObject(lastCreateData, 'status')).toBeUndefined();
+    expect(readObject(lastCreateData, 'status')).toBe('pending');
+    expect(readObject(lastCreateData, 'Status')).toBeUndefined();
     expect(readObject(lastCreateData, 'advertiserId')).toBe('owner');
     expect(
       readObject(readObject(lastCreateData, 'analytics'), 'impressions'),
@@ -314,7 +314,7 @@ describe('ads lifecycle', () => {
       status: 'paused',
     });
 
-    expect(readObject(readObject(lastFindManyArgs, 'where'), 'Status')).toBe(
+    expect(readObject(readObject(lastFindManyArgs, 'where'), 'status')).toBe(
       'paused',
     );
     expect(
@@ -382,15 +382,15 @@ describe('ads lifecycle', () => {
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
-  it('applies only allowlisted updates through the Status boundary', async () => {
+  it('applies only allowlisted updates through the status boundary', async () => {
     const service = createService();
     const updated = await service.updateOwned(ownerPrincipal, 'ad-owned', {
       title: 'Revised',
       status: 'running',
     });
 
-    expect(readObject(lastUpdateData, 'Status')).toBe('running');
-    expect(readObject(lastUpdateData, 'status')).toBeUndefined();
+    expect(readObject(lastUpdateData, 'status')).toBe('running');
+    expect(readObject(lastUpdateData, 'Status')).toBeUndefined();
     expect(readObject(lastUpdateData, 'advertiserId')).toBeUndefined();
     expect(updated.title).toBe('Revised');
 

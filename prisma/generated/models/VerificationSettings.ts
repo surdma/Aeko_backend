@@ -252,6 +252,7 @@ export type VerificationSettingsWhereInput = {
   autoApprove?: Prisma.BoolFilter<"VerificationSettings"> | boolean
   updatedAt?: Prisma.DateTimeFilter<"VerificationSettings"> | Date | string
   updatedBy?: Prisma.StringNullableFilter<"VerificationSettings"> | string | null
+  updatedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }
 
 export type VerificationSettingsOrderByWithRelationInput = {
@@ -264,6 +265,7 @@ export type VerificationSettingsOrderByWithRelationInput = {
   autoApprove?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   updatedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  updatedByUser?: Prisma.UserOrderByWithRelationInput
 }
 
 export type VerificationSettingsWhereUniqueInput = Prisma.AtLeast<{
@@ -279,6 +281,7 @@ export type VerificationSettingsWhereUniqueInput = Prisma.AtLeast<{
   autoApprove?: Prisma.BoolFilter<"VerificationSettings"> | boolean
   updatedAt?: Prisma.DateTimeFilter<"VerificationSettings"> | Date | string
   updatedBy?: Prisma.StringNullableFilter<"VerificationSettings"> | string | null
+  updatedByUser?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
 }, "id">
 
 export type VerificationSettingsOrderByWithAggregationInput = {
@@ -322,7 +325,7 @@ export type VerificationSettingsCreateInput = {
   requiresBio?: boolean
   autoApprove?: boolean
   updatedAt?: Date | string
-  updatedBy?: string | null
+  updatedByUser?: Prisma.UserCreateNestedOneWithoutVerificationSettingsUpdatedInput
 }
 
 export type VerificationSettingsUncheckedCreateInput = {
@@ -346,7 +349,7 @@ export type VerificationSettingsUpdateInput = {
   requiresBio?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoApprove?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  updatedByUser?: Prisma.UserUpdateOneWithoutVerificationSettingsUpdatedNestedInput
 }
 
 export type VerificationSettingsUncheckedUpdateInput = {
@@ -382,7 +385,6 @@ export type VerificationSettingsUpdateManyMutationInput = {
   requiresBio?: Prisma.BoolFieldUpdateOperationsInput | boolean
   autoApprove?: Prisma.BoolFieldUpdateOperationsInput | boolean
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
 }
 
 export type VerificationSettingsUncheckedUpdateManyInput = {
@@ -443,6 +445,165 @@ export type VerificationSettingsSumOrderByAggregateInput = {
   minPosts?: Prisma.SortOrder
 }
 
+export type VerificationSettingsListRelationFilter = {
+  every?: Prisma.VerificationSettingsWhereInput
+  some?: Prisma.VerificationSettingsWhereInput
+  none?: Prisma.VerificationSettingsWhereInput
+}
+
+export type VerificationSettingsOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
+export type VerificationSettingsCreateNestedManyWithoutUpdatedByUserInput = {
+  create?: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput> | Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput[] | Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput[]
+  connectOrCreate?: Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput | Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput[]
+  createMany?: Prisma.VerificationSettingsCreateManyUpdatedByUserInputEnvelope
+  connect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+}
+
+export type VerificationSettingsUncheckedCreateNestedManyWithoutUpdatedByUserInput = {
+  create?: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput> | Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput[] | Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput[]
+  connectOrCreate?: Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput | Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput[]
+  createMany?: Prisma.VerificationSettingsCreateManyUpdatedByUserInputEnvelope
+  connect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+}
+
+export type VerificationSettingsUpdateManyWithoutUpdatedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput> | Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput[] | Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput[]
+  connectOrCreate?: Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput | Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput[]
+  upsert?: Prisma.VerificationSettingsUpsertWithWhereUniqueWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpsertWithWhereUniqueWithoutUpdatedByUserInput[]
+  createMany?: Prisma.VerificationSettingsCreateManyUpdatedByUserInputEnvelope
+  set?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  disconnect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  delete?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  connect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  update?: Prisma.VerificationSettingsUpdateWithWhereUniqueWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
+  updateMany?: Prisma.VerificationSettingsUpdateManyWithWhereWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpdateManyWithWhereWithoutUpdatedByUserInput[]
+  deleteMany?: Prisma.VerificationSettingsScalarWhereInput | Prisma.VerificationSettingsScalarWhereInput[]
+}
+
+export type VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserNestedInput = {
+  create?: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput> | Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput[] | Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput[]
+  connectOrCreate?: Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput | Prisma.VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput[]
+  upsert?: Prisma.VerificationSettingsUpsertWithWhereUniqueWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpsertWithWhereUniqueWithoutUpdatedByUserInput[]
+  createMany?: Prisma.VerificationSettingsCreateManyUpdatedByUserInputEnvelope
+  set?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  disconnect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  delete?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  connect?: Prisma.VerificationSettingsWhereUniqueInput | Prisma.VerificationSettingsWhereUniqueInput[]
+  update?: Prisma.VerificationSettingsUpdateWithWhereUniqueWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpdateWithWhereUniqueWithoutUpdatedByUserInput[]
+  updateMany?: Prisma.VerificationSettingsUpdateManyWithWhereWithoutUpdatedByUserInput | Prisma.VerificationSettingsUpdateManyWithWhereWithoutUpdatedByUserInput[]
+  deleteMany?: Prisma.VerificationSettingsScalarWhereInput | Prisma.VerificationSettingsScalarWhereInput[]
+}
+
+export type VerificationSettingsCreateWithoutUpdatedByUserInput = {
+  id?: string
+  minFollowers?: number
+  minPosts?: number
+  requiresProfilePic?: boolean
+  requiresCoverPic?: boolean
+  requiresBio?: boolean
+  autoApprove?: boolean
+  updatedAt?: Date | string
+}
+
+export type VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput = {
+  id?: string
+  minFollowers?: number
+  minPosts?: number
+  requiresProfilePic?: boolean
+  requiresCoverPic?: boolean
+  requiresBio?: boolean
+  autoApprove?: boolean
+  updatedAt?: Date | string
+}
+
+export type VerificationSettingsCreateOrConnectWithoutUpdatedByUserInput = {
+  where: Prisma.VerificationSettingsWhereUniqueInput
+  create: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput>
+}
+
+export type VerificationSettingsCreateManyUpdatedByUserInputEnvelope = {
+  data: Prisma.VerificationSettingsCreateManyUpdatedByUserInput | Prisma.VerificationSettingsCreateManyUpdatedByUserInput[]
+  skipDuplicates?: boolean
+}
+
+export type VerificationSettingsUpsertWithWhereUniqueWithoutUpdatedByUserInput = {
+  where: Prisma.VerificationSettingsWhereUniqueInput
+  update: Prisma.XOR<Prisma.VerificationSettingsUpdateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedUpdateWithoutUpdatedByUserInput>
+  create: Prisma.XOR<Prisma.VerificationSettingsCreateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedCreateWithoutUpdatedByUserInput>
+}
+
+export type VerificationSettingsUpdateWithWhereUniqueWithoutUpdatedByUserInput = {
+  where: Prisma.VerificationSettingsWhereUniqueInput
+  data: Prisma.XOR<Prisma.VerificationSettingsUpdateWithoutUpdatedByUserInput, Prisma.VerificationSettingsUncheckedUpdateWithoutUpdatedByUserInput>
+}
+
+export type VerificationSettingsUpdateManyWithWhereWithoutUpdatedByUserInput = {
+  where: Prisma.VerificationSettingsScalarWhereInput
+  data: Prisma.XOR<Prisma.VerificationSettingsUpdateManyMutationInput, Prisma.VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserInput>
+}
+
+export type VerificationSettingsScalarWhereInput = {
+  AND?: Prisma.VerificationSettingsScalarWhereInput | Prisma.VerificationSettingsScalarWhereInput[]
+  OR?: Prisma.VerificationSettingsScalarWhereInput[]
+  NOT?: Prisma.VerificationSettingsScalarWhereInput | Prisma.VerificationSettingsScalarWhereInput[]
+  id?: Prisma.StringFilter<"VerificationSettings"> | string
+  minFollowers?: Prisma.IntFilter<"VerificationSettings"> | number
+  minPosts?: Prisma.IntFilter<"VerificationSettings"> | number
+  requiresProfilePic?: Prisma.BoolFilter<"VerificationSettings"> | boolean
+  requiresCoverPic?: Prisma.BoolFilter<"VerificationSettings"> | boolean
+  requiresBio?: Prisma.BoolFilter<"VerificationSettings"> | boolean
+  autoApprove?: Prisma.BoolFilter<"VerificationSettings"> | boolean
+  updatedAt?: Prisma.DateTimeFilter<"VerificationSettings"> | Date | string
+  updatedBy?: Prisma.StringNullableFilter<"VerificationSettings"> | string | null
+}
+
+export type VerificationSettingsCreateManyUpdatedByUserInput = {
+  id?: string
+  minFollowers?: number
+  minPosts?: number
+  requiresProfilePic?: boolean
+  requiresCoverPic?: boolean
+  requiresBio?: boolean
+  autoApprove?: boolean
+  updatedAt?: Date | string
+}
+
+export type VerificationSettingsUpdateWithoutUpdatedByUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  minFollowers?: Prisma.IntFieldUpdateOperationsInput | number
+  minPosts?: Prisma.IntFieldUpdateOperationsInput | number
+  requiresProfilePic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresCoverPic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresBio?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoApprove?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type VerificationSettingsUncheckedUpdateWithoutUpdatedByUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  minFollowers?: Prisma.IntFieldUpdateOperationsInput | number
+  minPosts?: Prisma.IntFieldUpdateOperationsInput | number
+  requiresProfilePic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresCoverPic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresBio?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoApprove?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type VerificationSettingsUncheckedUpdateManyWithoutUpdatedByUserInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  minFollowers?: Prisma.IntFieldUpdateOperationsInput | number
+  minPosts?: Prisma.IntFieldUpdateOperationsInput | number
+  requiresProfilePic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresCoverPic?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  requiresBio?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  autoApprove?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 
 
 export type VerificationSettingsSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -455,6 +616,7 @@ export type VerificationSettingsSelect<ExtArgs extends runtime.Types.Extensions.
   autoApprove?: boolean
   updatedAt?: boolean
   updatedBy?: boolean
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["verificationSettings"]>
 
 export type VerificationSettingsSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -467,6 +629,7 @@ export type VerificationSettingsSelectCreateManyAndReturn<ExtArgs extends runtim
   autoApprove?: boolean
   updatedAt?: boolean
   updatedBy?: boolean
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["verificationSettings"]>
 
 export type VerificationSettingsSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -479,6 +642,7 @@ export type VerificationSettingsSelectUpdateManyAndReturn<ExtArgs extends runtim
   autoApprove?: boolean
   updatedAt?: boolean
   updatedBy?: boolean
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
 }, ExtArgs["result"]["verificationSettings"]>
 
 export type VerificationSettingsSelectScalar = {
@@ -494,10 +658,21 @@ export type VerificationSettingsSelectScalar = {
 }
 
 export type VerificationSettingsOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "minFollowers" | "minPosts" | "requiresProfilePic" | "requiresCoverPic" | "requiresBio" | "autoApprove" | "updatedAt" | "updatedBy", ExtArgs["result"]["verificationSettings"]>
+export type VerificationSettingsInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
+}
+export type VerificationSettingsIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
+}
+export type VerificationSettingsIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  updatedByUser?: boolean | Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>
+}
 
 export type $VerificationSettingsPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "VerificationSettings"
-  objects: {}
+  objects: {
+    updatedByUser: Prisma.$UserPayload<ExtArgs> | null
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     minFollowers: number
@@ -902,6 +1077,7 @@ readonly fields: VerificationSettingsFieldRefs;
  */
 export interface Prisma__VerificationSettingsClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  updatedByUser<T extends Prisma.VerificationSettings$updatedByUserArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.VerificationSettings$updatedByUserArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -957,6 +1133,10 @@ export type VerificationSettingsFindUniqueArgs<ExtArgs extends runtime.Types.Ext
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  /**
    * Filter, which VerificationSettings to fetch.
    */
   where: Prisma.VerificationSettingsWhereUniqueInput
@@ -975,6 +1155,10 @@ export type VerificationSettingsFindUniqueOrThrowArgs<ExtArgs extends runtime.Ty
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  /**
    * Filter, which VerificationSettings to fetch.
    */
   where: Prisma.VerificationSettingsWhereUniqueInput
@@ -992,6 +1176,10 @@ export type VerificationSettingsFindFirstArgs<ExtArgs extends runtime.Types.Exte
    * Omit specific fields from the VerificationSettings
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
   /**
    * Filter, which VerificationSettings to fetch.
    */
@@ -1041,6 +1229,10 @@ export type VerificationSettingsFindFirstOrThrowArgs<ExtArgs extends runtime.Typ
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  /**
    * Filter, which VerificationSettings to fetch.
    */
   where?: Prisma.VerificationSettingsWhereInput
@@ -1088,6 +1280,10 @@ export type VerificationSettingsFindManyArgs<ExtArgs extends runtime.Types.Exten
    * Omit specific fields from the VerificationSettings
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
   /**
    * Filter, which VerificationSettings to fetch.
    */
@@ -1137,6 +1333,10 @@ export type VerificationSettingsCreateArgs<ExtArgs extends runtime.Types.Extensi
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  /**
    * The data needed to create a VerificationSettings.
    */
   data: Prisma.XOR<Prisma.VerificationSettingsCreateInput, Prisma.VerificationSettingsUncheckedCreateInput>
@@ -1170,6 +1370,10 @@ export type VerificationSettingsCreateManyAndReturnArgs<ExtArgs extends runtime.
    */
   data: Prisma.VerificationSettingsCreateManyInput | Prisma.VerificationSettingsCreateManyInput[]
   skipDuplicates?: boolean
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsIncludeCreateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1184,6 +1388,10 @@ export type VerificationSettingsUpdateArgs<ExtArgs extends runtime.Types.Extensi
    * Omit specific fields from the VerificationSettings
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
   /**
    * The data needed to update a VerificationSettings.
    */
@@ -1236,6 +1444,10 @@ export type VerificationSettingsUpdateManyAndReturnArgs<ExtArgs extends runtime.
    * Limit how many VerificationSettings to update.
    */
   limit?: number
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsIncludeUpdateManyAndReturn<ExtArgs> | null
 }
 
 /**
@@ -1250,6 +1462,10 @@ export type VerificationSettingsUpsertArgs<ExtArgs extends runtime.Types.Extensi
    * Omit specific fields from the VerificationSettings
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
   /**
    * The filter to search for the VerificationSettings to update in case it exists.
    */
@@ -1277,6 +1493,10 @@ export type VerificationSettingsDeleteArgs<ExtArgs extends runtime.Types.Extensi
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
+  /**
    * Filter which VerificationSettings to delete.
    */
   where: Prisma.VerificationSettingsWhereUniqueInput
@@ -1297,6 +1517,25 @@ export type VerificationSettingsDeleteManyArgs<ExtArgs extends runtime.Types.Ext
 }
 
 /**
+ * VerificationSettings.updatedByUser
+ */
+export type VerificationSettings$updatedByUserArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
+}
+
+/**
  * VerificationSettings without action
  */
 export type VerificationSettingsDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1308,4 +1547,8 @@ export type VerificationSettingsDefaultArgs<ExtArgs extends runtime.Types.Extens
    * Omit specific fields from the VerificationSettings
    */
   omit?: Prisma.VerificationSettingsOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VerificationSettingsInclude<ExtArgs> | null
 }

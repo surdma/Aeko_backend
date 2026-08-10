@@ -34,7 +34,7 @@ export class ProfilesService {
   ) {}
 
   private get profiles(): ProfilePrismaClient {
-    return createProfilePrismaClient(this.prisma.adapterClient);
+    return createProfilePrismaClient(this.prisma.db);
   }
 
   followers(userId: string, query: PageQuery): Promise<UserPage> {

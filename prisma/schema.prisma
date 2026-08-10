@@ -20,7 +20,9 @@ model Ad {
   pricing Json
   campaign Json
   advertiserId String
-  Status String @default("draft")
+  /// The database column is the legacy mixed-case `Status`; the Prisma field is
+  /// `status` so no code above this schema has to know that.
+  status String @default("draft") @map("Status")
   callToAction Json?
   analytics Json?
   review Json?
@@ -262,6 +264,24 @@ model Interest {
   isActive Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  users UserInterest[]
+}
+
+/// Join table between `User` and `Interest`. `User.interests` is still the
+/// authoritative JSON column; this table is created empty and is backfilled by
+/// the social-graph normalization, after which the JSON column is retired.
+model UserInterest {
+  @@map("user_interests")
+  id String @id @default(uuid())
+  userId String
+  interestId String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interest Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, interestId])
+  @@index([interestId])
 }
 
 model LiveStream {
@@ -437,6 +457,7 @@ model VerificationSettings {
   autoApprove Boolean @default(true)
   updatedAt DateTime @updatedAt
   updatedBy String?
+  updatedByUser User? @relation("verificationSettingsUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)
 }
 
 model Transaction {
@@ -559,6 +580,8 @@ model User {
   coinBalance Float @default(0)
   coinTransactions CoinTransaction[]
   sentGifts LiveStreamGift[] @relation("sentGifts")
+  interestLinks UserInterest[]
+  verificationSettingsUpdated VerificationSettings[] @relation("verificationSettingsUpdatedBy")
 }
 
 model Report {

@@ -88,6 +88,13 @@ export type EnhancedMessage = Prisma.EnhancedMessageModel
  */
 export type Interest = Prisma.InterestModel
 /**
+ * Model UserInterest
+ * Join table between `User` and `Interest`. `User.interests` is still the
+ * authoritative JSON column; this table is created empty and is backfilled by
+ * the social-graph normalization, after which the JSON column is retired.
+ */
+export type UserInterest = Prisma.UserInterestModel
+/**
  * Model LiveStream
  * 
  */

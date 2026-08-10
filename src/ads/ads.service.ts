@@ -60,7 +60,7 @@ export class AdsService {
   constructor(private readonly prisma: PrismaService) {}
 
   private get ads(): AdPrismaClient {
-    return createAdPrismaClient(this.prisma.adapterClient);
+    return createAdPrismaClient(this.prisma.db);
   }
 
   async create(

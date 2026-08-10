@@ -2,7 +2,12 @@ import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import { RequestMethod } from '@nestjs/common';
 
 import type { AuthenticatedPrincipal } from '../../src/auth/auth.types';
-import { DomainError } from '../../src/common/errors/domain.error';
+import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
+import {
+  DomainError,
+  type PublicErrorBody,
+} from '../../src/common/errors/domain.error';
+import { GlobalExceptionFilter } from '../../src/common/errors/global-exception/global-exception.filter';
 import { PrismaService } from '../../src/database/prisma/prisma.service';
 import { UsersController } from '../../src/users/users.controller';
 import { UsersService } from '../../src/users/users.service';
@@ -201,6 +206,33 @@ const invoke = async (
   return Promise.resolve(Reflect.apply(candidate, service, args));
 };
 
+/** Runs the raised error through the filter that shapes every HTTP response. */
+const capturedErrorBody = (exception: unknown): PublicErrorBody => {
+  let body: PublicErrorBody | undefined;
+  const response = {
+    status(): typeof response {
+      return response;
+    },
+    json(value: PublicErrorBody): typeof response {
+      body = value;
+      return response;
+    },
+  };
+  const host = new ExecutionContextHost([
+    { method: 'GET', originalUrl: '/api/users/public-user' },
+    response,
+  ]);
+  host.setType('http');
+  new GlobalExceptionFilter(
+    { error: () => undefined },
+    {
+      requestId: 'request-123',
+    },
+  ).catch(exception, host);
+  if (!body) throw new Error('The exception filter emitted no response body.');
+  return body;
+};
+
 const expectDomainError = async (
   promise: Promise<unknown>,
   code: string,
@@ -309,6 +341,10 @@ describe('users endpoints', () => {
   });
 
   it('does not expose Prisma delegate members when its boundary is unavailable', async () => {
+    // A delegate method can no longer go missing undetected — the repository is
+    // typed against the generated client, so an absent `findUnique` fails to
+    // compile. The remaining risk is that a runtime failure leaks the member
+    // name to the caller, which GlobalExceptionFilter is what prevents.
     const incompleteClient = {
       $connect: (): Promise<void> => Promise.resolve(),
       $disconnect: (): Promise<void> => Promise.resolve(),
@@ -322,13 +358,24 @@ describe('users endpoints', () => {
     };
 
     const service: unknown = Reflect.construct(UsersService, [
-      new PrismaService(incompleteClient),
+      new PrismaService(incompleteClient as never),
     ]);
-    const promise = invoke(service, 'getUser', ['viewer', 'public-user']);
-    await expect(promise).rejects.toThrow(
-      'The user data service is unavailable.',
+    const raised = await invoke(service, 'getUser', [
+      'viewer',
+      'public-user',
+    ]).then(
+      () => undefined,
+      (error: unknown) => error,
     );
-    await expect(promise).rejects.not.toThrow('findUnique');
+    expect(raised).toBeInstanceOf(TypeError);
+
+    const body = capturedErrorBody(raised);
+    expect(body).toMatchObject({
+      success: false,
+      code: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred.',
+    });
+    expect(JSON.stringify(body)).not.toContain('findUnique');
   });
 
   it('returns a limited private profile with numeric graph counts to a non-follower', async () => {

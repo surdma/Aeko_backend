@@ -45,6 +45,48 @@ function fieldName(line: string): string | undefined {
   return line.match(/^(\w+)\s/)?.[1];
 }
 
+/**
+ * Intentional, reviewed departures from the legacy schema. Everything not
+ * listed here must still match the legacy definition line for line, so an
+ * accidental drift during migration still fails this suite.
+ *
+ * `replace` rewrites one legacy line; `add` appends a line the legacy schema
+ * does not have. Neither changes a physical column, so the legacy Express
+ * service keeps working against the same tables.
+ */
+const DIVERGENCES: Readonly<
+  Record<
+    string,
+    {
+      readonly replace?: Readonly<Record<string, string>>;
+      readonly add?: readonly string[];
+    }
+  >
+> = {
+  // The physical column stays `Status`; only the Prisma field is renamed.
+  Ad: {
+    replace: {
+      'Status String @default("draft")':
+        'status String @default("draft") @map("Status")',
+    },
+  },
+  // `interests` was an orphan table with no path to a user.
+  Interest: { add: ['users UserInterest[]'] },
+  // `updatedBy` held a user id with no foreign key behind it.
+  VerificationSettings: {
+    add: [
+      'updatedByUser User? @relation("verificationSettingsUpdatedBy", fields: [updatedBy], references: [id], onDelete: SetNull)',
+    ],
+  },
+};
+
+function applyDivergences(name: string, lines: string[]): string[] {
+  const divergence = DIVERGENCES[name];
+  if (!divergence) return lines;
+  const replaced = lines.map((line) => divergence.replace?.[line] ?? line);
+  return [...replaced, ...(divergence.add ?? [])];
+}
+
 describe('Aeko Prisma domain preservation', () => {
   const legacy = read(legacyPath);
   const target = read(targetPath);
@@ -61,16 +103,24 @@ describe('Aeko Prisma domain preservation', () => {
     expect(target).not.toMatch(/datasource db[\s\S]*?\burl\s*=/);
   });
 
-  test('preserves every complete non-User Aeko model verbatim in semantic content', () => {
+  test('preserves every non-User Aeko model except for recorded divergences', () => {
     const legacyDomainModels = [...legacyModels.keys()].filter(
       (name) => name !== 'User',
     );
     expect(legacyDomainModels.length).toBeGreaterThan(20);
 
     for (const name of legacyDomainModels) {
-      expect(semanticLines(targetModels.get(name) ?? '')).toEqual(
+      const expected = applyDivergences(
+        name,
         semanticLines(legacyModels.get(name)),
       );
+      expect(semanticLines(targetModels.get(name) ?? '')).toEqual(expected);
+    }
+  });
+
+  test('records no divergence for a model that no longer exists', () => {
+    for (const name of Object.keys(DIVERGENCES)) {
+      expect([...legacyModels.keys()]).toContain(name);
     }
   });
 

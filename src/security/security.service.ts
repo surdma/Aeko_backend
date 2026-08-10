@@ -2,6 +2,7 @@ import { Injectable, Optional } from '@nestjs/common';
 
 import { DomainError } from '../common/errors/domain.error';
 import type { PageMeta, PageQuery } from '../common/pagination/page-query';
+import type { PrismaClient } from '../../prisma/generated/client';
 import { PrismaService } from '../database/prisma/prisma.service';
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import type { RequestAuditContext } from '../common/http/request-audit/request-audit.decorator';
@@ -62,17 +63,17 @@ interface FollowRequestEntry {
 
 @Injectable()
 export class SecurityService {
-  private readonly adapterClient: object;
+  private readonly db: PrismaClient;
 
   constructor(
     prisma: PrismaService,
     @Optional() private readonly audit?: SecurityEventService,
   ) {
-    this.adapterClient = prisma.adapterClient;
+    this.db = prisma.db;
   }
 
   private get social(): SocialPrismaClient {
-    return createSocialPrismaClient(this.adapterClient);
+    return createSocialPrismaClient(this.db);
   }
 
   async verifyUser(
@@ -81,7 +82,7 @@ export class SecurityService {
     audit: RequestAuditContext = unknownAuditContext,
   ): Promise<{ readonly verified: true }> {
     const verification: SecurityVerificationClient =
-      createSecurityVerificationClient(this.adapterClient);
+      createSecurityVerificationClient(this.db);
     if (!principal.isAdmin) {
       await this.recordVerification(
         principal.userId,

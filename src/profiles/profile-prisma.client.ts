@@ -1,4 +1,6 @@
+import type { Prisma } from '../../prisma/generated/client';
 import { DomainError } from '../common/errors/domain.error';
+import type { PrismaTransaction } from '../database/prisma/prisma.service';
 import type { ProfileUpdate } from './profile.contract';
 
 export interface ProfileRecord {
@@ -73,82 +75,6 @@ export interface ProfilePrismaClient {
   findVerificationSettings(): Promise<VerificationSettingsRecord | null>;
 }
 
-export const createProfilePrismaClient = (
-  client: object,
-): ProfilePrismaClient => {
-  const user = requireDelegate(client, 'user', ['findUnique', 'update']);
-  const post = requireDelegate(client, 'post', ['findMany']);
-  const comment = requireDelegate(client, 'comment', ['findMany']);
-  const securityEvent = requireDelegate(client, 'securityEvent', ['findMany']);
-  const verificationSettings = requireDelegate(client, 'verificationSettings', [
-    'findFirst',
-  ]);
-
-  return {
-    async findProfile(id) {
-      const value = await invoke(user, 'findUnique', [profileQuery(id)]);
-      return value === null ? null : parseProfile(value);
-    },
-    async updateProfile(id, update) {
-      return parseProfile(
-        await invoke(user, 'update', [
-          { ...profileQuery(id), data: Object.freeze({ ...update }) },
-        ]),
-      );
-    },
-    async findPosts(id, take) {
-      const value = await invoke(post, 'findMany', [
-        {
-          where: { userId: id },
-          orderBy: { createdAt: 'desc' },
-          take,
-          select: {
-            id: true,
-            type: true,
-            createdAt: true,
-            text: true,
-            media: true,
-          },
-        },
-      ]);
-      return parseArray(value, parsePost);
-    },
-    async findComments(id, take) {
-      const value = await invoke(comment, 'findMany', [
-        {
-          where: { userId: id },
-          orderBy: { createdAt: 'desc' },
-          take,
-          select: { id: true, text: true, createdAt: true, postId: true },
-        },
-      ]);
-      return parseArray(value, parseComment);
-    },
-    async findSecurityEvents(id, take) {
-      const value = await invoke(securityEvent, 'findMany', [
-        {
-          where: { userId: id },
-          orderBy: { createdAt: 'desc' },
-          take,
-          select: {
-            id: true,
-            eventType: true,
-            timestamp: true,
-            ipAddress: true,
-          },
-        },
-      ]);
-      return parseArray(value, parseSecurityEvent);
-    },
-    async findVerificationSettings() {
-      const value = await invoke(verificationSettings, 'findFirst', [
-        { select: verificationSettingsSelection },
-      ]);
-      return value === null ? null : parseVerificationSettings(value);
-    },
-  };
-};
-
 const profileSelection = {
   id: true,
   username: true,
@@ -172,191 +98,122 @@ const profileSelection = {
   lastLoginAt: true,
   followers: true,
   _count: { select: { posts_posts_userIdTousers: true, bookmarks: true } },
-} as const;
+} satisfies Prisma.UserSelect;
 
-const profileQuery = (id: string) => ({
-  where: { id },
-  select: profileSelection,
+type ProfileRow = Prisma.UserGetPayload<{ select: typeof profileSelection }>;
+
+const toProfile = (row: ProfileRow): ProfileRecord => ({
+  id: row.id,
+  username: row.username,
+  name: row.name,
+  email: row.email,
+  emailVerified: row.emailVerified,
+  image: row.image,
+  avatar: row.avatar,
+  profilePicture: row.profilePicture,
+  coverPicture: row.coverPicture,
+  bio: row.bio,
+  location: row.location,
+  blueTick: row.blueTick,
+  goldenTick: row.goldenTick,
+  subscriptionStatus: row.subscriptionStatus,
+  subscriptionExpiry: row.subscriptionExpiry,
+  walletAddress: row.walletAddress,
+  twoFactorEnabled: row.twoFactorEnabled,
+  createdAt: row.createdAt,
+  updatedAt: row.updatedAt,
+  lastLoginAt: row.lastLoginAt,
+  followersCount: readFollowerCount(row.followers),
+  postsCount: row._count.posts_posts_userIdTousers,
+  bookmarksCount: row._count.bookmarks,
 });
 
-const verificationSettingsSelection = {
-  minFollowers: true,
-  minPosts: true,
-  requiresProfilePic: true,
-  requiresCoverPic: true,
-  requiresBio: true,
-  autoApprove: true,
-} as const;
-
-const parseProfile = (value: unknown): ProfileRecord => {
-  const record = requireObject(value);
-  const counts = requireObject(Reflect.get(record, '_count'));
-  return {
-    id: readString(record, 'id'),
-    username: readString(record, 'username'),
-    name: readString(record, 'name'),
-    email: readString(record, 'email'),
-    emailVerified: readBoolean(record, 'emailVerified'),
-    image: readNullableString(record, 'image'),
-    avatar: readNullableString(record, 'avatar'),
-    profilePicture: readNullableString(record, 'profilePicture'),
-    coverPicture: readNullableString(record, 'coverPicture'),
-    bio: readNullableString(record, 'bio'),
-    location: readNullableString(record, 'location'),
-    blueTick: readBoolean(record, 'blueTick'),
-    goldenTick: readBoolean(record, 'goldenTick'),
-    subscriptionStatus: readString(record, 'subscriptionStatus'),
-    subscriptionExpiry: readNullableDate(record, 'subscriptionExpiry'),
-    walletAddress: readNullableString(record, 'walletAddress'),
-    twoFactorEnabled: readNullableBoolean(record, 'twoFactorEnabled'),
-    createdAt: readDate(record, 'createdAt'),
-    updatedAt: readDate(record, 'updatedAt'),
-    lastLoginAt: readNullableDate(record, 'lastLoginAt'),
-    followersCount: readFollowerCount(Reflect.get(record, 'followers')),
-    postsCount: readCount(counts, 'posts_posts_userIdTousers'),
-    bookmarksCount: readCount(counts, 'bookmarks'),
-  };
-};
-
-const parsePost = (value: unknown): PostActivityRecord => {
-  const record = requireObject(value);
-  const media: unknown = Reflect.get(record, 'media');
-  return {
-    id: readString(record, 'id'),
-    type: readString(record, 'type'),
-    createdAt: readDate(record, 'createdAt'),
-    text: readNullableString(record, 'text'),
-    hasMedia: media !== null && media !== undefined,
-  };
-};
-
-const parseComment = (value: unknown): CommentActivityRecord => {
-  const record = requireObject(value);
-  return {
-    id: readString(record, 'id'),
-    text: readString(record, 'text'),
-    createdAt: readDate(record, 'createdAt'),
-    postId: readString(record, 'postId'),
-  };
-};
-
-const parseSecurityEvent = (value: unknown): SecurityActivityRecord => {
-  const record = requireObject(value);
-  return {
-    id: readString(record, 'id'),
-    eventType: readString(record, 'eventType'),
-    timestamp: readDate(record, 'timestamp'),
-    ipAddress: readString(record, 'ipAddress'),
-  };
-};
-
-const parseVerificationSettings = (
-  value: unknown,
-): VerificationSettingsRecord => {
-  const record = requireObject(value);
-  return {
-    minFollowers: readCount(record, 'minFollowers'),
-    minPosts: readCount(record, 'minPosts'),
-    requiresProfilePic: readBoolean(record, 'requiresProfilePic'),
-    requiresCoverPic: readBoolean(record, 'requiresCoverPic'),
-    requiresBio: readBoolean(record, 'requiresBio'),
-    autoApprove: readBoolean(record, 'autoApprove'),
-  };
-};
-
-const parseArray = <T>(
-  value: unknown,
-  parser: (item: unknown) => T,
-): readonly T[] => {
-  if (!Array.isArray(value)) invalidResult();
-  return value.map(parser);
-};
-
-const invoke = async (
-  target: object,
-  method: string,
-  args: readonly unknown[],
-): Promise<unknown> => {
-  const candidate: unknown = Reflect.get(target, method);
-  if (typeof candidate !== 'function') unavailable();
-  return Promise.resolve(Reflect.apply(candidate, target, args));
-};
-
-const requireDelegate = (
-  client: object,
-  key: string,
-  methods: readonly string[],
-): object => {
-  const delegate = requireObject(Reflect.get(client, key), unavailable);
-  for (const method of methods) {
-    if (typeof Reflect.get(delegate, method) !== 'function') unavailable();
-  }
-  return delegate;
-};
-
-const requireObject = (
-  value: unknown,
-  fail: () => never = invalidResult,
-): object => {
-  if (typeof value !== 'object' || value === null) fail();
-  return value;
-};
-
-const readString = (record: object, key: string): string => {
-  const value: unknown = Reflect.get(record, key);
-  if (typeof value !== 'string') invalidResult();
-  return value;
-};
-const readNullableString = (record: object, key: string): string | null => {
-  const value: unknown = Reflect.get(record, key);
-  if (value === null || value === undefined) return null;
-  if (typeof value !== 'string') invalidResult();
-  return value;
-};
-const readBoolean = (record: object, key: string): boolean => {
-  const value: unknown = Reflect.get(record, key);
-  if (typeof value !== 'boolean') invalidResult();
-  return value;
-};
-const readNullableBoolean = (record: object, key: string): boolean | null => {
-  const value: unknown = Reflect.get(record, key);
-  if (value === null || value === undefined) return null;
-  if (typeof value !== 'boolean') invalidResult();
-  return value;
-};
-const readDate = (record: object, key: string): Date => {
-  const value: unknown = Reflect.get(record, key);
-  if (!(value instanceof Date) || Number.isNaN(value.getTime()))
-    invalidResult();
-  return value;
-};
-const readNullableDate = (record: object, key: string): Date | null => {
-  const value: unknown = Reflect.get(record, key);
-  if (value === null || value === undefined) return null;
-  if (!(value instanceof Date) || Number.isNaN(value.getTime()))
-    invalidResult();
-  return value;
-};
-const readCount = (record: object, key: string): number => {
-  const value: unknown = Reflect.get(record, key);
-  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0)
-    invalidResult();
-  return value;
-};
-
-const readFollowerCount = (value: unknown): number => {
+/**
+ * `User.followers` is an untyped JSON column, so its contents still need a
+ * runtime check — Prisma can only promise `JsonValue` here. Normalizing this
+ * column into a `Follow` table removes the check entirely.
+ */
+const readFollowerCount = (value: Prisma.JsonValue): number => {
   if (value === null || value === undefined) return 0;
   if (!Array.isArray(value)) invalidResult();
   if (!value.every((item) => typeof item === 'string')) invalidResult();
   return value.length;
 };
 
-function unavailable(): never {
-  throw new DomainError(
-    'INTERNAL_ERROR',
-    'The profile data service is unavailable.',
-  );
-}
+export const createProfilePrismaClient = (
+  db: PrismaTransaction,
+): ProfilePrismaClient => ({
+  async findProfile(id) {
+    const row = await db.user.findUnique({
+      where: { id },
+      select: profileSelection,
+    });
+    return row === null ? null : toProfile(row);
+  },
+
+  async updateProfile(id, update) {
+    return toProfile(
+      await db.user.update({
+        where: { id },
+        data: { ...update },
+        select: profileSelection,
+      }),
+    );
+  },
+
+  async findPosts(id, take) {
+    const rows = await db.post.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: {
+        id: true,
+        type: true,
+        createdAt: true,
+        text: true,
+        media: true,
+      },
+    });
+    return rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      createdAt: row.createdAt,
+      text: row.text,
+      hasMedia: row.media !== null,
+    }));
+  },
+
+  async findComments(id, take) {
+    return db.comment.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: { id: true, text: true, createdAt: true, postId: true },
+    });
+  },
+
+  async findSecurityEvents(id, take) {
+    return db.securityEvent.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' },
+      take,
+      select: { id: true, eventType: true, timestamp: true, ipAddress: true },
+    });
+  },
+
+  async findVerificationSettings() {
+    return db.verificationSettings.findFirst({
+      select: {
+        minFollowers: true,
+        minPosts: true,
+        requiresProfilePic: true,
+        requiresCoverPic: true,
+        requiresBio: true,
+        autoApprove: true,
+      },
+    });
+  },
+});
 
 function invalidResult(): never {
   throw new DomainError(

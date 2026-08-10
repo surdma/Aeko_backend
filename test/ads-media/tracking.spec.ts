@@ -26,7 +26,7 @@ interface Row {
   pricing: unknown;
   campaign: unknown;
   advertiserId: string;
-  Status: string;
+  status: string;
   callToAction: unknown;
   analytics: unknown;
   review: unknown;
@@ -72,7 +72,7 @@ const makeRow = (overrides: Partial<Row>): Row => ({
   pricing: { model: 'cpm', bidAmount: 20, maxBid: null },
   campaign,
   advertiserId: 'owner',
-  Status: 'running',
+  status: 'running',
   callToAction: { type: 'learn_more', url: null },
   analytics: { ...baseAnalytics },
   review: null,
@@ -153,10 +153,10 @@ const createHarness = (rows: readonly Row[]): Harness => {
         ...existing,
         analytics: readObject(data, 'analytics') ?? existing.analytics,
         budget: readObject(data, 'budget') ?? existing.budget,
-        Status:
-          typeof readObject(data, 'Status') === 'string'
-            ? String(readObject(data, 'Status'))
-            : existing.Status,
+        status:
+          typeof readObject(data, 'status') === 'string'
+            ? String(readObject(data, 'status'))
+            : existing.status,
       };
       store.set(next.id, next);
       return Promise.resolve(next);
@@ -325,13 +325,13 @@ describe('ad tracking', () => {
     await harness.service.trackClick(principal, { adId: 'ad-running' });
 
     const stored = harness.rows.get('ad-running');
-    expect(stored?.Status).toBe('completed');
-    expect(stored).not.toHaveProperty('status');
+    expect(stored?.status).toBe('completed');
+    expect(stored).not.toHaveProperty('Status');
   });
 
   it('rejects tracking for missing and non-running ads', async () => {
     const harness = createHarness([
-      makeRow({ id: 'ad-paused', Status: 'paused' }),
+      makeRow({ id: 'ad-paused', status: 'paused' }),
     ]);
 
     await expect(

@@ -28,7 +28,7 @@ interface Row {
   pricing: unknown;
   campaign: unknown;
   advertiserId: string;
-  Status: string;
+  status: string;
   callToAction: unknown;
   analytics: unknown;
   review: unknown;
@@ -59,7 +59,7 @@ const makeRow = (overrides: Partial<Row>): Row => ({
     },
   },
   advertiserId: 'owner',
-  Status: 'pending',
+  status: 'pending',
   callToAction: { type: 'learn_more', url: null },
   analytics: { impressions: 0, clicks: 0, ctr: 0, conversions: 0 },
   review: null,
@@ -127,10 +127,10 @@ const createHarness = (rows: readonly Row[]): Harness => {
       Promise.resolve(store.get(readWhereId(input)) ?? null),
     findMany: (input: unknown): Promise<readonly Row[]> => {
       harness.lastFindManyArgs = input;
-      const status = readObject(readObject(input, 'where'), 'Status');
+      const status = readObject(readObject(input, 'where'), 'status');
       return Promise.resolve(
         [...store.values()].filter(
-          (row) => typeof status !== 'string' || row.Status === status,
+          (row) => typeof status !== 'string' || row.status === status,
         ),
       );
     },
@@ -143,10 +143,10 @@ const createHarness = (rows: readonly Row[]): Harness => {
       const next: Row = {
         ...existing,
         review: readObject(data, 'review') ?? existing.review,
-        Status:
-          typeof readObject(data, 'Status') === 'string'
-            ? String(readObject(data, 'Status'))
-            : existing.Status,
+        status:
+          typeof readObject(data, 'status') === 'string'
+            ? String(readObject(data, 'status'))
+            : existing.status,
       };
       store.set(next.id, next);
       return Promise.resolve(next);
@@ -187,7 +187,7 @@ describe('administrator review', () => {
   it('lists pending ads by default without internal column names', async () => {
     const harness = createHarness([
       makeRow({}),
-      makeRow({ id: 'ad-running', Status: 'running' }),
+      makeRow({ id: 'ad-running', status: 'running' }),
     ]);
     const page = await harness.service.listForReview(adminPrincipal, {
       page: 1,
@@ -196,7 +196,7 @@ describe('administrator review', () => {
     });
 
     expect(
-      readObject(readObject(harness.lastFindManyArgs, 'where'), 'Status'),
+      readObject(readObject(harness.lastFindManyArgs, 'where'), 'status'),
     ).toBe('pending');
     expect(page.ads).toHaveLength(1);
     expect(page.ads[0]).not.toHaveProperty('Status');
@@ -207,7 +207,7 @@ describe('administrator review', () => {
   it('honours an explicit review status filter', async () => {
     const harness = createHarness([
       makeRow({}),
-      makeRow({ id: 'ad-rejected', Status: 'rejected' }),
+      makeRow({ id: 'ad-rejected', status: 'rejected' }),
     ]);
     const page = await harness.service.listForReview(adminPrincipal, {
       page: 1,
@@ -252,7 +252,7 @@ describe('administrator review', () => {
     );
 
     expect(reviewed.status).toBe('running');
-    expect(readObject(harness.lastUpdateData, 'Status')).toBe('running');
+    expect(readObject(harness.lastUpdateData, 'status')).toBe('running');
     const review = readObject(harness.lastUpdateData, 'review');
     expect(review).toEqual({
       reviewedBy: 'admin',
@@ -277,7 +277,7 @@ describe('administrator review', () => {
     });
 
     expect(reviewed.status).toBe('rejected');
-    expect(readObject(harness.lastUpdateData, 'Status')).toBe('rejected');
+    expect(readObject(harness.lastUpdateData, 'status')).toBe('rejected');
     expect(
       readObject(
         readObject(harness.lastUpdateData, 'review'),

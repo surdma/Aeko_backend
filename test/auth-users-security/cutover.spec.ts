@@ -146,9 +146,12 @@ describe('auth users security cutover', () => {
 
   it('contains no legacy auth stack, second runtime client, or unsafe domain syntax', () => {
     const files = sourceFiles(join(root, 'src'));
-    const runtimeFiles = files
-      .filter((path) => !path.endsWith('auth.schema.ts'))
-      .map((path) => ({ path, source: readFileSync(path, 'utf8') }));
+    // No exemption: the schema-generation config now lives in `prisma/`, so
+    // every file under `src/` is genuinely runtime.
+    const runtimeFiles = files.map((path) => ({
+      path,
+      source: readFileSync(path, 'utf8'),
+    }));
     const runtime = runtimeFiles.map(({ source }) => source).join('\n');
     expect(runtime).not.toMatch(
       /from ['"](?:bcrypt|jsonwebtoken|passport|jose)['"]/,

@@ -65,6 +65,7 @@ export const ModelName = {
   Debate: 'Debate',
   EnhancedMessage: 'EnhancedMessage',
   Interest: 'Interest',
+  UserInterest: 'UserInterest',
   LiveStream: 'LiveStream',
   Message: 'Message',
   Notification: 'Notification',
@@ -116,7 +117,7 @@ export const AdScalarFieldEnum = {
   pricing: 'pricing',
   campaign: 'campaign',
   advertiserId: 'advertiserId',
-  Status: 'Status',
+  status: 'status',
   callToAction: 'callToAction',
   analytics: 'analytics',
   review: 'review',
@@ -343,6 +344,16 @@ export const InterestScalarFieldEnum = {
 } as const
 
 export type InterestScalarFieldEnum = (typeof InterestScalarFieldEnum)[keyof typeof InterestScalarFieldEnum]
+
+
+export const UserInterestScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  interestId: 'interestId',
+  createdAt: 'createdAt'
+} as const
+
+export type UserInterestScalarFieldEnum = (typeof UserInterestScalarFieldEnum)[keyof typeof UserInterestScalarFieldEnum]
 
 
 export const LiveStreamScalarFieldEnum = {

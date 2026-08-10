@@ -1,3 +1,4 @@
+import type { Prisma, PrismaClient } from '../../prisma/generated/client';
 import { DomainError } from '../common/errors/domain.error';
 import type { AdStatus, JsonValue } from './ad.contract';
 import { AD_STATUSES } from './ad.contract';
@@ -9,9 +10,9 @@ export interface AdAdvertiser {
 }
 
 /**
- * A row of the canonical `ads` table. The legacy column is `Status`; this
- * boundary is the only place that name is allowed to exist, so every caller
- * above it reads and writes the API field `status`.
+ * A row of the canonical `ads` table. The legacy database column is the
+ * mixed-case `Status`; that name is now confined to a single `@map` in the
+ * Prisma schema, so nothing in TypeScript refers to it.
  */
 export interface AdRecord {
   readonly id: string;
@@ -110,186 +111,75 @@ const isWriteConflict = (error: unknown): boolean =>
   error !== null &&
   Reflect.get(error, 'code') === WRITE_CONFLICT_CODE;
 
-const adOperations = (delegate: object): AdTransactionClient => ({
-  async findById(id) {
-    const value = await invoke(delegate, 'findUnique', [
-      { where: { id }, include: advertiserInclude },
-    ]);
-    return value === null || value === undefined ? null : parseAdRecord(value);
-  },
-  async update(id, data, status) {
-    const value = await invoke(delegate, 'update', [
-      {
-        where: { id },
-        data: status === null ? { ...data } : { ...data, Status: status },
-        include: advertiserInclude,
-      },
-    ]);
-    return parseAdRecord(value);
-  },
-});
-
-export const createAdPrismaClient = (client: object): AdPrismaClient => {
-  const adDelegate = readObject(client, 'ad');
-  const userDelegate = readObject(client, 'user');
-  requireMethod(adDelegate, 'create');
-  requireMethod(adDelegate, 'findUnique');
-  requireMethod(adDelegate, 'findMany');
-  requireMethod(adDelegate, 'count');
-  requireMethod(adDelegate, 'update');
-  requireMethod(adDelegate, 'delete');
-  requireMethod(userDelegate, 'findUnique');
-
-  return {
-    async create(data, status) {
-      const value = await invoke(adDelegate, 'create', [
-        { data: { ...data, Status: status }, include: advertiserInclude },
-      ]);
-      return parseAdRecord(value);
-    },
-    async runSerializable<T>(
-      operation: (transaction: AdTransactionClient) => Promise<T>,
-    ): Promise<T> {
-      requireMethod(client, '$transaction');
-      for (let attempt = 0; attempt < SERIALIZABLE_ATTEMPTS; attempt += 1) {
-        // Captured in a box rather than read from the `$transaction` return
-        // value, which is untyped at this boundary.
-        const captured: { readonly value: T }[] = [];
-        try {
-          await invoke(client, '$transaction', [
-            async (transaction: unknown) => {
-              const scope = requireObject(transaction, 'transaction');
-              captured.push({
-                value: await operation(adOperations(readObject(scope, 'ad'))),
-              });
-            },
-            { isolationLevel: 'Serializable' },
-          ]);
-        } catch (error: unknown) {
-          if (!isWriteConflict(error)) throw error;
-          continue;
-        }
-        const [result] = captured;
-        if (result === undefined) invalidResult('transaction');
-        return result.value;
-      }
-      throw new DomainError(
-        'CONFLICT',
-        'That advertisement is being updated. Please try again.',
-      );
-    },
-    async findById(id) {
-      const value = await invoke(adDelegate, 'findUnique', [
-        { where: { id }, include: advertiserInclude },
-      ]);
-      return value === null || value === undefined
-        ? null
-        : parseAdRecord(value);
-    },
-    async findOwned({ advertiserId, status, skip, take }) {
-      const value = await invoke(adDelegate, 'findMany', [
-        {
-          where: ownedWhere(advertiserId, status),
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take,
-          include: advertiserInclude,
-        },
-      ]);
-      return parseAdRecords(value);
-    },
-    async countOwned(advertiserId, status) {
-      const value = await invoke(adDelegate, 'count', [
-        { where: ownedWhere(advertiserId, status) },
-      ]);
-      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
-        invalidResult('count');
-      }
-      return value;
-    },
-    async findRunning() {
-      const value = await invoke(adDelegate, 'findMany', [
-        { where: { Status: 'running' }, include: advertiserInclude },
-      ]);
-      return parseAdRecords(value);
-    },
-    async findByStatus({ status, skip, take }) {
-      const value = await invoke(adDelegate, 'findMany', [
-        {
-          where: { Status: status },
-          orderBy: { createdAt: 'desc' },
-          skip,
-          take,
-          include: advertiserInclude,
-        },
-      ]);
-      return parseAdRecords(value);
-    },
-    async countByStatus(status) {
-      const value = await invoke(adDelegate, 'count', [
-        { where: { Status: status } },
-      ]);
-      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
-        invalidResult('count');
-      }
-      return value;
-    },
-    async findCreatedBetween(advertiserId, from, to) {
-      const value = await invoke(adDelegate, 'findMany', [
-        {
-          where: { advertiserId, createdAt: { gte: from, lte: to } },
-          include: advertiserInclude,
-        },
-      ]);
-      return parseAdRecords(value);
-    },
-    async update(id, data, status) {
-      const value = await invoke(adDelegate, 'update', [
-        {
-          where: { id },
-          data: status === null ? { ...data } : { ...data, Status: status },
-          include: advertiserInclude,
-        },
-      ]);
-      return parseAdRecord(value);
-    },
-    async delete(id) {
-      await invoke(adDelegate, 'delete', [{ where: { id } }]);
-    },
-    async findViewer(id) {
-      const value = await invoke(userDelegate, 'findUnique', [
-        { where: { id }, select: viewerSelection },
-      ]);
-      if (value === null || value === undefined) return null;
-      const record = requireObject(value, 'viewer result');
-      return {
-        id: readString(record, 'id'),
-        age: readNullableNumber(record, 'age'),
-        location: readNullableString(record, 'location'),
-        followerCount: countFollowers(Reflect.get(record, 'followers')),
-      };
-    },
-  };
-};
-
 const advertiserInclude = {
   user: { select: { username: true, profilePicture: true, blueTick: true } },
-} as const;
+} satisfies Prisma.AdInclude;
 
-const viewerSelection = {
-  id: true,
-  age: true,
-  location: true,
-  followers: true,
-} as const;
+type AdRow = Prisma.AdGetPayload<{ include: typeof advertiserInclude }>;
 
 const ownedWhere = (
   advertiserId: string,
   status: AdStatus | null,
-): Readonly<Record<string, string>> =>
-  status === null ? { advertiserId } : { advertiserId, Status: status };
+): Prisma.AdWhereInput =>
+  status === null ? { advertiserId } : { advertiserId, status };
 
-const countFollowers = (value: unknown): number => {
+/**
+ * `AdWriteData` is assembled from validated request contracts rather than from
+ * Prisma input types, so the shape is checked at the contract layer. Prisma
+ * still validates column names and types against the schema at runtime.
+ */
+const writeInput = (
+  data: AdWriteData,
+  status: AdStatus | null,
+): Prisma.AdUncheckedUpdateInput =>
+  status === null ? { ...data } : { ...data, status };
+
+const toAdRecord = (row: AdRow): AdRecord =>
+  Object.freeze({
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    mediaType: row.mediaType,
+    mediaUrl: row.mediaUrl,
+    mediaUrls: Object.freeze([...row.mediaUrls]),
+    targetAudience: toJsonValue(row.targetAudience),
+    budget: toJsonValue(row.budget),
+    pricing: toJsonValue(row.pricing),
+    campaign: toJsonValue(row.campaign),
+    advertiserId: row.advertiserId,
+    status: readStatus(row.status),
+    callToAction: toJsonValue(row.callToAction),
+    analytics: toJsonValue(row.analytics),
+    review: toJsonValue(row.review),
+    placement: toJsonValue(row.placement),
+    frequency: toJsonValue(row.frequency),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    advertiser: readAdvertiser(row.user),
+  });
+
+/**
+ * `Ad.user` is a required relation, so a row without one only happens when the
+ * caller omitted the include. Preserved as `null` rather than a throw, matching
+ * the previous boundary.
+ */
+const readAdvertiser = (user: AdRow['user'] | null): AdAdvertiser | null =>
+  user === null || user === undefined
+    ? null
+    : Object.freeze({
+        username: user.username,
+        profilePicture: user.profilePicture,
+        blueTick: user.blueTick,
+      });
+
+/** `Ad.status` is still a free-text column, so the value needs narrowing. */
+const readStatus = (value: string): AdStatus => {
+  const match = AD_STATUSES.find((status) => status === value);
+  if (match === undefined) invalidResult('status');
+  return match;
+};
+
+const countFollowers = (value: Prisma.JsonValue): number => {
   if (Array.isArray(value)) return value.length;
   if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
     return value;
@@ -297,52 +187,140 @@ const countFollowers = (value: unknown): number => {
   return 0;
 };
 
-const parseAdRecords = (value: unknown): readonly AdRecord[] => {
-  if (!Array.isArray(value)) invalidResult('findMany');
-  return value.map(parseAdRecord);
-};
+const adOperations = (
+  delegate: Prisma.TransactionClient['ad'],
+): AdTransactionClient => ({
+  async findById(id) {
+    const row = await delegate.findUnique({
+      where: { id },
+      include: advertiserInclude,
+    });
+    return row === null ? null : toAdRecord(row);
+  },
+  async update(id, data, status) {
+    return toAdRecord(
+      await delegate.update({
+        where: { id },
+        data: writeInput(data, status),
+        include: advertiserInclude,
+      }),
+    );
+  },
+});
 
-const parseAdRecord = (value: unknown): AdRecord => {
-  const record = requireObject(value, 'ad result');
-  return Object.freeze({
-    id: readString(record, 'id'),
-    title: readString(record, 'title'),
-    description: readString(record, 'description'),
-    mediaType: readString(record, 'mediaType'),
-    mediaUrl: readNullableString(record, 'mediaUrl'),
-    mediaUrls: Object.freeze(readStringArray(record, 'mediaUrls')),
-    targetAudience: readJson(record, 'targetAudience'),
-    budget: readJson(record, 'budget'),
-    pricing: readJson(record, 'pricing'),
-    campaign: readJson(record, 'campaign'),
-    advertiserId: readString(record, 'advertiserId'),
-    status: readStatus(record),
-    callToAction: readJson(record, 'callToAction'),
-    analytics: readJson(record, 'analytics'),
-    review: readJson(record, 'review'),
-    placement: readJson(record, 'placement'),
-    frequency: readJson(record, 'frequency'),
-    createdAt: readDate(record, 'createdAt'),
-    updatedAt: readDate(record, 'updatedAt'),
-    advertiser: readAdvertiser(Reflect.get(record, 'user')),
-  });
-};
+export const createAdPrismaClient = (db: PrismaClient): AdPrismaClient => ({
+  async create(data, status) {
+    const row = await db.ad.create({
+      data: { ...data, status } as Prisma.AdUncheckedCreateInput,
+      include: advertiserInclude,
+    });
+    return toAdRecord(row);
+  },
 
-const readStatus = (record: object): AdStatus => {
-  const value: unknown = Reflect.get(record, 'Status');
-  const match = AD_STATUSES.find((status) => status === value);
-  if (match === undefined) invalidResult('Status');
-  return match;
-};
+  async runSerializable<T>(
+    operation: (transaction: AdTransactionClient) => Promise<T>,
+  ): Promise<T> {
+    for (let attempt = 0; attempt < SERIALIZABLE_ATTEMPTS; attempt += 1) {
+      try {
+        return await db.$transaction(
+          async (transaction) => operation(adOperations(transaction.ad)),
+          { isolationLevel: 'Serializable' },
+        );
+      } catch (error: unknown) {
+        if (!isWriteConflict(error)) throw error;
+      }
+    }
+    throw new DomainError(
+      'CONFLICT',
+      'That advertisement is being updated. Please try again.',
+    );
+  },
 
-const readAdvertiser = (value: unknown): AdAdvertiser | null => {
-  if (typeof value !== 'object' || value === null) return null;
-  return Object.freeze({
-    username: readString(value, 'username'),
-    profilePicture: readNullableString(value, 'profilePicture'),
-    blueTick: Reflect.get(value, 'blueTick') === true,
-  });
-};
+  async findById(id) {
+    const row = await db.ad.findUnique({
+      where: { id },
+      include: advertiserInclude,
+    });
+    return row === null ? null : toAdRecord(row);
+  },
+
+  async findOwned({ advertiserId, status, skip, take }) {
+    const rows = await db.ad.findMany({
+      where: ownedWhere(advertiserId, status),
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: advertiserInclude,
+    });
+    return rows.map(toAdRecord);
+  },
+
+  async countOwned(advertiserId, status) {
+    return db.ad.count({ where: ownedWhere(advertiserId, status) });
+  },
+
+  async findRunning() {
+    const rows = await db.ad.findMany({
+      where: { status: 'running' },
+      include: advertiserInclude,
+    });
+    return rows.map(toAdRecord);
+  },
+
+  async findByStatus({ status, skip, take }) {
+    const rows = await db.ad.findMany({
+      where: { status },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: advertiserInclude,
+    });
+    return rows.map(toAdRecord);
+  },
+
+  async countByStatus(status) {
+    return db.ad.count({ where: { status } });
+  },
+
+  async findCreatedBetween(advertiserId, from, to) {
+    const rows = await db.ad.findMany({
+      where: { advertiserId, createdAt: { gte: from, lte: to } },
+      include: advertiserInclude,
+    });
+    return rows.map(toAdRecord);
+  },
+
+  async update(id, data, status) {
+    return toAdRecord(
+      await db.ad.update({
+        where: { id },
+        data: writeInput(data, status),
+        include: advertiserInclude,
+      }),
+    );
+  },
+
+  async delete(id) {
+    await db.ad.delete({ where: { id } });
+  },
+
+  async findViewer(id) {
+    const row = await db.user.findUnique({
+      where: { id },
+      select: { id: true, location: true, followers: true },
+    });
+    if (row === null) return null;
+    return {
+      id: row.id,
+      // `users` has no age column. The previous boundary selected `age`, which
+      // made every call fail Prisma validation; age targeting is skipped for a
+      // null age, which is the behaviour the matcher already handles.
+      age: null,
+      location: row.location,
+      followerCount: countFollowers(row.followers),
+    };
+  },
+});
 
 /**
  * Prisma returns `Json` columns as arbitrary values. Normalizing here keeps
@@ -363,81 +341,6 @@ export const toJsonValue = (value: unknown): JsonValue => {
   }
   return null;
 };
-
-const readJson = (record: object, key: string): JsonValue =>
-  toJsonValue(Reflect.get(record, key));
-
-const invoke = async (
-  target: object,
-  method: string,
-  args: readonly unknown[],
-): Promise<unknown> => {
-  const candidate: unknown = Reflect.get(target, method);
-  if (typeof candidate !== 'function') missingBoundary(method);
-  return Promise.resolve(Reflect.apply(candidate, target, args));
-};
-
-const requireMethod = (target: object, method: string): void => {
-  if (typeof Reflect.get(target, method) !== 'function') {
-    missingBoundary(method);
-  }
-};
-
-const readObject = (target: object, key: string): object =>
-  requireObject(Reflect.get(target, key), key);
-
-const requireObject = (value: unknown, key: string): object => {
-  if (typeof value !== 'object' || value === null) missingBoundary(key);
-  return value;
-};
-
-const readString = (value: object, key: string): string => {
-  const property: unknown = Reflect.get(value, key);
-  if (typeof property !== 'string') invalidResult(key);
-  return property;
-};
-
-const readNullableString = (value: object, key: string): string | null => {
-  const property: unknown = Reflect.get(value, key);
-  if (property === null || property === undefined) return null;
-  if (typeof property !== 'string') invalidResult(key);
-  return property;
-};
-
-const readNullableNumber = (value: object, key: string): number | null => {
-  const property: unknown = Reflect.get(value, key);
-  if (property === null || property === undefined) return null;
-  if (typeof property !== 'number' || !Number.isFinite(property)) {
-    invalidResult(key);
-  }
-  return property;
-};
-
-const readStringArray = (value: object, key: string): string[] => {
-  const property: unknown = Reflect.get(value, key);
-  if (property === null || property === undefined) return [];
-  if (!Array.isArray(property)) invalidResult(key);
-  return property.map((entry: unknown) => {
-    if (typeof entry !== 'string') invalidResult(key);
-    return entry;
-  });
-};
-
-const readDate = (value: object, key: string): Date => {
-  const property: unknown = Reflect.get(value, key);
-  if (!(property instanceof Date) || Number.isNaN(property.getTime())) {
-    invalidResult(key);
-  }
-  return property;
-};
-
-function missingBoundary(name: string): never {
-  throw new DomainError(
-    'DATABASE_UNAVAILABLE',
-    'The advertising service is temporarily unavailable.',
-    { boundary: [name] },
-  );
-}
 
 function invalidResult(name: string): never {
   throw new DomainError(

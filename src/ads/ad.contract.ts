@@ -151,7 +151,7 @@ export interface AdAdvertiserView {
 
 /**
  * The legacy response shape. `Status` is deliberately absent: Express relied on
- * `Status: undefined` being dropped by `res.json`, which is not a guarantee we
+ * `status: undefined` being dropped by `res.json`, which is not a guarantee we
  * want to depend on, so the internal column never enters the projection.
  */
 export interface AdView {

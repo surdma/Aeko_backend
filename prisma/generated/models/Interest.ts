@@ -206,6 +206,7 @@ export type InterestWhereInput = {
   isActive?: Prisma.BoolFilter<"Interest"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Interest"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Interest"> | Date | string
+  users?: Prisma.UserInterestListRelationFilter
 }
 
 export type InterestOrderByWithRelationInput = {
@@ -217,6 +218,7 @@ export type InterestOrderByWithRelationInput = {
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  users?: Prisma.UserInterestOrderByRelationAggregateInput
 }
 
 export type InterestWhereUniqueInput = Prisma.AtLeast<{
@@ -231,6 +233,7 @@ export type InterestWhereUniqueInput = Prisma.AtLeast<{
   isActive?: Prisma.BoolFilter<"Interest"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Interest"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Interest"> | Date | string
+  users?: Prisma.UserInterestListRelationFilter
 }, "id" | "name">
 
 export type InterestOrderByWithAggregationInput = {
@@ -270,6 +273,7 @@ export type InterestCreateInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  users?: Prisma.UserInterestCreateNestedManyWithoutInterestInput
 }
 
 export type InterestUncheckedCreateInput = {
@@ -281,6 +285,7 @@ export type InterestUncheckedCreateInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
+  users?: Prisma.UserInterestUncheckedCreateNestedManyWithoutInterestInput
 }
 
 export type InterestUpdateInput = {
@@ -292,6 +297,7 @@ export type InterestUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserInterestUpdateManyWithoutInterestNestedInput
 }
 
 export type InterestUncheckedUpdateInput = {
@@ -303,6 +309,7 @@ export type InterestUncheckedUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserInterestUncheckedUpdateManyWithoutInterestNestedInput
 }
 
 export type InterestCreateManyInput = {
@@ -371,6 +378,114 @@ export type InterestMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type InterestScalarRelationFilter = {
+  is?: Prisma.InterestWhereInput
+  isNot?: Prisma.InterestWhereInput
+}
+
+export type InterestCreateNestedOneWithoutUsersInput = {
+  create?: Prisma.XOR<Prisma.InterestCreateWithoutUsersInput, Prisma.InterestUncheckedCreateWithoutUsersInput>
+  connectOrCreate?: Prisma.InterestCreateOrConnectWithoutUsersInput
+  connect?: Prisma.InterestWhereUniqueInput
+}
+
+export type InterestUpdateOneRequiredWithoutUsersNestedInput = {
+  create?: Prisma.XOR<Prisma.InterestCreateWithoutUsersInput, Prisma.InterestUncheckedCreateWithoutUsersInput>
+  connectOrCreate?: Prisma.InterestCreateOrConnectWithoutUsersInput
+  upsert?: Prisma.InterestUpsertWithoutUsersInput
+  connect?: Prisma.InterestWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.InterestUpdateToOneWithWhereWithoutUsersInput, Prisma.InterestUpdateWithoutUsersInput>, Prisma.InterestUncheckedUpdateWithoutUsersInput>
+}
+
+export type InterestCreateWithoutUsersInput = {
+  id?: string
+  name: string
+  displayName: string
+  description?: string | null
+  icon?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type InterestUncheckedCreateWithoutUsersInput = {
+  id?: string
+  name: string
+  displayName: string
+  description?: string | null
+  icon?: string | null
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type InterestCreateOrConnectWithoutUsersInput = {
+  where: Prisma.InterestWhereUniqueInput
+  create: Prisma.XOR<Prisma.InterestCreateWithoutUsersInput, Prisma.InterestUncheckedCreateWithoutUsersInput>
+}
+
+export type InterestUpsertWithoutUsersInput = {
+  update: Prisma.XOR<Prisma.InterestUpdateWithoutUsersInput, Prisma.InterestUncheckedUpdateWithoutUsersInput>
+  create: Prisma.XOR<Prisma.InterestCreateWithoutUsersInput, Prisma.InterestUncheckedCreateWithoutUsersInput>
+  where?: Prisma.InterestWhereInput
+}
+
+export type InterestUpdateToOneWithWhereWithoutUsersInput = {
+  where?: Prisma.InterestWhereInput
+  data: Prisma.XOR<Prisma.InterestUpdateWithoutUsersInput, Prisma.InterestUncheckedUpdateWithoutUsersInput>
+}
+
+export type InterestUpdateWithoutUsersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type InterestUncheckedUpdateWithoutUsersInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  displayName?: Prisma.StringFieldUpdateOperationsInput | string
+  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  icon?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type InterestCountOutputType
+ */
+
+export type InterestCountOutputType = {
+  users: number
+}
+
+export type InterestCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  users?: boolean | InterestCountOutputTypeCountUsersArgs
+}
+
+/**
+ * InterestCountOutputType without action
+ */
+export type InterestCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the InterestCountOutputType
+   */
+  select?: Prisma.InterestCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * InterestCountOutputType without action
+ */
+export type InterestCountOutputTypeCountUsersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.UserInterestWhereInput
+}
 
 
 export type InterestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -382,6 +497,8 @@ export type InterestSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  users?: boolean | Prisma.Interest$usersArgs<ExtArgs>
+  _count?: boolean | Prisma.InterestCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["interest"]>
 
 export type InterestSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -418,10 +535,18 @@ export type InterestSelectScalar = {
 }
 
 export type InterestOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "displayName" | "description" | "icon" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["interest"]>
+export type InterestInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  users?: boolean | Prisma.Interest$usersArgs<ExtArgs>
+  _count?: boolean | Prisma.InterestCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type InterestIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type InterestIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $InterestPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Interest"
-  objects: {}
+  objects: {
+    users: Prisma.$UserInterestPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     name: string
@@ -825,6 +950,7 @@ readonly fields: InterestFieldRefs;
  */
 export interface Prisma__InterestClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  users<T extends Prisma.Interest$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Interest$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserInterestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -879,6 +1005,10 @@ export type InterestFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.Inte
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * Filter, which Interest to fetch.
    */
   where: Prisma.InterestWhereUniqueInput
@@ -897,6 +1027,10 @@ export type InterestFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Extensio
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * Filter, which Interest to fetch.
    */
   where: Prisma.InterestWhereUniqueInput
@@ -914,6 +1048,10 @@ export type InterestFindFirstArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Omit specific fields from the Interest
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
   /**
    * Filter, which Interest to fetch.
    */
@@ -963,6 +1101,10 @@ export type InterestFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extension
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * Filter, which Interest to fetch.
    */
   where?: Prisma.InterestWhereInput
@@ -1010,6 +1152,10 @@ export type InterestFindManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Omit specific fields from the Interest
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
   /**
    * Filter, which Interests to fetch.
    */
@@ -1059,6 +1205,10 @@ export type InterestCreateArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * The data needed to create a Interest.
    */
   data: Prisma.XOR<Prisma.InterestCreateInput, Prisma.InterestUncheckedCreateInput>
@@ -1106,6 +1256,10 @@ export type InterestUpdateArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Omit specific fields from the Interest
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
   /**
    * The data needed to update a Interest.
    */
@@ -1173,6 +1327,10 @@ export type InterestUpsertArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * The filter to search for the Interest to update in case it exists.
    */
   where: Prisma.InterestWhereUniqueInput
@@ -1199,6 +1357,10 @@ export type InterestDeleteArgs<ExtArgs extends runtime.Types.Extensions.Internal
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
+  /**
    * Filter which Interest to delete.
    */
   where: Prisma.InterestWhereUniqueInput
@@ -1219,6 +1381,30 @@ export type InterestDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
 }
 
 /**
+ * Interest.users
+ */
+export type Interest$usersArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the UserInterest
+   */
+  select?: Prisma.UserInterestSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the UserInterest
+   */
+  omit?: Prisma.UserInterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInterestInclude<ExtArgs> | null
+  where?: Prisma.UserInterestWhereInput
+  orderBy?: Prisma.UserInterestOrderByWithRelationInput | Prisma.UserInterestOrderByWithRelationInput[]
+  cursor?: Prisma.UserInterestWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.UserInterestScalarFieldEnum | Prisma.UserInterestScalarFieldEnum[]
+}
+
+/**
  * Interest without action
  */
 export type InterestDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1230,4 +1416,8 @@ export type InterestDefaultArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Omit specific fields from the Interest
    */
   omit?: Prisma.InterestOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.InterestInclude<ExtArgs> | null
 }
