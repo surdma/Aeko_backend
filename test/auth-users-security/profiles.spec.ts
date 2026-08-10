@@ -37,6 +37,7 @@ const profileRecord = Object.freeze({
   coverPicture: null,
   bio: null,
   location: null,
+  age: null,
   blueTick: true,
   goldenTick: false,
   subscriptionStatus: 'active',
@@ -78,7 +79,12 @@ const fakeClient = {
     update: (input: unknown): Promise<unknown> => {
       capturedUpdate = input;
       if (updateError) return Promise.reject(updateError);
-      return Promise.resolve({ ...profileRecord, username: 'analytical-ada' });
+      const data = readData(input);
+      return Promise.resolve({
+        ...profileRecord,
+        ...(typeof data === 'object' && data !== null ? data : {}),
+        username: 'analytical-ada',
+      });
     },
   },
   post: {
@@ -211,6 +217,31 @@ describe('profile endpoints', () => {
     expect(result).not.toHaveProperty('followers');
     expect(result).not.toHaveProperty('_count');
     expect(result).not.toHaveProperty('password');
+  });
+
+  it('accepts an optional age, returns it, and clears it with null', async () => {
+    await expect(
+      createService().updateProfile(principal.userId, { age: 30 }),
+    ).resolves.toMatchObject({ age: 30 });
+    expect(readData(capturedUpdate)).toMatchObject({ age: 30 });
+
+    await expect(
+      createService().updateProfile(principal.userId, { age: null }),
+    ).resolves.toMatchObject({ age: null });
+    expect(readData(capturedUpdate)).toMatchObject({ age: null });
+  });
+
+  it('omits age from the update entirely when it is not supplied', async () => {
+    await createService().updateProfile(principal.userId, { bio: 'hi' });
+    expect(readData(capturedUpdate)).not.toHaveProperty('age');
+  });
+
+  it('rejects an age outside the accepted range rather than clamping it', async () => {
+    for (const age of [12, 121, 30.5, '30']) {
+      await expect(
+        createService().updateProfile(principal.userId, { age }),
+      ).rejects.toMatchObject({ code: 'VALIDATION_FAILED' });
+    }
   });
 
   it('updates only username, bio, and location', async () => {

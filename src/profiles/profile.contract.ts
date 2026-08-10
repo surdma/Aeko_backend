@@ -19,6 +19,12 @@ export interface UserProfile extends UserSummary {
   readonly lastLoginAt: string | null;
   readonly postsCount: number;
   readonly bookmarksCount: number;
+  /**
+   * Null when the owner never supplied one. Only ever returned on the
+   * owner's own profile — `UserSummary`, which is what other users see, does
+   * not carry it.
+   */
+  readonly age: number | null;
 }
 
 export type UserProfileSource = UserProjectionSource &
@@ -32,6 +38,7 @@ export type UserProfileSource = UserProjectionSource &
     | 'twoFactorEnabled'
     | 'updatedAt'
     | 'lastLoginAt'
+    | 'age'
   > & {
     readonly postsCount: number;
     readonly bookmarksCount: number;
@@ -49,19 +56,37 @@ export const projectUserProfile = (user: UserProfileSource): UserProfile => ({
   lastLoginAt: user.lastLoginAt?.toISOString() ?? null,
   postsCount: user.postsCount,
   bookmarksCount: user.bookmarksCount,
+  age: user.age ?? null,
 });
 
 export interface ProfileUpdate {
   readonly username?: string;
   readonly bio?: string | null;
   readonly location?: string | null;
+  /** Null clears a previously supplied age. */
+  readonly age?: number | null;
 }
+
+/**
+ * Ad targeting buckets start at `under-18`, so minors are representable; 13 is
+ * the floor. An age outside the range is a validation error rather than a
+ * silent clamp, so a client bug cannot quietly rewrite someone's age.
+ */
+const MINIMUM_AGE = 13;
+const MAXIMUM_AGE = 120;
 
 const profileUpdateSchema = z
   .object({
     username: z.string().trim().min(1).max(100).optional(),
     bio: z.string().trim().max(1000).nullable().optional(),
     location: z.string().trim().max(200).nullable().optional(),
+    age: z
+      .number()
+      .int()
+      .min(MINIMUM_AGE)
+      .max(MAXIMUM_AGE)
+      .nullable()
+      .optional(),
   })
   .strict()
   .refine((value) => Object.keys(value).length > 0, {
@@ -99,6 +124,7 @@ export const parseProfileUpdate = (input: unknown): ProfileUpdate => {
     ...(result.data.location !== undefined
       ? { location: result.data.location }
       : {}),
+    ...(result.data.age !== undefined ? { age: result.data.age } : {}),
   });
 };
 

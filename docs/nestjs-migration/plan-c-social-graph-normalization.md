@@ -21,7 +21,10 @@ shipped.
 - `test/migration/social-graph-backfill.spec.ts` runs the real migration
   against a real Postgres (PGlite, in memory) seeded with the awkward shapes,
   and asserts the reconciliation outcome. Run with `pnpm test:migration`.
-- Ad age targeting is live again against the new `users.age`.
+- Ad age targeting is live again against the new `users.age`, and `age` is an
+  optional field on the profile update contract (13-120, null clears it). It is
+  returned on the owner's own profile only — `UserSummary`, which is what other
+  users see, does not carry it.
 
 ## Still to do
 
@@ -164,10 +167,10 @@ exactly as they are.
 
 ## Known issues found during A/B, not yet addressed
 
-- ~~`findViewer` selected a non-existent `users.age`.~~ Resolved: `age` is now
-  a real nullable column and targeting reads it. Nothing populates it yet — no
-  endpoint accepts an age — so every viewer is still `null` and the matcher
-  skips the age check. Exposing it needs a profile-contract change.
+- ~~`findViewer` selected a non-existent `users.age`.~~ Resolved: `age` is a
+  real nullable column, `PATCH` on the profile accepts it, and ad targeting
+  reads it. Existing rows are all null until users supply one, and the matcher
+  skips the age check for a null age rather than excluding the viewer.
 - `AdWriteData` and `PostWriteData` are still index-signature types assembled
   from contracts rather than Prisma input types. The update path now
   type-checks against Prisma; `create` still needs a cast because required

@@ -24,6 +24,7 @@ export interface ProfileRecord {
   readonly createdAt: Date;
   readonly updatedAt: Date;
   readonly lastLoginAt: Date | null;
+  readonly age: number | null;
   readonly followersCount: number;
   readonly postsCount: number;
   readonly bookmarksCount: number;
@@ -96,6 +97,7 @@ const profileSelection = {
   createdAt: true,
   updatedAt: true,
   lastLoginAt: true,
+  age: true,
   followers: true,
   _count: { select: { posts_posts_userIdTousers: true, bookmarks: true } },
 } satisfies Prisma.UserSelect;
@@ -123,6 +125,7 @@ const toProfile = (row: ProfileRow): ProfileRecord => ({
   createdAt: row.createdAt,
   updatedAt: row.updatedAt,
   lastLoginAt: row.lastLoginAt,
+  age: row.age,
   followersCount: readFollowerCount(row.followers),
   postsCount: row._count.posts_posts_userIdTousers,
   bookmarksCount: row._count.bookmarks,
