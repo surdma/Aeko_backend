@@ -128,17 +128,12 @@ export class NotificationsService {
   /**
    * Realtime delivery. Subscribes only to the caller's own channel, so a
    * subscriber cannot observe another recipient even if the broker were to
-   * deliver a foreign message.
+   * deliver a foreign message. A bus is always installed, so this never
+   * reports the capability as missing.
    */
   async subscribe(
     principal: AuthenticatedPrincipal,
   ): Promise<NotificationSubscription> {
-    if (!this.bus.enabled) {
-      throw new DomainError(
-        'PROVIDER_UNAVAILABLE',
-        'Realtime notifications are not available.',
-      );
-    }
     return this.bus.subscribe(principal.userId);
   }
 

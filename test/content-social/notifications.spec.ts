@@ -18,6 +18,7 @@ import type {
 import {
   NotificationBusPort,
   type NotificationSubscription,
+  type PublishOutcome,
 } from '../../src/notifications/notification-bus.port';
 import { NotificationsController } from '../../src/notifications/notifications.controller';
 import { NotificationsService } from '../../src/notifications/notifications.service';
@@ -73,14 +74,14 @@ const viewer: AuthenticatedPrincipal = {
 const intruder: AuthenticatedPrincipal = { ...viewer, userId: 'intruder' };
 
 class StubBus extends NotificationBusPort {
-  enabled = true;
+  readonly transport = 'in-process' as const;
   published: NotificationEvent[] = [];
   subscribedTo: string[] = [];
   closed = 0;
 
-  publish(notification: NotificationEvent): Promise<void> {
+  publish(notification: NotificationEvent): Promise<PublishOutcome> {
     this.published.push(notification);
-    return Promise.resolve();
+    return Promise.resolve('delivered');
   }
 
   subscribe(recipientId: string): Promise<NotificationSubscription> {
@@ -327,13 +328,12 @@ describe('notification realtime delivery', () => {
     expect(harness.bus.closed).toBe(1);
   });
 
-  it('reports unavailable when no broker is configured', async () => {
+  it('still subscribes when only the in-process transport is available', async () => {
+    // Without Redis the stream degrades to single-instance delivery rather
+    // than being switched off.
     const harness = createHarness([]);
-    harness.bus.enabled = false;
-
-    await expect(harness.service.subscribe(viewer)).rejects.toMatchObject({
-      code: 'PROVIDER_UNAVAILABLE',
-    });
+    await expect(harness.service.subscribe(viewer)).resolves.toBeDefined();
+    expect(harness.bus.transport).toBe('in-process');
   });
 
   it('scopes each recipient to a distinct channel', () => {
@@ -415,10 +415,12 @@ describe('notification routes', () => {
       true,
     );
 
-    // The stream is additive: the legacy inbox count is unchanged.
+    // Every non-legacy handler must be listed here. Anything added without
+    // updating this list fails, so the migrated surface cannot drift.
+    const ADDITIONS = ['stream', 'realtimeHealth'];
     const legacy = Object.getOwnPropertyNames(
       NotificationsController.prototype,
-    ).filter((name) => name !== 'constructor' && name !== 'stream');
+    ).filter((name) => name !== 'constructor' && !ADDITIONS.includes(name));
     expect(legacy).toHaveLength(8);
   });
 

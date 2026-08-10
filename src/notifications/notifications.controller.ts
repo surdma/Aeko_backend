@@ -20,6 +20,10 @@ import {
   type NotificationSettings,
   type NotificationView,
 } from './notification.contract';
+import {
+  NotificationRelayService,
+  type RelayHealth,
+} from './notification-relay.service';
 import { NotificationsService } from './notifications.service';
 
 /** Keeps proxies from idling out an otherwise silent connection. */
@@ -33,7 +37,21 @@ interface StreamMessage {
 @Controller('api/notifications')
 @UseGuards(SessionGuard)
 export class NotificationsController {
-  constructor(private readonly notifications: NotificationsService) {}
+  constructor(
+    private readonly notifications: NotificationsService,
+    private readonly relay: NotificationRelayService,
+  ) {}
+
+  /**
+   * Realtime delivery health. Reports which transport is in force so an
+   * operator is never left assuming cross-instance fan-out when only
+   * in-process delivery is configured, and surfaces undelivered counts rather
+   * than letting a broker outage stay silent.
+   */
+  @Get('realtime-health')
+  realtimeHealth(): RelayHealth {
+    return this.relay.health();
+  }
 
   // Literal paths are declared before `:id`.
   @Get('settings')
