@@ -252,11 +252,48 @@ The stream therefore combines:
    catches other producers, deduplicated by notification id and watermarked by
    `createdAt` so a reconnect never replays.
 
-Polling is a deliberate cost. It is the only mechanism that is correct while a
-second writer exists and there is no shared broker declared in the stack.
-**Open decision for the owner:** if a Postgres `LISTEN`/`NOTIFY` channel or a
-Redis dependency is acceptable, the poll can be dropped for push. That is a
-dependency and infrastructure choice, so it is not made here.
+**Decision (owner, 2026-08-10): Redis for true push, BullMQ for the relay.**
+
+Redis pub/sub replaces the per-connection poll for fan-out. One important
+caveat drove the rest of the design:
+
+> Redis pub/sub alone does **not** close the producer gap. The legacy Express
+> service writes notifications straight to Postgres and will never call
+> `PUBLISH`. A pub/sub-only stream therefore still misses every legacy-written
+> notification — which today is most of them. Redis fixes *fan-out across
+> instances*, not *discovery of writes we did not make*.
+
+So the design is three parts, each doing one job:
+
+1. **`NotificationBusPort` (Redis pub/sub)** — fan-out. A notification this
+   service writes is published on `aeko:notifications:<recipientId>`; every
+   instance holding an SSE connection for that recipient delivers it. This is
+   the true-push path and it is instant.
+2. **`NotificationRelay` (BullMQ repeatable job)** — discovery. A single
+   cluster-wide job tails the `notifications` table on a short interval for
+   rows this service did not publish (legacy Express, future workers, manual
+   inserts) and publishes them to the same Redis channel. BullMQ is used here
+   because the work genuinely needs a scheduler with a single owner across
+   instances: a naive `setInterval` in every replica would republish the same
+   rows N times. The relay carries a `createdAt` watermark plus a bounded
+   recently-seen id set so a row is published exactly once.
+3. **SSE endpoint** — transport. Subscribes to the recipient's channel only,
+   emits `NotificationView`, and heartbeats so proxies do not idle out.
+
+This removes the per-connection poll: the cost becomes one relay poll for the
+whole cluster instead of one per open connection, and it stays correct while a
+second writer exists. When Express is retired, deleting the relay leaves pure
+push with no other change.
+
+BullMQ is deliberately **not** introduced anywhere else in this task. Push-token
+delivery, email fan-out, and digest batching are real queue use cases, but none
+of them is an existing legacy behavior, and inventing them here would be feature
+creep rather than migration.
+
+**Client note:** `EventSource` cannot send an `Authorization` header, so
+bearer-token clients cannot use the stream directly; cookie-session browser
+clients can. Bearer clients keep using `GET /api/notifications` exactly as
+today. This is documented, not worked around.
 
 - [ ] Assert the stream requires a session and rejects an anonymous connection.
 - [ ] Assert one recipient never receives another recipient's notification.

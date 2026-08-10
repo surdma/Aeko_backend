@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import type { JsonValue } from '../common/json/json-value';
+import { toJsonValue, type JsonValue } from '../common/json/json-value';
 import {
   boundedText,
   parseWithScope,
@@ -30,6 +30,8 @@ export interface NotificationListQuery {
   readonly page: number;
   readonly limit: number;
   readonly unreadOnly: boolean;
+  /** Legacy accepted `?type=` to filter the inbox by notification kind. */
+  readonly type: string | null;
 }
 
 export interface NotificationView {
@@ -105,6 +107,7 @@ const listQuerySchema = z
       .union([z.boolean(), z.enum(['true', 'false'])])
       .transform((value) => value === true || value === 'true')
       .default(false),
+    type: boundedText(100).nullable().default(null),
   })
   .strip();
 
@@ -135,3 +138,75 @@ export const parseNotificationListQuery = (
   input: unknown,
 ): NotificationListQuery =>
   Object.freeze(parseWithScope(listQuerySchema, input, 'notification query'));
+
+/**
+ * A notification as delivered over the realtime stream. It is the same shape
+ * the REST inbox returns plus the recipient, so a subscriber can assert the
+ * event is addressed to it.
+ */
+export interface NotificationEvent extends NotificationView {
+  readonly recipientId: string;
+}
+
+const eventSchema = z
+  .object({
+    id: boundedText(200),
+    recipientId: boundedText(200),
+    type: boundedText(100),
+    title: z.string().nullable(),
+    message: z.string().nullable(),
+    entityId: z.string().nullable(),
+    entityType: z.string().nullable(),
+    read: z.boolean(),
+    metadata: z.unknown(),
+    sender: z.unknown(),
+    createdAt: z.string(),
+  })
+  .strip();
+
+/**
+ * Broker payloads are untrusted input like any other: a malformed or foreign
+ * message is dropped rather than propagated to a subscriber.
+ */
+export const parseNotificationEvent = (
+  payload: string,
+): NotificationEvent | null => {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(payload);
+  } catch {
+    return null;
+  }
+  const result = eventSchema.safeParse(raw);
+  if (!result.success) return null;
+  const value = result.data;
+  return Object.freeze({
+    id: value.id,
+    recipientId: value.recipientId,
+    type: value.type,
+    title: value.title,
+    message: value.message,
+    entityId: value.entityId,
+    entityType: value.entityType,
+    read: value.read,
+    metadata: toJsonValue(value.metadata),
+    sender: readAuthorView(value.sender),
+    createdAt: value.createdAt,
+  });
+};
+
+const readAuthorView = (value: unknown): PostAuthorView | null => {
+  if (typeof value !== 'object' || value === null) return null;
+  const read = (key: string): string | null => {
+    const found: unknown = Reflect.get(value, key);
+    return typeof found === 'string' ? found : null;
+  };
+  return Object.freeze({
+    id: read('id'),
+    name: read('name'),
+    username: read('username'),
+    profilePicture: read('profilePicture'),
+    blueTick: Reflect.get(value, 'blueTick') === true,
+    goldenTick: Reflect.get(value, 'goldenTick') === true,
+  });
+};

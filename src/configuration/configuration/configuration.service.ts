@@ -22,6 +22,12 @@ export interface AppConfig {
   readonly betterAuthUrl: string;
   readonly trustedOrigins: readonly string[];
   readonly proxyHops: number;
+  /**
+   * Absent means realtime notification delivery is disabled: the REST inbox is
+   * unaffected and the SSE stream reports the capability as unavailable rather
+   * than opening a connection that would never emit.
+   */
+  readonly redisUrl: string | null;
   readonly providerCredentials: ProviderCredentials;
 }
 
@@ -47,6 +53,16 @@ const environmentSchema = z
     CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
     CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
     CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
+    REDIS_URL: z
+      .string()
+      .trim()
+      .min(1)
+      .refine(
+        (value) =>
+          value.startsWith('redis://') || value.startsWith('rediss://'),
+        { message: 'must be a redis:// or rediss:// URL' },
+      )
+      .optional(),
   })
   .superRefine((value, context) => {
     if (
@@ -133,6 +149,7 @@ export function loadAppConfig(environment: NodeJS.ProcessEnv): AppConfig {
     ),
     trustedOrigins: Object.freeze(trustedOrigins),
     proxyHops: parsed.data.TRUST_PROXY,
+    redisUrl: parsed.data.REDIS_URL ?? null,
     providerCredentials,
   });
 }
@@ -177,5 +194,10 @@ export class ConfigurationService {
 
   get value(): AppConfig {
     return this.configuration;
+  }
+
+  /** Null disables realtime notification delivery; REST is unaffected. */
+  get redisUrl(): string | null {
+    return this.configuration.redisUrl;
   }
 }

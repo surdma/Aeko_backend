@@ -230,11 +230,14 @@ describe('status contracts', () => {
 
 describe('notification contracts', () => {
   it('bounds the inbox and validates settings and tokens', () => {
+    // Legacy accepted `?type=` to filter the inbox by notification kind.
     expect(parseNotificationListQuery({ limit: '900' })).toEqual({
       page: 1,
       limit: 50,
       unreadOnly: false,
+      type: null,
     });
+    expect(parseNotificationListQuery({ type: 'LIKE' }).type).toBe('LIKE');
     // Legacy persisted the raw request body; the nested shape is now validated
     // and merged onto the documented defaults.
     const settings = parseNotificationSettings({
