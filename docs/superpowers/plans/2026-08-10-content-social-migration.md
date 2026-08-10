@@ -207,7 +207,7 @@ Register exact routes `POST /api/comments/:postId`, `POST /api/comments/reply/:c
 
 **Interfaces:** Produces `create`, `list`, `remove`, `react`, and `reshare`, preserving expiry semantics and viewer scoping.
 
-- [ ] **Step 1: Write RED, implement, then run GREEN**
+- [x] **Step 1: Write RED, implement, then run GREEN**
 
 Register exact routes `POST /api/status`, `GET /api/status`, `DELETE /api/status/:id`, `POST /api/status/:id/react`, `POST /api/status/:id/reshare`. Expired status is never returned; deletion and reshare assert ownership and visibility.
 
@@ -220,6 +220,48 @@ Register exact routes `POST /api/status`, `GET /api/status`, `DELETE /api/status
 - [ ] **Step 1: Write RED, implement, then run GREEN**
 
 Register the exact eight notification routes and `GET /api/explore`. Notification reads and mutations are strictly owner-scoped; a push token is validated and never logged. Explore ranking preserves the legacy ordering inputs under the shared visibility policy.
+
+#### Step 2 (added 2026-08-10): additive SSE delivery — `GET /api/notifications/stream`
+
+This is a **new capability, not a migrated one.** It is deliberately outside the
+52-ID legacy inventory: the eight REST routes keep their exact behavior and
+nothing is removed, so polling clients are unaffected. Consequences:
+
+- `content-social.json` stays at 52 capabilities; the stream is recorded in the
+  compatibility document as an addition, never as a migrated capability.
+- The Task 10 cutover route assertion expects the 46 legacy routes **plus** this
+  one, listed separately as an intentional addition so the count cannot drift
+  unnoticed.
+
+**Delivery design and its honest limit.** The stream is a Nest `@Sse()` endpoint
+behind `SessionGuard`, emitting the same `NotificationView` the inbox returns,
+plus a periodic heartbeat so proxies do not idle out the connection.
+
+The hard constraint is *where notifications come from*. During the migration
+window they are written by three producers: this NestJS service, the legacy
+Express service, and any future worker. An in-process event bus only sees the
+first, and only on the instance that handled the write. So an in-process-only
+stream would silently miss every notification the legacy service creates —
+which today is most of them.
+
+The stream therefore combines:
+
+1. an in-process publisher for notifications this service writes, for immediate
+   delivery; and
+2. a bounded per-connection poll of the recipient's inbox as the backstop that
+   catches other producers, deduplicated by notification id and watermarked by
+   `createdAt` so a reconnect never replays.
+
+Polling is a deliberate cost. It is the only mechanism that is correct while a
+second writer exists and there is no shared broker declared in the stack.
+**Open decision for the owner:** if a Postgres `LISTEN`/`NOTIFY` channel or a
+Redis dependency is acceptable, the poll can be dropped for push. That is a
+dependency and infrastructure choice, so it is not made here.
+
+- [ ] Assert the stream requires a session and rejects an anonymous connection.
+- [ ] Assert one recipient never receives another recipient's notification.
+- [ ] Assert a reconnect does not replay already-delivered ids.
+- [ ] Assert the eight REST routes are unchanged by the stream's presence.
 
 ### Task 9: Migrate reporting and administrator moderation
 

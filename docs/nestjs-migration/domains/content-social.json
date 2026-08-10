@@ -76,7 +76,9 @@
     "correction:post-invalid-author-include",
     "correction:post-read-privacy-bypass",
     "correction:raw-error-disclosure",
-    "correction:shadowed-post-routes"
+    "correction:shadowed-post-routes",
+    "correction:status-reaction-integrity",
+    "correction:status-unbounded-list"
   ],
   "cutoverUnit": [
     "model:model:Bookmark",

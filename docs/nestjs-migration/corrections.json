@@ -673,5 +673,43 @@
     "replacementBehavior": "The like runs in a Serializable transaction with bounded P2034 retry and dual-writes the CommentLike row, per Plan C step 3. Liking stays idempotent: there is no unlike route in the legacy API.",
     "reason": "Like counts must not be lost, and the relational table must stay in step during the dual-write window.",
     "status": "approved"
+  },
+  {
+    "id": "correction:status-unbounded-list",
+    "capabilityIds": [
+      "rest:GET:/api/status:routes/status.js:197"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/status.js",
+        "line": 200
+      },
+      {
+        "file": "routes/status.js",
+        "line": 232
+      }
+    ],
+    "legacyBehavior": "GET /api/status loaded every unexpired status in the system with no limit, then evaluated blocking one row at a time with a query per status.",
+    "replacementBehavior": "The query is bounded by a page limit and the blocked set is resolved once per request.",
+    "reason": "A global unbounded read with per-row blocking queries does not survive growth.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:status-reaction-integrity",
+    "capabilityIds": [
+      "rest:POST:/api/status/:id/react:routes/status.js:384"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/status.js",
+        "line": 396
+      }
+    ],
+    "legacyBehavior": "Reacting read the reactions JSON array and wrote it back whole with no transaction, losing concurrent reactions.",
+    "replacementBehavior": "The append runs in a Serializable transaction with bounded P2034 retry. Append semantics are unchanged: repeat reactions from the same user are still recorded, and an expired status still accepts a reaction, both as in Express.",
+    "reason": "Concurrent reactions must not overwrite one another.",
+    "status": "approved"
   }
 ]
