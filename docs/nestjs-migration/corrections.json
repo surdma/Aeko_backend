@@ -272,24 +272,6 @@
     "status": "approved"
   },
   {
-    "id": "correction:community-payment-settlement-deferred",
-    "capabilityIds": [
-      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
-      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/webhookRoutes.js",
-        "line": 27
-      }
-    ],
-    "legacyBehavior": "The webhook dispatcher settles community payments through handleCommunityPaymentSuccess, which belongs to the communities domain.",
-    "replacementBehavior": "NOT YET CLOSED. Dispatch runs against CommunityPaymentPort, whose installed adapter reports the capability unavailable so the provider retries rather than the payment being dropped. The provider retry window is finite, so the real adapter must land with the communities domain before the legacy community routes are cut over.",
-    "reason": "Recorded as an open gate rather than counted as migrated.",
-    "status": "pending-domain"
-  },
-  {
     "id": "correction:community-profile-ownership-drift",
     "capabilityIds": [
       "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72",
@@ -310,6 +292,24 @@
     "legacyBehavior": "Community-profile documentation and runtime ownership checks do not consistently agree.",
     "replacementBehavior": "Typed policies enforce the approved owner/moderator contract.",
     "reason": "Authorization behavior must match the public contract.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-settlement-race",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/communityPaymentService.js",
+        "line": 185
+      }
+    ],
+    "legacyBehavior": "handleCommunityPaymentSuccess read the completed status outside the transaction that writes it, and credited community earnings by adding to a JSON total read earlier, so a redelivered webhook added a second membership, inflated the member count and credited the earnings twice, while two settlements landing together could lose one of the credits.",
+    "replacementBehavior": "Settlement is one Serializable transaction whose gate is a conditional update from pending to completed; the membership grant, the User.communities sync and the earnings credit all happen inside it, and the earnings are read in the same transaction that writes them.",
+    "reason": "A redelivered provider callback granted a duplicate membership and double-credited community earnings.",
     "status": "approved"
   },
   {

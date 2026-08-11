@@ -11,7 +11,6 @@ import { Reflector } from '@nestjs/core';
 import { DomainError } from '../../src/common/errors/domain.error';
 import { PrismaService } from '../../src/database/prisma/prisma.service';
 import { CommunityPaymentPort } from '../../src/providers/community-payment/community-payment.port';
-import { UnavailableCommunityPaymentAdapter } from '../../src/providers/community-payment/unavailable-community-payment.adapter';
 import { HttpPaystackAdapter } from '../../src/providers/paystack/http-paystack.adapter';
 import type {
   StripeCheckoutRequest,
@@ -257,19 +256,22 @@ describe('paystack webhook', () => {
     expect(harness.completed).toEqual([]);
   });
 
-  it('asks the provider to retry while community settlement is unavailable', async () => {
-    const harness = createHarness(undefined, {
-      communityAdapter: new UnavailableCommunityPaymentAdapter(),
-    });
+  it('propagates a settlement failure so the provider retries', async () => {
+    const failing: CommunityPaymentPort = {
+      settle: (): Promise<void> =>
+        Promise.reject(
+          new DomainError('CONFLICT', 'That payment is still being processed.'),
+        ),
+    };
+    const harness = createHarness(undefined, { communityAdapter: failing });
     const body = paystackEvent('charge.success', {
       metadata: { transactionId: 'tx-community' },
     });
 
-    // A retryable failure keeps the event queued rather than dropping a
-    // payment the communities domain has not landed to settle yet.
+    // A failed settlement must not be acknowledged: the provider redelivers.
     await expect(
       harness.service.handlePaystack(body, sign(body)),
-    ).rejects.toMatchObject({ code: 'PROVIDER_UNAVAILABLE' });
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
   });
 
   it('acknowledges a transaction that is neither kind', async () => {

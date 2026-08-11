@@ -1,10 +1,10 @@
 # Payments and subscriptions — client compatibility
 
 Domain 5 of the Express → NestJS migration, and the highest-risk one: every
-defect here is a money defect. Nineteen routes, thirty capabilities, all closed.
+defect here is a money defect. Nineteen routes, thirty capabilities, all closed, with no correction left deferred.
 Every legacy path, verb, request field and success response shape is preserved.
 The differences below are limited to defects that could not be carried across
-verbatim, plus one gap that is deliberately left open and visible.
+verbatim.
 
 ## Route surface
 
@@ -91,21 +91,33 @@ cookie. Requiring one would break payment entirely.
 11. **`correction:payments-unbounded-page-size`** — `limit` was parsed with no
     ceiling. Capped at 100; the legacy defaults of 20 and 10 are unchanged.
 
-## Left open, deliberately
+## Community settlement: carved out, not deferred
 
-**`correction:community-payment-settlement-deferred`** (`status: pending-domain`).
 Both providers deliver subscription *and* community events down the same two
-webhook URLs, so the dispatcher had to migrate now, but community settlement
-belongs to the `communities` domain (programme order 6), which has not landed.
-Dispatch runs against `CommunityPaymentPort`, whose installed adapter reports
-the capability unavailable. That answers the provider with a **retryable**
-failure, so a community payment stays queued for redelivery rather than being
-silently dropped.
+webhook URLs, so the dispatcher had to migrate with this domain even though
+community payments belong to `communities` (programme order 6).
 
-**This is time-limited.** Provider retry windows are finite — Stripe gives up
-after about three days, Paystack sooner. The real adapter must land with the
-communities domain before the legacy community routes are cut over, or community
-payments received in the interval will be lost.
+Rather than park that behind an unavailable adapter — which would have rested
+on a finite provider retry window, roughly three days for Stripe and less for
+Paystack — the settlement half of the legacy `communityPaymentService` is
+implemented here in full, as `PrismaCommunityPaymentAdapter`. It grants or
+renews the membership, keeps `User.communities` in step, bumps `memberCount`
+only for a genuinely new member, and credits `settings.payment.totalEarnings`
+and `availableForWithdrawal`. Nothing about a community payment now depends on
+a later domain arriving in time.
+
+**Scope is strictly settlement.** Initialising a community payment, requesting
+a withdrawal and completing one stay with the `communities` domain, which will
+consume this adapter rather than duplicate it.
+
+**`correction:community-settlement-race`** covers the defects found there, and
+is closed: legacy read the completed status outside the transaction that writes
+it and credited earnings by adding to a JSON total read earlier, so a
+redelivered webhook granted a second membership, inflated the member count and
+credited the earnings twice, while two settlements landing together could lose
+one credit. Settlement is now a single `Serializable` transaction gated on a
+conditional `pending` → `completed` update, with the membership grant, the user
+sync and the earnings credit all inside it.
 
 ## Preserved deliberately, not corrected
 

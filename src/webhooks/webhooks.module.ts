@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CommunityPaymentPort } from '../providers/community-payment/community-payment.port';
-import { UnavailableCommunityPaymentAdapter } from '../providers/community-payment/unavailable-community-payment.adapter';
+import { PrismaCommunityPaymentAdapter } from '../providers/community-payment/prisma-community-payment.adapter';
 import { HttpPaystackAdapter } from '../providers/paystack/http-paystack.adapter';
 import { PaystackPort } from '../providers/paystack/paystack.port';
 import { StripeSdkAdapter } from '../providers/stripe/stripe-sdk.adapter';
@@ -19,7 +19,7 @@ import { WebhooksService } from './webhooks.service';
     { provide: StripePort, useClass: StripeSdkAdapter },
     {
       provide: CommunityPaymentPort,
-      useClass: UnavailableCommunityPaymentAdapter,
+      useClass: PrismaCommunityPaymentAdapter,
     },
   ],
 })

@@ -1,12 +1,16 @@
 /**
- * Settlement of a community payment.
+ * Settlement of a paid community membership.
  *
- * Community payments belong to the `communities` domain (programme order 6),
- * which has not been migrated yet. The webhooks land first, because both
- * providers deliver subscription and community events down the same two URLs,
- * so the dispatch is migrated against this port and the real adapter arrives
- * with that domain.
+ * Both providers deliver subscription and community events down the same two
+ * webhook URLs, so the payments domain owns the dispatch and this port is how
+ * it hands a settled community payment on. The installed adapter implements the
+ * legacy `handleCommunityPaymentSuccess` in full; initialising a community
+ * payment and withdrawing earnings stay with the `communities` domain.
  */
 export abstract class CommunityPaymentPort {
+  /**
+   * Idempotent: settling an already-settled transaction is a no-op, so a
+   * redelivered webhook changes nothing.
+   */
   abstract settle(transactionId: string): Promise<void>;
 }

@@ -52,7 +52,7 @@
     "correction:coin-credit-double-spend",
     "correction:coin-credit-lost-updates",
     "correction:coin-credit-unverified-amount",
-    "correction:community-payment-settlement-deferred",
+    "correction:community-settlement-race",
     "correction:flutterwave-verify-status-field",
     "correction:payments-unbounded-page-size",
     "correction:paystack-webhook-signature-comparison",

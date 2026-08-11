@@ -166,21 +166,30 @@ describe('payments and subscriptions cutover', () => {
     }
   });
 
-  it('registers every correction, and carries the open one openly', () => {
+  it('registers every correction as approved, with nothing left deferred', () => {
     const registered = new Map(
       corrections.map((correction) => [correction.id, correction]),
     );
     expect(manifest.corrections.length).toBeGreaterThan(0);
     for (const id of manifest.corrections) {
-      expect(registered.get(id)?.status).toMatch(
-        /^(approved|pending-schema|pending-domain)$/u,
-      );
+      expect(registered.get(id)?.status).toBe('approved');
     }
-    // Community settlement is not closed; it must stay visible as pending.
+  });
+
+  it('settles community payments for real, not behind a deferred adapter', () => {
+    // Both providers deliver community events down the same webhook URLs, so a
+    // deferred settlement would rest on a finite provider retry window.
+    const module = readCode('src', 'webhooks', 'webhooks.module.ts');
+    expect(module).toContain('PrismaCommunityPaymentAdapter');
+    expect(module).not.toContain('Unavailable');
     expect(
-      registered.get('correction:community-payment-settlement-deferred')
-        ?.status,
-    ).toBe('pending-domain');
+      readCode(
+        'src',
+        'providers',
+        'community-payment',
+        'community-payment-prisma.client.ts',
+      ),
+    ).toContain("isolationLevel: 'Serializable'");
   });
 
   it('carries no Express-era patterns into the services', () => {
