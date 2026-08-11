@@ -711,5 +711,78 @@
     "replacementBehavior": "The append runs in a Serializable transaction with bounded P2034 retry. Append semantics are unchanged: repeat reactions from the same user are still recorded, and an expired status still accepts a reaction, both as in Express.",
     "reason": "Concurrent reactions must not overwrite one another.",
     "status": "approved"
+  },
+  {
+    "id": "correction:debate-scoring-authorization",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 33
+      }
+    ],
+    "legacyBehavior": "Any authenticated user could drive the AI scorer against any debate and overwrite a participant score; the handler performed no authorization at all.",
+    "replacementBehavior": "Scoring requires the debate creator or an administrator, and the score write runs in a Serializable transaction.",
+    "reason": "A debate outcome must not be settable by an unrelated user.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-counter-lost-updates",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33",
+      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 44
+      },
+      {
+        "file": "routes/debates.js",
+        "line": 67
+      }
+    ],
+    "legacyBehavior": "scores and votes were read, mutated in memory, and written back whole with no transaction, so concurrent updates silently overwrote one another.",
+    "replacementBehavior": "Both counters are re-read and written inside one Serializable transaction with bounded P2034 retry.",
+    "reason": "Concurrent scoring and voting must not lose writes.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-list-n-plus-one",
+    "capabilityIds": [
+      "rest:GET:/api/debates:routes/debates.js:116"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 136
+      }
+    ],
+    "legacyBehavior": "The public listing issued one user query per debate row to resolve participants, and limit was unbounded.",
+    "replacementBehavior": "Participants for the whole page are resolved in one query and limit is capped. The route stays public, as it was.",
+    "reason": "A public unbounded read with per-row queries does not survive growth.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-vote-ballot-stuffing",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 67
+      }
+    ],
+    "legacyBehavior": "votes is a counts map keyed by participant with no record of who voted, so one user can vote without limit by repeating the request.",
+    "replacementBehavior": "NOT YET CORRECTED. Closing this needs somewhere to record the voter, which means a DebateVote(voterId, debateId, participantId) table with a unique constraint — a schema migration outside this domain plan. Changing the stored shape instead would break every client reading votes[participantId] as a number. The lost-update half of the defect is fixed; the ballot-stuffing half is carried here.",
+    "reason": "Recorded as an open gate rather than counted as corrected.",
+    "status": "pending-schema"
   }
 ]

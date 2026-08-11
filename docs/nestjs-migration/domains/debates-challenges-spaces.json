@@ -29,7 +29,12 @@
     "spaces"
   ],
   "providerPorts": [],
-  "corrections": [],
+  "corrections": [
+    "correction:debate-counter-lost-updates",
+    "correction:debate-list-n-plus-one",
+    "correction:debate-scoring-authorization",
+    "correction:debate-vote-ballot-stuffing"
+  ],
   "cutoverUnit": [
     "model:model:Challenge",
     "model:model:Debate",
@@ -50,6 +55,7 @@
   ],
   "risk": "high",
   "specialistReview": [
-    "backend"
+    "backend",
+    "security"
   ]
 }

@@ -95,11 +95,34 @@ Bound every page and text field, require HTTPS media URLs for duet and highlight
 
 **Interfaces:** Produces `start`, `score`, `vote`, `end`, and `list`.
 
-- [ ] **Step 1: Write RED, implement, then run GREEN**
+- [x] **Step 1: Write RED, implement, then run GREEN**
 
 Register exact routes `POST /api/debates/start`, `PUT /api/debates/:debateId/score`, `PUT /api/debates/:debateId/vote`, `PUT /api/debates/:debateId/end`, `GET /api/debates`.
 
-Corrections: scoring requires the debate creator or an administrator; voting records one vote per voter and rejects a second; both counters are written in a `Serializable` transaction; scoring goes through `DebateScoringPort`. The list stays public and unpaged in shape but is bounded and resolves participants in one query, not one per row.
+Corrections: scoring requires the debate creator or an administrator; both counters are written in a `Serializable` transaction; scoring goes through `DebateScoringPort`. The list stays public and unpaged in shape but is bounded and resolves participants in one query, not one per row.
+
+> **Revised 2026-08-10, during implementation.** This task originally promised
+> "one vote per voter" for debates. That is not deliverable here, and saying so
+> is better than pretending otherwise.
+>
+> `challenges.votes` is an array of voter ids and already dedupes, so the
+> challenge fix in Task 4 is real: take the voter from the session instead of
+> the body and the existing `includes` check does the rest.
+>
+> `debates.votes` is a counts map, `{ participantId: n }`, with no voter
+> identity stored anywhere and no spare column on `Debate`. Enforcing one vote
+> per voter needs somewhere to record who voted, which means either changing
+> the stored shape — breaking every client that reads `votes[participantId]` as
+> a number — or adding a `DebateVote` table, which is a schema migration this
+> plan's constraints exclude.
+>
+> So Task 3 delivers the transactional increment, which fixes the lost-update
+> half of the defect, and the ballot-stuffing half is registered as
+> `correction:debate-vote-ballot-stuffing` with status `pending-schema`. It is
+> carried the same way the social graph normalization was: a `DebateVote(voterId,
+> debateId, participantId)` table with a unique constraint, backfilled from the
+> existing counts as anonymous votes, then a read cutover. Task 6 records it as
+> an open gate rather than counting it as corrected.
 
 ### Task 4: Migrate challenges
 
