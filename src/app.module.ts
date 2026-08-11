@@ -29,6 +29,9 @@ import { PaymentsModule } from './payments/payments.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { SubscriptionPlansModule } from './subscription-plans/subscription-plans.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
+import { CommunitiesModule } from './communities/communities.module';
+import { CommunityProfilesModule } from './community-profiles/community-profiles.module';
+import { CommunityPaymentsModule } from './community-payments/community-payments.module';
 
 @Module({
   imports: [
@@ -52,6 +55,9 @@ import { WebhooksModule } from './webhooks/webhooks.module';
     SubscriptionsModule,
     SubscriptionPlansModule,
     WebhooksModule,
+    CommunitiesModule,
+    CommunityProfilesModule,
+    CommunityPaymentsModule,
   ],
 })
 export class AppModule {

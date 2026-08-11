@@ -1,0 +1,71 @@
+{
+  "model:model:Community": [
+    "communities"
+  ],
+  "model:model:CommunityFollower": [
+    "community-profiles"
+  ],
+  "model:model:CommunityMember": [
+    "communities"
+  ],
+  "model:model:Interest": [
+    "communities"
+  ],
+  "rest:DELETE:/api/communities/:id:routes/communityRoutes.js:299": [
+    "communities"
+  ],
+  "rest:GET:/api/communities/:id:routes/communityRoutes.js:146": [
+    "communities"
+  ],
+  "rest:GET:/api/communities/my:routes/communityRoutes.js:116": [
+    "communities"
+  ],
+  "rest:GET:/api/communities:routes/communityRoutes.js:114": [
+    "communities"
+  ],
+  "rest:GET:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:384": [
+    "community-profiles"
+  ],
+  "rest:GET:/api/community/payment/:communityId/transactions:routes/communityPaymentRoutes.js:366": [
+    "community-payments"
+  ],
+  "rest:GET:/api/community/payment/verify:routes/communityPaymentRoutes.js:133": [
+    "community-payments"
+  ],
+  "rest:POST:/api/communities/:id/join:routes/communityRoutes.js:178": [
+    "communities"
+  ],
+  "rest:POST:/api/communities/:id/leave:routes/communityRoutes.js:206": [
+    "communities"
+  ],
+  "rest:POST:/api/communities:routes/communityRoutes.js:70": [
+    "communities"
+  ],
+  "rest:POST:/api/community-profiles/:id/follow:routes/communityProfileRoutes.js:248": [
+    "community-profiles"
+  ],
+  "rest:POST:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:329": [
+    "community-profiles"
+  ],
+  "rest:POST:/api/community-profiles/:id/unfollow:routes/communityProfileRoutes.js:280": [
+    "community-profiles"
+  ],
+  "rest:POST:/api/community-profiles/:id/upload-photo:routes/communityProfileRoutes.js:128": [
+    "community-profiles"
+  ],
+  "rest:POST:/api/community/payment/initialize:routes/communityPaymentRoutes.js:63": [
+    "community-payments"
+  ],
+  "rest:POST:/api/community/payment/withdraw:routes/communityPaymentRoutes.js:224": [
+    "community-payments"
+  ],
+  "rest:PUT:/api/communities/:id:routes/communityRoutes.js:256": [
+    "communities"
+  ],
+  "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72": [
+    "community-profiles"
+  ],
+  "rest:PUT:/api/community-profiles/:id/settings:routes/communityProfileRoutes.js:199": [
+    "community-profiles"
+  ]
+}
