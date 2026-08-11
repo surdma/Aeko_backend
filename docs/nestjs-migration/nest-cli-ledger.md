@@ -92,3 +92,4 @@
 | 2026-08-11T10:15:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate class providers/paystack/paystack.port --no-spec --flat` | `src/providers/paystack/paystack.port.ts` | Payments/subscriptions Task 1 |
 | 2026-08-11T10:16:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate class providers/stripe/stripe.port --no-spec --flat` | `src/providers/stripe/stripe.port.ts` | Payments/subscriptions Task 1 |
 | 2026-08-11T10:17:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate class providers/flutterwave/flutterwave.port --no-spec --flat` | `src/providers/flutterwave/flutterwave.port.ts` | Payments/subscriptions Task 1 |
+| 2026-08-11T10:18:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate class providers/community-payment/community-payment.port --no-spec --flat` | `src/providers/community-payment/community-payment.port.ts` | Payments/subscriptions Task 7 |
