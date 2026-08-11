@@ -30,9 +30,12 @@ export interface SubscriptionStatusView {
   readonly subscriptionExpiry: string | null;
   readonly subscriptionPlanId: string | null;
   readonly subscriptionPlan: SubscriptionPlanView | null;
+  /**
+   * Legacy also selected `prideTick` and `businessTick`, neither of which is a
+   * column on User. Prisma rejected the query, so the route answered 500 on
+   * every call and no client ever saw a response to depend on.
+   */
   readonly goldenTick: boolean;
-  readonly prideTick: boolean;
-  readonly businessTick: boolean;
 }
 
 export interface SubscriptionPlanView {
