@@ -1,10 +1,13 @@
 import { HttpStatus } from '@nestjs/common';
 
+import type { JsonValue } from '../json/json-value';
+
 export type DomainErrorCode =
   | 'VALIDATION_FAILED'
   | 'AUTHENTICATION_REQUIRED'
   | 'AUTHORIZATION_DENIED'
   | 'TWO_FACTOR_REQUIRED'
+  | 'PAYMENT_REQUIRED'
   | 'NOT_FOUND'
   | 'CONFLICT'
   | 'RATE_LIMITED'
@@ -12,12 +15,18 @@ export type DomainErrorCode =
   | 'DATABASE_UNAVAILABLE'
   | 'INTERNAL_ERROR';
 
+/**
+ * Structured context a client may act on — the paid-community paywall reads
+ * its price out of here. Values are JSON so a nested object survives.
+ */
+export type ErrorDetails = Readonly<Record<string, JsonValue>>;
+
 export interface PublicErrorBody {
   readonly success: false;
   readonly message: string;
   readonly code: DomainErrorCode;
   readonly requestId: string;
-  readonly details?: Readonly<Record<string, string | readonly string[]>>;
+  readonly details?: ErrorDetails;
 }
 
 const statusByCode: Readonly<Record<DomainErrorCode, HttpStatus>> = {
@@ -25,6 +34,7 @@ const statusByCode: Readonly<Record<DomainErrorCode, HttpStatus>> = {
   AUTHENTICATION_REQUIRED: HttpStatus.UNAUTHORIZED,
   AUTHORIZATION_DENIED: HttpStatus.FORBIDDEN,
   TWO_FACTOR_REQUIRED: HttpStatus.FORBIDDEN,
+  PAYMENT_REQUIRED: HttpStatus.PAYMENT_REQUIRED,
   NOT_FOUND: HttpStatus.NOT_FOUND,
   CONFLICT: HttpStatus.CONFLICT,
   RATE_LIMITED: HttpStatus.TOO_MANY_REQUESTS,
@@ -39,7 +49,7 @@ export class DomainError extends Error {
   constructor(
     readonly code: DomainErrorCode,
     message: string,
-    readonly details?: Readonly<Record<string, string | readonly string[]>>,
+    readonly details?: ErrorDetails,
   ) {
     super(message);
     this.name = 'DomainError';

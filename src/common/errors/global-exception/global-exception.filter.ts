@@ -7,6 +7,7 @@ import {
 import {
   DomainError,
   type DomainErrorCode,
+  type ErrorDetails,
   type PublicErrorBody,
 } from '../domain.error';
 import { RequestContext } from '../../http/request-context/request-context.middleware';
@@ -32,7 +33,7 @@ interface ErrorMapping {
   readonly status: number;
   readonly code: DomainErrorCode;
   readonly message: string;
-  readonly details?: Readonly<Record<string, string | readonly string[]>>;
+  readonly details?: ErrorDetails;
 }
 
 const statusCode = {

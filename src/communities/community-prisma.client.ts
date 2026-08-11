@@ -48,6 +48,7 @@ export interface CommunityWriteData {
   readonly tags?: readonly string[];
   readonly settings?: WritableJson;
   readonly profile?: WritableJson;
+  readonly isActive?: boolean;
 }
 
 export interface CommunityTransactionClient {
@@ -179,6 +180,7 @@ const asWrite = (
     ? {}
     : { settings: jsonInput(data.settings) }),
   ...(data.profile === undefined ? {} : { profile: jsonInput(data.profile) }),
+  ...(data.isActive === undefined ? {} : { isActive: data.isActive }),
 });
 
 /**
