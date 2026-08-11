@@ -24,6 +24,11 @@ import { ReportsModule } from './reports/reports.module';
 import { DebatesModule } from './debates/debates.module';
 import { ChallengesModule } from './challenges/challenges.module';
 import { SpacesModule } from './spaces/spaces.module';
+import { CoinsModule } from './coins/coins.module';
+import { PaymentsModule } from './payments/payments.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { SubscriptionPlansModule } from './subscription-plans/subscription-plans.module';
+import { WebhooksModule } from './webhooks/webhooks.module';
 
 @Module({
   imports: [
@@ -42,6 +47,11 @@ import { SpacesModule } from './spaces/spaces.module';
     DebatesModule,
     ChallengesModule,
     SpacesModule,
+    CoinsModule,
+    PaymentsModule,
+    SubscriptionsModule,
+    SubscriptionPlansModule,
+    WebhooksModule,
   ],
 })
 export class AppModule {

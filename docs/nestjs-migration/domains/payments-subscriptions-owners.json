@@ -1,0 +1,94 @@
+{
+  "model:model:CoinTransaction": [
+    "coins"
+  ],
+  "model:model:SubscriptionPlan": [
+    "subscription-plans"
+  ],
+  "model:model:Transaction": [
+    "subscriptions",
+    "payments",
+    "webhooks"
+  ],
+  "provider:email:d62f64af5dee": [
+    "subscriptions"
+  ],
+  "provider:paystack:1e6fbea184c5": [
+    "providers/paystack"
+  ],
+  "provider:paystack:2d945d5f31cc": [
+    "providers/paystack"
+  ],
+  "provider:paystack:4455080ca046": [
+    "providers/paystack"
+  ],
+  "provider:paystack:85d88f8fddf5": [
+    "providers/paystack"
+  ],
+  "provider:paystack:e7cb17b7d934": [
+    "providers/paystack"
+  ],
+  "provider:stripe:27be3542a7ac": [
+    "providers/stripe"
+  ],
+  "provider:stripe:4cb3899dffc8": [
+    "providers/stripe"
+  ],
+  "rest:DELETE:/api/subscription-plans/:id:routes/subscriptionPlanRoutes.js:162": [
+    "subscription-plans"
+  ],
+  "rest:GET:/api/coins/balance:routes/coinRoutes.js:26": [
+    "coins"
+  ],
+  "rest:GET:/api/coins/history:routes/coinRoutes.js:39": [
+    "coins"
+  ],
+  "rest:GET:/api/coins/packages:routes/coinRoutes.js:21": [
+    "coins"
+  ],
+  "rest:GET:/api/coins/purchase/verify:routes/coinRoutes.js:136": [
+    "coins"
+  ],
+  "rest:GET:/api/payments/verify:routes/paymentRoutes.js:81": [
+    "payments"
+  ],
+  "rest:GET:/api/subscription-plans:routes/subscriptionPlanRoutes.js:93": [
+    "subscription-plans"
+  ],
+  "rest:GET:/api/subscription/admin/all:routes/subscriptionRoutes.js:36": [
+    "subscriptions"
+  ],
+  "rest:GET:/api/subscription/admin/stats:routes/subscriptionRoutes.js:100": [
+    "subscriptions"
+  ],
+  "rest:GET:/api/subscription/status:routes/subscriptionRoutes.js:243": [
+    "subscriptions"
+  ],
+  "rest:GET:/api/subscription/verify:routes/subscriptionRoutes.js:211": [
+    "subscriptions"
+  ],
+  "rest:POST:/api/coins/purchase/verify-stripe:routes/coinRoutes.js:193": [
+    "coins"
+  ],
+  "rest:POST:/api/coins/purchase:routes/coinRoutes.js:67": [
+    "coins"
+  ],
+  "rest:POST:/api/payments/pay:routes/paymentRoutes.js:80": [
+    "payments"
+  ],
+  "rest:POST:/api/subscription-plans:routes/subscriptionPlanRoutes.js:60": [
+    "subscription-plans"
+  ],
+  "rest:POST:/api/subscription/initialize:routes/subscriptionRoutes.js:171": [
+    "subscriptions"
+  ],
+  "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45": [
+    "webhooks"
+  ],
+  "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93": [
+    "webhooks"
+  ],
+  "rest:PUT:/api/subscription-plans/:id:routes/subscriptionPlanRoutes.js:128": [
+    "subscription-plans"
+  ]
+}
