@@ -23,10 +23,15 @@ export interface CommunityRecord {
 export interface CommunitySettlementClient {
   findTransaction(id: string): Promise<CommunityTransactionRecord | null>;
   /**
-   * Moves a transaction from `pending` to `completed` and reports whether this
-   * call is the one that moved it. Legacy read the status outside the
+   * Moves a not-yet-completed transaction to `completed` and reports whether
+   * this call is the one that moved it. Legacy read the status outside the
    * transaction that writes it, so a redelivered webhook settled twice: a
    * second membership row, a second member count and a second earnings credit.
+   *
+   * The gate is `not completed` rather than `pending` so that a payment which
+   * settles after a failed initialisation is still honoured — legacy also
+   * short-circuited only on `completed`, and narrowing it would take the money
+   * without granting the membership.
    */
   claimTransaction(id: string): Promise<boolean>;
   findCommunity(id: string): Promise<CommunityRecord | null>;
@@ -77,7 +82,7 @@ const settlementOps = (
 
   async claimTransaction(id) {
     const claimed = await transaction.transaction.updateMany({
-      where: { id, status: 'pending' },
+      where: { id, status: { not: 'completed' } },
       data: { status: 'completed', verifiedAt: new Date() },
     });
     return claimed.count === 1;

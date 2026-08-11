@@ -31,6 +31,12 @@ export interface CoinTransactionClient {
    * why every caller runs inside a serializable transaction.
    */
   findByReference(reference: string): Promise<CoinTransactionRecord | null>;
+  /**
+   * The balance as it stands now, not as it stood when a credit was written.
+   * A replayed verification reports the live balance, as legacy did; the
+   * ledger row's `balanceAfter` is history and may be long out of date.
+   */
+  findBalance(userId: string): Promise<number | null>;
   /** Adds to the stored balance rather than overwriting a value read earlier. */
   incrementBalance(userId: string, amount: number): Promise<number>;
   recordCredit(data: CoinCreditData): Promise<CoinTransactionRecord>;
@@ -90,6 +96,14 @@ const transactionOps = (
       where: { metadata: { path: ['reference'], equals: reference } },
     });
     return row === null ? null : toRecord(row);
+  },
+
+  async findBalance(userId) {
+    const user = await transaction.user.findUnique({
+      where: { id: userId },
+      select: { coinBalance: true },
+    });
+    return user === null ? null : user.coinBalance;
   },
 
   async incrementBalance(userId, amount) {

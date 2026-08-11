@@ -81,6 +81,14 @@ interface TxRow {
   updatedAt: Date;
 }
 
+/** Mirrors the Prisma filters the claim actually uses. */
+type StatusPredicate = string | Readonly<{ not: string }>;
+
+const statusMatches = (status: string, predicate: StatusPredicate): boolean =>
+  typeof predicate === 'string'
+    ? status === predicate
+    : status !== predicate.not;
+
 const EPOCH = new Date('2026-08-01T00:00:00.000Z');
 
 const makePlan = (overrides: Partial<PlanRow> = {}): PlanRow => ({
@@ -349,11 +357,11 @@ const createHarness = (
         where,
         data,
       }: {
-        where: { id: string; status: string };
+        where: { id: string; status: StatusPredicate };
         data: Record<string, unknown>;
       }): Promise<{ count: number }> => {
         const row = transactions.get(where.id);
-        if (row === undefined || row.status !== where.status) {
+        if (row === undefined || !statusMatches(row.status, where.status)) {
           return Promise.resolve({ count: 0 });
         }
         transactions.set(row.id, {
@@ -579,6 +587,23 @@ describe('subscription verification', () => {
         paymentMethod: 'paystack',
       }),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('still activates a payment that settles after a failed initialisation', async () => {
+    // initialize() marks the row `failed` whenever the provider call throws,
+    // yet the payer may still finish a checkout that was already open. Gating
+    // the claim on `pending` would take the money and grant no subscription.
+    const harness = createHarness({
+      transactions: [pendingTx({ status: 'failed' })],
+    });
+
+    await harness.service.completeTransaction('tx-1');
+
+    expect(harness.activations).toBe(1);
+    expect(harness.transactions.get('tx-1')?.status).toBe('completed');
+    expect(harness.users.get('user-1')).toMatchObject({
+      subscriptionStatus: 'active',
+    });
   });
 
   it('refuses to complete a transaction that is not a subscription', async () => {

@@ -257,10 +257,14 @@ export class CoinsService {
     return this.coins.runSerializable(async (transaction) => {
       const already = await transaction.findByReference(reference);
       if (already !== null) {
+        // The live balance, as legacy reported. The ledger row's balanceAfter
+        // is history: the buyer may have spent coins since this credit landed.
+        const current = await transaction.findBalance(already.userId);
+        if (current === null) throw userNotFound();
         return Object.freeze({
           success: true as const,
           message: 'Already processed',
-          data: Object.freeze({ coinBalance: already.balanceAfter }),
+          data: Object.freeze({ coinBalance: current }),
         });
       }
 

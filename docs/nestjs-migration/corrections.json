@@ -207,6 +207,24 @@
     "status": "approved"
   },
   {
+    "id": "correction:coin-replay-reports-live-balance",
+    "capabilityIds": [
+      "rest:GET:/api/coins/purchase/verify:routes/coinRoutes.js:136",
+      "rest:POST:/api/coins/purchase/verify-stripe:routes/coinRoutes.js:193"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/coinRoutes.js",
+        "line": 156
+      }
+    ],
+    "legacyBehavior": "A replayed verification reported the balance read live from the user row.",
+    "replacementBehavior": "The replay reads the live balance inside the settlement transaction rather than echoing the ledger row balanceAfter, which is history and goes stale as soon as the buyer spends.",
+    "reason": "Keeps the replay response truthful, matching legacy.",
+    "status": "approved"
+  },
+  {
     "id": "correction:comment-like-dual-write",
     "capabilityIds": [
       "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204"
@@ -817,6 +835,25 @@
     "legacyBehavior": "Helmet is imported but not installed as active middleware.",
     "replacementBehavior": "Compatible Helmet security headers are installed globally.",
     "reason": "The runtime should apply the security headers its dependency implies.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:settlement-claim-honours-failed-initialisation",
+    "capabilityIds": [
+      "rest:GET:/api/subscription/verify:routes/subscriptionRoutes.js:211",
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/subscriptionPaymentService.js",
+        "line": 153
+      }
+    ],
+    "legacyBehavior": "Legacy short-circuited only on a completed status, so a transaction marked failed during initialisation was still settled if the payer went on to pay.",
+    "replacementBehavior": "The atomic claim gates on not-completed rather than on pending, preserving that behaviour. Gating on pending would have taken the money and granted nothing whenever initialisation marked the row failed but the payer completed a checkout that was already open.",
+    "reason": "Guards the migration against narrowing an idempotency gate into a money-losing one.",
     "status": "approved"
   },
   {

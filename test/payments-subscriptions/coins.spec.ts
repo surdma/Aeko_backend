@@ -336,6 +336,23 @@ describe('coin credit', () => {
     expect(harness.balance).toBe(PACKAGE.coins);
   });
 
+  it('reports the live balance on replay, not the one from credit time', async () => {
+    const harness = createHarness({ balance: 0 });
+    await harness.service.verifyPaystack({ reference: 'COINS_1' });
+
+    // The buyer spends after the credit landed; the ledger row still records
+    // the balance as it stood then, which is no longer what they hold.
+    harness.balance -= 30;
+
+    await expect(
+      harness.service.verifyPaystack({ reference: 'COINS_1' }),
+    ).resolves.toEqual({
+      success: true,
+      message: 'Already processed',
+      data: { coinBalance: PACKAGE.coins - 30 },
+    });
+  });
+
   it('adds to the stored balance rather than to one read earlier', async () => {
     const harness = createHarness({ balance: 100 });
     harness.paystack.transaction = {

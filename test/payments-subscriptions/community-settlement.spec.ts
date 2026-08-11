@@ -22,6 +22,14 @@ interface UserRow {
   communities: unknown;
 }
 
+/** Mirrors the Prisma filters the claim actually uses. */
+type StatusPredicate = string | Readonly<{ not: string }>;
+
+const statusMatches = (status: string, predicate: StatusPredicate): boolean =>
+  typeof predicate === 'string'
+    ? status === predicate
+    : status !== predicate.not;
+
 const makeTx = (overrides: Partial<TxRow> = {}): TxRow => ({
   id: 'tx-1',
   userId: 'user-1',
@@ -90,11 +98,11 @@ const createHarness = (
         where,
         data,
       }: {
-        where: { id: string; status: string };
+        where: { id: string; status: StatusPredicate };
         data: Record<string, unknown>;
       }): Promise<{ count: number }> => {
         const row = transactions.get(where.id);
-        if (row === undefined || row.status !== where.status) {
+        if (row === undefined || !statusMatches(row.status, where.status)) {
           return Promise.resolve({ count: 0 });
         }
         transactions.set(row.id, {
@@ -357,6 +365,34 @@ describe('community payment settlement', () => {
     await expect(
       createHarness({ users: [] }).adapter.settle('tx-1'),
     ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('still settles a payment that arrives after a failed initialisation', async () => {
+    // Initialising marks the row `failed` whenever the provider call throws,
+    // but the payer may still complete the checkout that was already open.
+    // Gating the claim on `pending` would take the money and grant nothing.
+    const harness = createHarness({
+      transactions: [makeTx({ status: 'failed' })],
+    });
+
+    await harness.adapter.settle('tx-1');
+
+    expect(membersOf(harness.communities.get('community-1'))).toHaveLength(1);
+    expect(harness.transactions.get('tx-1')?.status).toBe('completed');
+    expect(earningsOf(harness.communities.get('community-1'))).toMatchObject({
+      totalEarnings: 25,
+    });
+  });
+
+  it('does nothing for a transaction already marked completed', async () => {
+    const harness = createHarness({
+      transactions: [makeTx({ status: 'completed' })],
+    });
+
+    await harness.adapter.settle('tx-1');
+
+    expect(membersOf(harness.communities.get('community-1'))).toHaveLength(0);
+    expect(harness.membershipWrites).toBe(0);
   });
 
   it('refuses a transaction that is not a community payment', async () => {

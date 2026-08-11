@@ -119,6 +119,27 @@ one credit. Settlement is now a single `Serializable` transaction gated on a
 conditional `pending` → `completed` update, with the membership grant, the user
 sync and the earnings credit all inside it.
 
+## Two things the atomic gate had to get right
+
+Making settlement idempotent means settling **exactly once** — not *at most*
+once. Two traps sit either side of that, and both are pinned by test.
+
+**`correction:settlement-claim-honours-failed-initialisation`.** The natural
+way to write the claim is `WHERE status = 'pending'`. That is wrong here.
+Initialising marks a transaction `failed` whenever the provider call throws —
+a timeout, a response we could not read — but the payer may still complete a
+checkout page that was already open. A `pending`-only gate would find `failed`,
+decline to claim, and return quietly: money taken, nothing granted. Legacy
+avoided this by short-circuiting only on `completed`, and the gate is
+`NOT completed` for the same reason. Both the subscription and community paths
+have a test that settles a `failed` transaction and asserts the grant lands.
+
+**`correction:coin-replay-reports-live-balance`.** A replayed coin
+verification must report the balance the buyer holds *now*. The ledger row's
+`balanceAfter` records what it was when that credit landed, and goes stale the
+moment they spend. The replay path reads the live balance inside the same
+transaction, as legacy did.
+
 ## Preserved deliberately, not corrected
 
 - **Renewal resets the term.** `subscriptionExpiry` is set a month or year from

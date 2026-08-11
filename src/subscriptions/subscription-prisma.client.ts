@@ -61,10 +61,17 @@ export interface SubscriptionTransactionClient {
   findTransaction(id: string): Promise<TransactionRecord | null>;
   findPlan(id: string): Promise<PlanRecord | null>;
   /**
-   * Moves a transaction from `pending` to `completed` and answers whether this
-   * call is the one that moved it. The conditional update is the idempotency
-   * gate: legacy read the status outside the transaction that wrote it, so a
-   * webhook and a verification racing each other both proceeded.
+   * Moves a not-yet-completed transaction to `completed` and answers whether
+   * this call is the one that moved it. The conditional update is the
+   * idempotency gate: legacy read the status outside the transaction that
+   * wrote it, so a webhook and a verification racing each other both proceeded.
+   *
+   * The gate is `not completed` rather than `pending` on purpose. Initialising
+   * marks a transaction `failed` whenever the provider call throws, but the
+   * payer may still go on to pay — a Paystack page that opened before the
+   * error, a response we failed to read. Gating on `pending` would take the
+   * money and grant nothing, which is exactly the case legacy got right by
+   * short-circuiting only on `completed`.
    */
   claimTransaction(id: string): Promise<boolean>;
   activateSubscription(
@@ -187,7 +194,7 @@ const transactionOps = (
 
   async claimTransaction(id) {
     const claimed = await transaction.transaction.updateMany({
-      where: { id, status: 'pending' },
+      where: { id, status: { not: 'completed' } },
       data: { status: 'completed', verifiedAt: new Date() },
     });
     return claimed.count === 1;
