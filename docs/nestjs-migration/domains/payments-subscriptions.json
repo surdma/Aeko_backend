@@ -49,8 +49,20 @@
     "stripe"
   ],
   "corrections": [
+    "correction:coin-credit-double-spend",
+    "correction:coin-credit-lost-updates",
+    "correction:coin-credit-unverified-amount",
+    "correction:community-payment-settlement-deferred",
+    "correction:flutterwave-verify-status-field",
+    "correction:payments-unbounded-page-size",
+    "correction:paystack-webhook-signature-comparison",
     "correction:prisma-imports",
+    "correction:stripe-subscription-verify-broken",
+    "correction:stripe-webhook-unguarded-metadata",
+    "correction:subscription-completion-race",
     "correction:subscription-expiry-email",
+    "correction:subscription-plan-mass-assignment",
+    "correction:subscription-status-missing-columns",
     "correction:webhook-verification"
   ],
   "cutoverUnit": [
@@ -90,5 +102,12 @@
     "backend",
     "security",
     "payments"
-  ]
+  ],
+  "migration": {
+    "status": "implemented",
+    "assigned": 30,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  }
 }

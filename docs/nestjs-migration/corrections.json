@@ -153,6 +153,60 @@
     "status": "approved"
   },
   {
+    "id": "correction:coin-credit-double-spend",
+    "capabilityIds": [
+      "rest:GET:/api/coins/purchase/verify:routes/coinRoutes.js:136",
+      "rest:POST:/api/coins/purchase/verify-stripe:routes/coinRoutes.js:193"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/coinRoutes.js",
+        "line": 148
+      }
+    ],
+    "legacyBehavior": "Idempotency was a findFirst on the stored reference followed by a create, with no transaction between them, so two verifications of the same reference arriving together both passed the check and both credited.",
+    "replacementBehavior": "The duplicate check, the balance change and the ledger row happen in one Serializable transaction with a bounded P2034 retry, so a reference credits exactly once.",
+    "reason": "A repeated provider callback could credit a purchase twice.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:coin-credit-lost-updates",
+    "capabilityIds": [
+      "rest:GET:/api/coins/purchase/verify:routes/coinRoutes.js:136",
+      "rest:POST:/api/coins/purchase/verify-stripe:routes/coinRoutes.js:193"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/coinRoutes.js",
+        "line": 159
+      }
+    ],
+    "legacyBehavior": "The new balance was computed in application code from a value read before the transaction and written back as an absolute total, so two credits landing together silently overwrote one another.",
+    "replacementBehavior": "The balance is incremented inside the transaction, so concurrent credits both land.",
+    "reason": "Silent loss of purchased coins under ordinary concurrency.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:coin-credit-unverified-amount",
+    "capabilityIds": [
+      "rest:GET:/api/coins/purchase/verify:routes/coinRoutes.js:136",
+      "rest:POST:/api/coins/purchase/verify-stripe:routes/coinRoutes.js:193"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/coinRoutes.js",
+        "line": 141
+      }
+    ],
+    "legacyBehavior": "A credit was granted on the provider status alone; the amount and currency that actually settled were never compared with the package price.",
+    "replacementBehavior": "A credit is refused unless the settled amount and currency match the catalogue price for the package named in the provider metadata.",
+    "reason": "Coins could be credited for a payment that did not cover them.",
+    "status": "approved"
+  },
+  {
     "id": "correction:comment-like-dual-write",
     "capabilityIds": [
       "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204"
@@ -216,6 +270,24 @@
     "replacementBehavior": "Both reads are bounded by a page query and the counter uses a count query; the response stays a bare array.",
     "reason": "An unbounded thread read is an availability risk on a popular post.",
     "status": "approved"
+  },
+  {
+    "id": "correction:community-payment-settlement-deferred",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/webhookRoutes.js",
+        "line": 27
+      }
+    ],
+    "legacyBehavior": "The webhook dispatcher settles community payments through handleCommunityPaymentSuccess, which belongs to the communities domain.",
+    "replacementBehavior": "NOT YET CLOSED. Dispatch runs against CommunityPaymentPort, whose installed adapter reports the capability unavailable so the provider retries rather than the payment being dropped. The provider retry window is finite, so the real adapter must land with the communities domain before the legacy community routes are cut over.",
+    "reason": "Recorded as an open gate rather than counted as migrated.",
+    "status": "pending-domain"
   },
   {
     "id": "correction:community-profile-ownership-drift",
@@ -371,6 +443,23 @@
     "status": "approved"
   },
   {
+    "id": "correction:flutterwave-verify-status-field",
+    "capabilityIds": [
+      "rest:GET:/api/payments/verify:routes/paymentRoutes.js:81"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/paymentService.js",
+        "line": 47
+      }
+    ],
+    "legacyBehavior": "The route compared the response envelope status to successful, but the envelope reads success for every answered call and the transaction state lives under data.status, so the route could never report a settled payment.",
+    "replacementBehavior": "The transaction state is read from data.status.",
+    "reason": "An always-failing route cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
     "id": "correction:health-route-drift",
     "capabilityIds": [],
     "category": "correctness",
@@ -488,6 +577,41 @@
     "legacyBehavior": "Some legacy handlers reference Prisma delegates absent from the schema.",
     "replacementBehavior": "Handlers use only generated delegates or explicit compatible repositories.",
     "reason": "A nonexistent model delegate causes deterministic runtime failure.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:payments-unbounded-page-size",
+    "capabilityIds": [
+      "rest:GET:/api/coins/history:routes/coinRoutes.js:39",
+      "rest:GET:/api/subscription/admin/all:routes/subscriptionRoutes.js:36"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/coinRoutes.js",
+        "line": 42
+      }
+    ],
+    "legacyBehavior": "The page size was parsed with no ceiling, so one request could ask for an entire table.",
+    "replacementBehavior": "Page size is capped at 100; the legacy defaults of 20 and 10 are unchanged.",
+    "reason": "An unbounded page size is a denial-of-service lever.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:paystack-webhook-signature-comparison",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/webhookRoutes.js",
+        "line": 57
+      }
+    ],
+    "legacyBehavior": "The computed HMAC was compared with the header using a plain inequality, which is not constant-time, and the header was used without checking it is a string.",
+    "replacementBehavior": "Comparison is timingSafeEqual over equal-length buffers of the raw request bytes, with a non-string or wrong-length header rejected outright.",
+    "reason": "A non-constant-time comparison on a signature is a timing oracle.",
     "status": "approved"
   },
   {
@@ -797,6 +921,60 @@
     "status": "approved"
   },
   {
+    "id": "correction:stripe-subscription-verify-broken",
+    "capabilityIds": [
+      "rest:GET:/api/subscription/verify:routes/subscriptionRoutes.js:211",
+      "rest:POST:/api/subscription/initialize:routes/subscriptionRoutes.js:171"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/subscriptionPaymentService.js",
+        "line": 196
+      }
+    ],
+    "legacyBehavior": "Initialization never persisted the PaymentIntent id, and verification then called paymentIntents.retrieve with the SUB- prefixed reference, which Stripe cannot resolve, so Stripe subscription verification failed on every call.",
+    "replacementBehavior": "The PaymentIntent id is recorded on the transaction at initialization and verification asks Stripe about that reference.",
+    "reason": "An always-failing payment path cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:stripe-webhook-unguarded-metadata",
+    "capabilityIds": [
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/webhookRoutes.js",
+        "line": 108
+      }
+    ],
+    "legacyBehavior": "The transaction id was read off event metadata without a null check, so an event carrying no metadata threw and answered 500, making Stripe retry a request that could never succeed.",
+    "replacementBehavior": "An event with no transaction metadata is acknowledged as nothing to do.",
+    "reason": "A permanent 500 on a webhook wastes the provider retry budget.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:subscription-completion-race",
+    "capabilityIds": [
+      "rest:GET:/api/subscription/verify:routes/subscriptionRoutes.js:211",
+      "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
+      "rest:POST:/api/webhooks/stripe:routes/webhookRoutes.js:93"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/subscriptionPaymentService.js",
+        "line": 150
+      }
+    ],
+    "legacyBehavior": "handleSubscriptionPaymentSuccess read the completed status outside the transaction that writes it, so a webhook and a verification racing each other both proceeded and the subscription was extended twice.",
+    "replacementBehavior": "Completion is one Serializable transaction whose gate is a conditional update from pending to completed; the caller that loses the race is told the work was already done.",
+    "reason": "A duplicated provider callback extended a paid subscription twice.",
+    "status": "approved"
+  },
+  {
     "id": "correction:subscription-expiry-email",
     "capabilityIds": [
       "provider:email:d62f64af5dee"
@@ -811,6 +989,40 @@
     "legacyBehavior": "Subscription expiry invokes an email path with a known incompatible service contract.",
     "replacementBehavior": "The scheduled job calls the typed email provider with its supported contract.",
     "reason": "The current invocation can fail instead of notifying expiring subscribers.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:subscription-plan-mass-assignment",
+    "capabilityIds": [
+      "rest:PUT:/api/subscription-plans/:id:routes/subscriptionPlanRoutes.js:128"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/subscriptionPlanRoutes.js",
+        "line": 131
+      }
+    ],
+    "legacyBehavior": "The request body was passed straight into the ORM update, so an administrator could rewrite id or createdAt or drive relation operations, and an unknown key answered 500.",
+    "replacementBehavior": "Only the columns the route documents are accepted, each optional so a partial update stays partial.",
+    "reason": "Unvalidated passthrough into an ORM update.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:subscription-status-missing-columns",
+    "capabilityIds": [
+      "rest:GET:/api/subscription/status:routes/subscriptionRoutes.js:243"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/subscriptionRoutes.js",
+        "line": 252
+      }
+    ],
+    "legacyBehavior": "The route selected prideTick and businessTick, neither of which is a column on User in either schema, so Prisma rejected the query and the route answered 500 on every call.",
+    "replacementBehavior": "Both are dropped from the projection; goldenTick, which is a real column, is kept.",
+    "reason": "An always-failing route cannot be migrated as-is.",
     "status": "approved"
   },
   {
