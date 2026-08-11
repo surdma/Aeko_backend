@@ -62,13 +62,12 @@ describe('coin contracts', () => {
   });
 
   it('never lets a request name its own price', () => {
-    const parsed: Record<string, unknown> = parseCoinPurchase({
+    const parsed = parseCoinPurchase({
       packageId: 'coins_100',
       priceUSD: 0.01,
       coins: 999_999,
     });
-    expect(parsed.priceUSD).toBeUndefined();
-    expect(parsed.coins).toBeUndefined();
+    expect(Object.keys(parsed).sort()).toEqual(['packageId', 'paymentMethod']);
   });
 
   it('keeps the legacy history defaults and caps the page size', () => {
