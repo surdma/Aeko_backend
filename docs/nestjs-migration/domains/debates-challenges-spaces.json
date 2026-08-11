@@ -30,10 +30,14 @@
   ],
   "providerPorts": [],
   "corrections": [
+    "correction:challenge-list-missing-relation",
+    "correction:challenge-space-lost-updates",
+    "correction:challenge-vote-voter-from-body",
     "correction:debate-counter-lost-updates",
     "correction:debate-list-n-plus-one",
     "correction:debate-scoring-authorization",
-    "correction:debate-vote-ballot-stuffing"
+    "correction:debate-vote-ballot-stuffing",
+    "correction:space-highlight-authorization"
   ],
   "cutoverUnit": [
     "model:model:Challenge",
@@ -57,5 +61,12 @@
   "specialistReview": [
     "backend",
     "security"
-  ]
+  ],
+  "migration": {
+    "status": "implemented",
+    "assigned": 16,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  }
 }

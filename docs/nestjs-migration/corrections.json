@@ -1,5 +1,69 @@
 [
   {
+    "id": "correction:ad-status-column",
+    "capabilityIds": [
+      "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
+      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688",
+      "model:model:Ad"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 695
+      },
+      {
+        "file": "controllers/adController.js",
+        "line": 851
+      }
+    ],
+    "legacyBehavior": "Deletion and the dashboard read ad.status, a field that does not exist on the row, so running ads were always deletable and every dashboard bucket collapsed into one undefined key.",
+    "replacementBehavior": "Every read and write goes through the canonical Status column at a single Prisma boundary.",
+    "reason": "The guard and the dashboard breakdown must act on the value actually stored.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:ad-tracking-concurrency",
+    "capabilityIds": [
+      "rest:POST:/api/ads/track-view:routes/adRoutes.js:696",
+      "rest:POST:/api/ads/track/click:routes/adRoutes.js:683",
+      "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684",
+      "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 374
+      },
+      {
+        "file": "controllers/adController.js",
+        "line": 450
+      }
+    ],
+    "legacyBehavior": "Analytics counters and budget were read outside any transaction and written back whole, losing concurrent increments; budget exhaustion assigned the lowercase status field, which Prisma rejects, so an exhausted ad errored instead of completing.",
+    "replacementBehavior": "Counter updates re-read inside a Serializable transaction with up to three P2034 retries, and completion is written through Status.",
+    "reason": "Impression, click, and conversion counts drive billing and must not be lost or error on exhaustion.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:ad-update-allowlist",
+    "capabilityIds": [
+      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "controllers/adController.js",
+        "line": 654
+      }
+    ],
+    "legacyBehavior": "The raw request body was forwarded to prisma.ad.update, so a caller could overwrite advertiserId, analytics, and review state.",
+    "replacementBehavior": "Updates are parsed against a strict allowlist that names any rejected field.",
+    "reason": "Ownership, analytics, and review state must not be caller-writable.",
+    "status": "approved"
+  },
+  {
     "id": "correction:admin-cookie-secret",
     "capabilityIds": [],
     "category": "security",
@@ -29,6 +93,128 @@
     "legacyBehavior": "Blocking and privacy response middleware run before mounted route handlers.",
     "replacementBehavior": "Nest guards and serializers enforce blocking/privacy at effective handler boundaries.",
     "reason": "The legacy ordering can be ineffective or bypass expected response filtering.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:challenge-list-missing-relation",
+    "capabilityIds": [
+      "rest:GET:/api/challenges:routes/challenges.js:118"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/challenges.js",
+        "line": 126
+      }
+    ],
+    "legacyBehavior": "The listing included a creator relation that does not exist on the Challenge model, so Prisma raised a validation error and the route returned 500 on every call.",
+    "replacementBehavior": "The listing includes the real user relation and is projected as creator, so the documented response shape is preserved and the route works.",
+    "reason": "An always-failing route cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:challenge-space-lost-updates",
+    "capabilityIds": [
+      "rest:PUT:/api/challenges/:challengeId/duet:routes/challenges.js:30",
+      "rest:PUT:/api/challenges/:challengeId/vote:routes/challenges.js:54",
+      "rest:PUT:/api/spaces/:spaceId/highlight:routes/space.js:60"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/challenges.js",
+        "line": 40
+      },
+      {
+        "file": "routes/space.js",
+        "line": 68
+      }
+    ],
+    "legacyBehavior": "Duets, votes and highlights were read-modify-writes on a JSON column outside any transaction, so concurrent requests silently dropped one another's entries.",
+    "replacementBehavior": "Each append runs in a Serializable transaction with a bounded retry on P2034, and surfaces a CONFLICT the client can retry rather than losing the write.",
+    "reason": "Silent data loss under ordinary concurrency.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:challenge-vote-voter-from-body",
+    "capabilityIds": [
+      "rest:PUT:/api/challenges/:challengeId/vote:routes/challenges.js:54"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/challenges.js",
+        "line": 57
+      }
+    ],
+    "legacyBehavior": "The voter identity was read from req.body.userId, so any authenticated caller could cast a vote as any other user, and could bypass the one-vote-per-user dedupe by sending different ids.",
+    "replacementBehavior": "The voter is always the authenticated session principal. userId in the body is accepted and ignored so existing clients keep working, and the dedupe is now a real one-vote-per-user rule.",
+    "reason": "Impersonation and unbounded ballot stuffing on a user-visible counter.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:comment-like-dual-write",
+    "capabilityIds": [
+      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 228
+      }
+    ],
+    "legacyBehavior": "Comment likes read the likes JSON array and wrote it back whole with no transaction, losing concurrent likes.",
+    "replacementBehavior": "The like runs in a Serializable transaction with bounded P2034 retry and dual-writes the CommentLike row, per Plan C step 3. Liking stays idempotent: there is no unlike route in the legacy API.",
+    "reason": "Like counts must not be lost, and the relational table must stay in step during the dual-write window.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:comment-post-visibility",
+    "capabilityIds": [
+      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9",
+      "rest:POST:/api/comments/reply/:commentId:routes/commentRoutes.js:126",
+      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204",
+      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
+      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 9
+      },
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 333
+      }
+    ],
+    "legacyBehavior": "Comment routes applied a blocking middleware but never checked that the parent post was visible, so a private post's thread could be read and written by anyone holding the post id.",
+    "replacementBehavior": "Every comment read and write resolves the shared post visibility policy first and reports NOT_FOUND when denied.",
+    "reason": "A private post's discussion is as sensitive as the post.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:comment-unbounded-reads",
+    "capabilityIds": [
+      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333",
+      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
+      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 333
+      },
+      {
+        "file": "routes/commentRoutes.js",
+        "line": 14
+      }
+    ],
+    "legacyBehavior": "Both comment reads fetched every comment and every nested reply with no limit, and creating a comment selected the entire comments relation only to size a counter.",
+    "replacementBehavior": "Both reads are bounded by a page query and the counter uses a count query; the response stays a bare array.",
+    "reason": "An unbounded thread read is an availability risk on a popular post.",
     "status": "approved"
   },
   {
@@ -68,6 +254,79 @@
     "replacementBehavior": "Readiness fails and bootstrap rejects when Prisma cannot connect.",
     "reason": "A listening process must not claim readiness without its database.",
     "status": "approved"
+  },
+  {
+    "id": "correction:debate-counter-lost-updates",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33",
+      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 44
+      },
+      {
+        "file": "routes/debates.js",
+        "line": 67
+      }
+    ],
+    "legacyBehavior": "scores and votes were read, mutated in memory, and written back whole with no transaction, so concurrent updates silently overwrote one another.",
+    "replacementBehavior": "Both counters are re-read and written inside one Serializable transaction with bounded P2034 retry.",
+    "reason": "Concurrent scoring and voting must not lose writes.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-list-n-plus-one",
+    "capabilityIds": [
+      "rest:GET:/api/debates:routes/debates.js:116"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 136
+      }
+    ],
+    "legacyBehavior": "The public listing issued one user query per debate row to resolve participants, and limit was unbounded.",
+    "replacementBehavior": "Participants for the whole page are resolved in one query and limit is capped. The route stays public, as it was.",
+    "reason": "A public unbounded read with per-row queries does not survive growth.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-scoring-authorization",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 33
+      }
+    ],
+    "legacyBehavior": "Any authenticated user could drive the AI scorer against any debate and overwrite a participant score; the handler performed no authorization at all.",
+    "replacementBehavior": "Scoring requires the debate creator or an administrator, and the score write runs in a Serializable transaction.",
+    "reason": "A debate outcome must not be settable by an unrelated user.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:debate-vote-ballot-stuffing",
+    "capabilityIds": [
+      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/debates.js",
+        "line": 67
+      }
+    ],
+    "legacyBehavior": "votes is a counts map keyed by participant with no record of who voted, so one user can vote without limit by repeating the request.",
+    "replacementBehavior": "NOT YET CORRECTED. Closing this needs somewhere to record the voter, which means a DebateVote(voterId, debateId, participantId) table with a unique constraint — a schema migration outside this domain plan. Changing the stored shape instead would break every client reading votes[participantId] as a number. The lost-update half of the defect is fixed; the ballot-stuffing half is carried here.",
+    "reason": "Recorded as an open gate rather than counted as corrected.",
+    "status": "pending-schema"
   },
   {
     "id": "correction:environment-load-order",
@@ -124,6 +383,88 @@
     "legacyBehavior": "Swagger documents a health route that the Express router does not mount.",
     "replacementBehavior": "Nest exposes explicit liveness and readiness endpoints.",
     "reason": "Operational documentation must describe executable routes.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:media-editing-authentication",
+    "capabilityIds": [
+      "rest:POST:/api/photo/edit:routes/photoEdit.js:8",
+      "rest:POST:/api/video/edit:routes/videoEdit.js:8"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "server.js",
+        "line": 139
+      },
+      {
+        "file": "controllers/photoEditController.js",
+        "line": 63
+      },
+      {
+        "file": "controllers/videoEditController.js",
+        "line": 16
+      }
+    ],
+    "legacyBehavior": "Photo and video editing were mounted without authentication, accepted unbounded uploads validated only by declared MIME type, derived output names from the uploaded filename, wrote them synchronously, and returned raw Sharp and FFmpeg errors including absolute paths.",
+    "replacementBehavior": "Both routes require a session, bound uploads at 10 MiB and 100 MiB, verify magic bytes against the declared type, generate random output names under one configured root, invoke FFmpeg with shell:false and a fixed argument array under a 60-second timeout, and return a fixed unavailable message.",
+    "reason": "Anonymous callers must not be able to spend CPU, memory, and disk or learn server paths.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:native-better-auth-cutover",
+    "capabilityIds": [
+      "provider:email:9611586235e6",
+      "provider:google-oauth:3b8ab112fd02",
+      "rest:DELETE:/api/profile/delete-account:routes/profile.js:420",
+      "rest:DELETE:/api/security/2fa:routes/security.js:838",
+      "rest:GET:/api/security/2fa/status:routes/security.js:1009",
+      "rest:POST:/api/security/2fa/backup-codes:routes/security.js:896",
+      "rest:POST:/api/security/2fa/backup-verify:routes/security.js:962",
+      "rest:POST:/api/security/2fa/setup:routes/security.js:647",
+      "rest:POST:/api/security/2fa/verify-setup:routes/security.js:722",
+      "rest:POST:/api/security/2fa/verify:routes/security.js:779",
+      "rest:POST:/api/users/login:routes/userRoutes.js:102",
+      "rest:POST:/api/users/register:routes/userRoutes.js:40",
+      "rest:PUT:/api/profile/change-password:routes/profile.js:389",
+      "rest:GET:/api/auth/google:routes/auth.js:363",
+      "rest:GET:/api/auth/google/callback:routes/auth.js:368",
+      "rest:GET:/api/auth/google:routes/auth.js:398",
+      "rest:GET:/api/auth/google/callback:routes/auth.js:405",
+      "rest:POST:/api/auth/google/mobile:routes/auth.js:468",
+      "rest:POST:/api/auth/google/mobile:routes/auth.js:595",
+      "rest:POST:/api/auth/signup:routes/auth.js:603",
+      "rest:POST:/api/auth/verify-email:routes/auth.js:695",
+      "rest:POST:/api/auth/resend-verification:routes/auth.js:808",
+      "rest:POST:/api/auth/login:routes/auth.js:881",
+      "rest:GET:/api/auth/profile-completion:routes/auth.js:1018",
+      "rest:GET:/api/auth/me:routes/auth.js:1071",
+      "rest:POST:/api/auth/logout:routes/auth.js:1116",
+      "rest:POST:/api/auth/forgot-password:routes/auth.js:1131",
+      "rest:POST:/api/auth/reset-password:routes/auth.js:1194"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/auth.js",
+        "line": 363
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 603
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 881
+      },
+      {
+        "file": "routes/auth.js",
+        "line": 1131
+      }
+    ],
+    "legacyBehavior": "Express owns duplicated Passport Google callbacks, bcrypt/JWT credential flows, verification codes, reset tokens, token cookies, and handwritten two-factor/session middleware.",
+    "replacementBehavior": "Better Auth exclusively owns /api/auth/** with native email/password, conditional Google, bearer, two-factor, verification, reset, cookie, and session contracts; Nest authorization consumes only immutable typed principals.",
+    "reason": "One native protocol owner removes duplicated credential logic, prevents partial two-factor principals, preserves CSRF/origin defenses, and revokes sessions after password reset.",
     "status": "approved"
   },
   {
@@ -193,6 +534,81 @@
     "legacyBehavior": "Post anchoring and mint preparation do not consistently enforce post/signing ownership.",
     "replacementBehavior": "Authenticated post ownership and signing-address binding are required.",
     "reason": "Chain preparation must not authorize another userâ€™s content or address.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:post-interaction-integrity",
+    "capabilityIds": [
+      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
+      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
+      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
+      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
+      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 812
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 896
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 952
+      }
+    ],
+    "legacyBehavior": "Like and bookmark read the likes JSON array and engagement outside any transaction and wrote them back whole, losing concurrent updates. Share-to-status carried an explicit allow-sharing comment and performed no access check, copying a private post into a status. Repost applied no visibility check. Promote coerced budget with Number(), admitting NaN and negative values.",
+    "replacementBehavior": "Every write interaction resolves visibility first and runs in a Serializable transaction with bounded P2034 retry; promotion input is validated.",
+    "reason": "Interaction counts drive ranking and billing, and a private post must not be republishable by a stranger.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:post-invalid-author-include",
+    "capabilityIds": [
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
+      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
+      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
+      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 874
+      },
+      {
+        "file": "prisma/schema.prisma",
+        "line": 10
+      }
+    ],
+    "legacyBehavior": "Four handlers include a Post relation named user, which does not exist on the model; the author relation is users_posts_userIdTouser. Every reachable call raises a Prisma validation error and returns 500.",
+    "replacementBehavior": "One Prisma boundary selects the real author relation and projects it as user for clients.",
+    "reason": "A permanently failing endpoint is not parity.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:post-read-privacy-bypass",
+    "capabilityIds": [
+      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
+      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/postRoutes.js",
+        "line": 686
+      },
+      {
+        "file": "routes/postRoutes.js",
+        "line": 869
+      }
+    ],
+    "legacyBehavior": "GET /api/posts/:postId checked blocking but never post privacy, so any authenticated caller who knew an id could read an only_me, followers, or select_users post. GET /api/posts/:postId/reposts applied neither privacy nor blocking.",
+    "replacementBehavior": "Both reads apply the shared visibility policy, and a denied read is reported as NOT_FOUND so an id cannot be probed.",
+    "reason": "A private post must not be readable by identifier.",
     "status": "approved"
   },
   {
@@ -326,6 +742,61 @@
     "status": "approved"
   },
   {
+    "id": "correction:space-highlight-authorization",
+    "capabilityIds": [
+      "rest:PUT:/api/spaces/:spaceId/highlight:routes/space.js:60"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "routes/space.js",
+        "line": 60
+      }
+    ],
+    "legacyBehavior": "Adding a highlight required only a session; there was no check that the caller hosted the space, so any user could append highlights to anyone else's space.",
+    "replacementBehavior": "Highlights are host-only, matching the end route. Administrators are not exempt, because a space is host-owned content.",
+    "reason": "Unauthorized write to another user's content.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:status-reaction-integrity",
+    "capabilityIds": [
+      "rest:POST:/api/status/:id/react:routes/status.js:384"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "routes/status.js",
+        "line": 396
+      }
+    ],
+    "legacyBehavior": "Reacting read the reactions JSON array and wrote it back whole with no transaction, losing concurrent reactions.",
+    "replacementBehavior": "The append runs in a Serializable transaction with bounded P2034 retry. Append semantics are unchanged: repeat reactions from the same user are still recorded, and an expired status still accepts a reaction, both as in Express.",
+    "reason": "Concurrent reactions must not overwrite one another.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:status-unbounded-list",
+    "capabilityIds": [
+      "rest:GET:/api/status:routes/status.js:197"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "routes/status.js",
+        "line": 200
+      },
+      {
+        "file": "routes/status.js",
+        "line": 232
+      }
+    ],
+    "legacyBehavior": "GET /api/status loaded every unexpired status in the system with no limit, then evaluated blocking one row at a time with a query per status.",
+    "replacementBehavior": "The query is bounded by a page limit and the blocked set is resolved once per request.",
+    "reason": "A global unbounded read with per-row blocking queries does not survive growth.",
+    "status": "approved"
+  },
+  {
     "id": "correction:subscription-expiry-email",
     "capabilityIds": [
       "provider:email:d62f64af5dee"
@@ -387,402 +858,5 @@
     "replacementBehavior": "Raw-body signatures, event identity, idempotency, and replay windows are enforced.",
     "reason": "Payment side effects must be authentic and exactly-once at the application boundary.",
     "status": "approved"
-  },
-  {
-    "id": "correction:native-better-auth-cutover",
-    "capabilityIds": [
-      "provider:email:9611586235e6",
-      "provider:google-oauth:3b8ab112fd02",
-      "rest:DELETE:/api/profile/delete-account:routes/profile.js:420",
-      "rest:DELETE:/api/security/2fa:routes/security.js:838",
-      "rest:GET:/api/security/2fa/status:routes/security.js:1009",
-      "rest:POST:/api/security/2fa/backup-codes:routes/security.js:896",
-      "rest:POST:/api/security/2fa/backup-verify:routes/security.js:962",
-      "rest:POST:/api/security/2fa/setup:routes/security.js:647",
-      "rest:POST:/api/security/2fa/verify-setup:routes/security.js:722",
-      "rest:POST:/api/security/2fa/verify:routes/security.js:779",
-      "rest:POST:/api/users/login:routes/userRoutes.js:102",
-      "rest:POST:/api/users/register:routes/userRoutes.js:40",
-      "rest:PUT:/api/profile/change-password:routes/profile.js:389",
-      "rest:GET:/api/auth/google:routes/auth.js:363",
-      "rest:GET:/api/auth/google/callback:routes/auth.js:368",
-      "rest:GET:/api/auth/google:routes/auth.js:398",
-      "rest:GET:/api/auth/google/callback:routes/auth.js:405",
-      "rest:POST:/api/auth/google/mobile:routes/auth.js:468",
-      "rest:POST:/api/auth/google/mobile:routes/auth.js:595",
-      "rest:POST:/api/auth/signup:routes/auth.js:603",
-      "rest:POST:/api/auth/verify-email:routes/auth.js:695",
-      "rest:POST:/api/auth/resend-verification:routes/auth.js:808",
-      "rest:POST:/api/auth/login:routes/auth.js:881",
-      "rest:GET:/api/auth/profile-completion:routes/auth.js:1018",
-      "rest:GET:/api/auth/me:routes/auth.js:1071",
-      "rest:POST:/api/auth/logout:routes/auth.js:1116",
-      "rest:POST:/api/auth/forgot-password:routes/auth.js:1131",
-      "rest:POST:/api/auth/reset-password:routes/auth.js:1194"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "routes/auth.js",
-        "line": 363
-      },
-      {
-        "file": "routes/auth.js",
-        "line": 603
-      },
-      {
-        "file": "routes/auth.js",
-        "line": 881
-      },
-      {
-        "file": "routes/auth.js",
-        "line": 1131
-      }
-    ],
-    "legacyBehavior": "Express owns duplicated Passport Google callbacks, bcrypt/JWT credential flows, verification codes, reset tokens, token cookies, and handwritten two-factor/session middleware.",
-    "replacementBehavior": "Better Auth exclusively owns /api/auth/** with native email/password, conditional Google, bearer, two-factor, verification, reset, cookie, and session contracts; Nest authorization consumes only immutable typed principals.",
-    "reason": "One native protocol owner removes duplicated credential logic, prevents partial two-factor principals, preserves CSRF/origin defenses, and revokes sessions after password reset.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:ad-status-column",
-    "capabilityIds": [
-      "rest:DELETE:/api/ads/:adId:routes/adRoutes.js:689",
-      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688",
-      "model:model:Ad"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "controllers/adController.js",
-        "line": 695
-      },
-      {
-        "file": "controllers/adController.js",
-        "line": 851
-      }
-    ],
-    "legacyBehavior": "Deletion and the dashboard read ad.status, a field that does not exist on the row, so running ads were always deletable and every dashboard bucket collapsed into one undefined key.",
-    "replacementBehavior": "Every read and write goes through the canonical Status column at a single Prisma boundary.",
-    "reason": "The guard and the dashboard breakdown must act on the value actually stored.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:ad-tracking-concurrency",
-    "capabilityIds": [
-      "rest:POST:/api/ads/track-view:routes/adRoutes.js:696",
-      "rest:POST:/api/ads/track/click:routes/adRoutes.js:683",
-      "rest:POST:/api/ads/track/conversion:routes/adRoutes.js:684",
-      "rest:POST:/api/ads/track/impression:routes/adRoutes.js:682"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "controllers/adController.js",
-        "line": 374
-      },
-      {
-        "file": "controllers/adController.js",
-        "line": 450
-      }
-    ],
-    "legacyBehavior": "Analytics counters and budget were read outside any transaction and written back whole, losing concurrent increments; budget exhaustion assigned the lowercase status field, which Prisma rejects, so an exhausted ad errored instead of completing.",
-    "replacementBehavior": "Counter updates re-read inside a Serializable transaction with up to three P2034 retries, and completion is written through Status.",
-    "reason": "Impression, click, and conversion counts drive billing and must not be lost or error on exhaustion.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:ad-update-allowlist",
-    "capabilityIds": [
-      "rest:PUT:/api/ads/:adId:routes/adRoutes.js:688"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "controllers/adController.js",
-        "line": 654
-      }
-    ],
-    "legacyBehavior": "The raw request body was forwarded to prisma.ad.update, so a caller could overwrite advertiserId, analytics, and review state.",
-    "replacementBehavior": "Updates are parsed against a strict allowlist that names any rejected field.",
-    "reason": "Ownership, analytics, and review state must not be caller-writable.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:media-editing-authentication",
-    "capabilityIds": [
-      "rest:POST:/api/photo/edit:routes/photoEdit.js:8",
-      "rest:POST:/api/video/edit:routes/videoEdit.js:8"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "server.js",
-        "line": 139
-      },
-      {
-        "file": "controllers/photoEditController.js",
-        "line": 63
-      },
-      {
-        "file": "controllers/videoEditController.js",
-        "line": 16
-      }
-    ],
-    "legacyBehavior": "Photo and video editing were mounted without authentication, accepted unbounded uploads validated only by declared MIME type, derived output names from the uploaded filename, wrote them synchronously, and returned raw Sharp and FFmpeg errors including absolute paths.",
-    "replacementBehavior": "Both routes require a session, bound uploads at 10 MiB and 100 MiB, verify magic bytes against the declared type, generate random output names under one configured root, invoke FFmpeg with shell:false and a fixed argument array under a 60-second timeout, and return a fixed unavailable message.",
-    "reason": "Anonymous callers must not be able to spend CPU, memory, and disk or learn server paths.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:post-read-privacy-bypass",
-    "capabilityIds": [
-      "rest:GET:/api/posts/:postId:routes/postRoutes.js:686",
-      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "routes/postRoutes.js",
-        "line": 686
-      },
-      {
-        "file": "routes/postRoutes.js",
-        "line": 869
-      }
-    ],
-    "legacyBehavior": "GET /api/posts/:postId checked blocking but never post privacy, so any authenticated caller who knew an id could read an only_me, followers, or select_users post. GET /api/posts/:postId/reposts applied neither privacy nor blocking.",
-    "replacementBehavior": "Both reads apply the shared visibility policy, and a denied read is reported as NOT_FOUND so an id cannot be probed.",
-    "reason": "A private post must not be readable by identifier.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:post-invalid-author-include",
-    "capabilityIds": [
-      "rest:GET:/api/posts/:postId/reposts:routes/postRoutes.js:869",
-      "rest:GET:/api/posts/mixed:routes/postRoutes.js:1070",
-      "rest:GET:/api/posts/videos:routes/postRoutes.js:1096",
-      "rest:PUT:/api/posts/:postId/privacy:routes/postRoutes.js:464"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/postRoutes.js",
-        "line": 874
-      },
-      {
-        "file": "prisma/schema.prisma",
-        "line": 10
-      }
-    ],
-    "legacyBehavior": "Four handlers include a Post relation named user, which does not exist on the model; the author relation is users_posts_userIdTouser. Every reachable call raises a Prisma validation error and returns 500.",
-    "replacementBehavior": "One Prisma boundary selects the real author relation and projects it as user for clients.",
-    "reason": "A permanently failing endpoint is not parity.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:post-interaction-integrity",
-    "capabilityIds": [
-      "rest:POST:/api/posts/:postId/like:routes/postRoutes.js:796",
-      "rest:POST:/api/posts/:postId/bookmark:routes/postRoutes.js:115",
-      "rest:POST:/api/posts/:postId/share-to-status:routes/postRoutes.js:886",
-      "rest:POST:/api/posts/repost/:postId:routes/postRoutes.js:1142",
-      "rest:POST:/api/posts/:postId/promote:routes/postRoutes.js:939"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/postRoutes.js",
-        "line": 812
-      },
-      {
-        "file": "routes/postRoutes.js",
-        "line": 896
-      },
-      {
-        "file": "routes/postRoutes.js",
-        "line": 952
-      }
-    ],
-    "legacyBehavior": "Like and bookmark read the likes JSON array and engagement outside any transaction and wrote them back whole, losing concurrent updates. Share-to-status carried an explicit allow-sharing comment and performed no access check, copying a private post into a status. Repost applied no visibility check. Promote coerced budget with Number(), admitting NaN and negative values.",
-    "replacementBehavior": "Every write interaction resolves visibility first and runs in a Serializable transaction with bounded P2034 retry; promotion input is validated.",
-    "reason": "Interaction counts drive ranking and billing, and a private post must not be republishable by a stranger.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:comment-post-visibility",
-    "capabilityIds": [
-      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9",
-      "rest:POST:/api/comments/reply/:commentId:routes/commentRoutes.js:126",
-      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204",
-      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
-      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "routes/commentRoutes.js",
-        "line": 9
-      },
-      {
-        "file": "routes/commentRoutes.js",
-        "line": 333
-      }
-    ],
-    "legacyBehavior": "Comment routes applied a blocking middleware but never checked that the parent post was visible, so a private post's thread could be read and written by anyone holding the post id.",
-    "replacementBehavior": "Every comment read and write resolves the shared post visibility policy first and reports NOT_FOUND when denied.",
-    "reason": "A private post's discussion is as sensitive as the post.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:comment-unbounded-reads",
-    "capabilityIds": [
-      "rest:GET:/api/comments/:postId:routes/commentRoutes.js:333",
-      "rest:GET:/api/comments/replies/:commentId:routes/commentRoutes.js:277",
-      "rest:POST:/api/comments/:postId:routes/commentRoutes.js:9"
-    ],
-    "category": "performance",
-    "legacyEvidence": [
-      {
-        "file": "routes/commentRoutes.js",
-        "line": 333
-      },
-      {
-        "file": "routes/commentRoutes.js",
-        "line": 14
-      }
-    ],
-    "legacyBehavior": "Both comment reads fetched every comment and every nested reply with no limit, and creating a comment selected the entire comments relation only to size a counter.",
-    "replacementBehavior": "Both reads are bounded by a page query and the counter uses a count query; the response stays a bare array.",
-    "reason": "An unbounded thread read is an availability risk on a popular post.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:comment-like-dual-write",
-    "capabilityIds": [
-      "rest:POST:/api/comments/like/:commentId:routes/commentRoutes.js:204"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/commentRoutes.js",
-        "line": 228
-      }
-    ],
-    "legacyBehavior": "Comment likes read the likes JSON array and wrote it back whole with no transaction, losing concurrent likes.",
-    "replacementBehavior": "The like runs in a Serializable transaction with bounded P2034 retry and dual-writes the CommentLike row, per Plan C step 3. Liking stays idempotent: there is no unlike route in the legacy API.",
-    "reason": "Like counts must not be lost, and the relational table must stay in step during the dual-write window.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:status-unbounded-list",
-    "capabilityIds": [
-      "rest:GET:/api/status:routes/status.js:197"
-    ],
-    "category": "performance",
-    "legacyEvidence": [
-      {
-        "file": "routes/status.js",
-        "line": 200
-      },
-      {
-        "file": "routes/status.js",
-        "line": 232
-      }
-    ],
-    "legacyBehavior": "GET /api/status loaded every unexpired status in the system with no limit, then evaluated blocking one row at a time with a query per status.",
-    "replacementBehavior": "The query is bounded by a page limit and the blocked set is resolved once per request.",
-    "reason": "A global unbounded read with per-row blocking queries does not survive growth.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:status-reaction-integrity",
-    "capabilityIds": [
-      "rest:POST:/api/status/:id/react:routes/status.js:384"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/status.js",
-        "line": 396
-      }
-    ],
-    "legacyBehavior": "Reacting read the reactions JSON array and wrote it back whole with no transaction, losing concurrent reactions.",
-    "replacementBehavior": "The append runs in a Serializable transaction with bounded P2034 retry. Append semantics are unchanged: repeat reactions from the same user are still recorded, and an expired status still accepts a reaction, both as in Express.",
-    "reason": "Concurrent reactions must not overwrite one another.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:debate-scoring-authorization",
-    "capabilityIds": [
-      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "routes/debates.js",
-        "line": 33
-      }
-    ],
-    "legacyBehavior": "Any authenticated user could drive the AI scorer against any debate and overwrite a participant score; the handler performed no authorization at all.",
-    "replacementBehavior": "Scoring requires the debate creator or an administrator, and the score write runs in a Serializable transaction.",
-    "reason": "A debate outcome must not be settable by an unrelated user.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:debate-counter-lost-updates",
-    "capabilityIds": [
-      "rest:PUT:/api/debates/:debateId/score:routes/debates.js:33",
-      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
-    ],
-    "category": "correctness",
-    "legacyEvidence": [
-      {
-        "file": "routes/debates.js",
-        "line": 44
-      },
-      {
-        "file": "routes/debates.js",
-        "line": 67
-      }
-    ],
-    "legacyBehavior": "scores and votes were read, mutated in memory, and written back whole with no transaction, so concurrent updates silently overwrote one another.",
-    "replacementBehavior": "Both counters are re-read and written inside one Serializable transaction with bounded P2034 retry.",
-    "reason": "Concurrent scoring and voting must not lose writes.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:debate-list-n-plus-one",
-    "capabilityIds": [
-      "rest:GET:/api/debates:routes/debates.js:116"
-    ],
-    "category": "performance",
-    "legacyEvidence": [
-      {
-        "file": "routes/debates.js",
-        "line": 136
-      }
-    ],
-    "legacyBehavior": "The public listing issued one user query per debate row to resolve participants, and limit was unbounded.",
-    "replacementBehavior": "Participants for the whole page are resolved in one query and limit is capped. The route stays public, as it was.",
-    "reason": "A public unbounded read with per-row queries does not survive growth.",
-    "status": "approved"
-  },
-  {
-    "id": "correction:debate-vote-ballot-stuffing",
-    "capabilityIds": [
-      "rest:PUT:/api/debates/:debateId/vote:routes/debates.js:58"
-    ],
-    "category": "security",
-    "legacyEvidence": [
-      {
-        "file": "routes/debates.js",
-        "line": 67
-      }
-    ],
-    "legacyBehavior": "votes is a counts map keyed by participant with no record of who voted, so one user can vote without limit by repeating the request.",
-    "replacementBehavior": "NOT YET CORRECTED. Closing this needs somewhere to record the voter, which means a DebateVote(voterId, debateId, participantId) table with a unique constraint — a schema migration outside this domain plan. Changing the stored shape instead would break every client reading votes[participantId] as a number. The lost-update half of the defect is fixed; the ballot-stuffing half is carried here.",
-    "reason": "Recorded as an open gate rather than counted as corrected.",
-    "status": "pending-schema"
   }
 ]
