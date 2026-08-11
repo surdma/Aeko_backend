@@ -3,13 +3,16 @@ import { z } from 'zod';
 import type { JsonValue } from '../common/json/json-value';
 import { boundedText, parseWithScope } from '../common/validation/parse';
 
+/** A JSON value that a JSON column can hold without a null token. */
+export type StoredJson = Exclude<JsonValue, null>;
+
 export interface SubscriptionPlanCreate {
   readonly name: string;
   readonly price: number;
   readonly currency: string;
   readonly duration: string;
-  readonly features: JsonValue;
-  readonly limits?: JsonValue | undefined;
+  readonly features: StoredJson;
+  readonly limits?: StoredJson | undefined;
   readonly targetAudience: string | null;
 }
 
@@ -18,8 +21,8 @@ export interface SubscriptionPlanUpdate {
   readonly price?: number | undefined;
   readonly currency?: string | undefined;
   readonly duration?: string | undefined;
-  readonly features?: JsonValue | undefined;
-  readonly limits?: JsonValue | undefined;
+  readonly features?: StoredJson | undefined;
+  readonly limits?: StoredJson | undefined;
   readonly targetAudience?: string | null | undefined;
   readonly isActive?: boolean | undefined;
 }
@@ -33,6 +36,17 @@ const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
     z.array(jsonValue),
     z.record(z.string(), jsonValue),
   ]),
+);
+
+/**
+ * A JSON column needs a provider-specific token to store a top-level null, so
+ * the boundary accepts an object, array or scalar and rejects a bare null.
+ * Nulls nested inside the value are stored normally. Legacy passed whatever it
+ * was given straight to Prisma, which raised on this case anyway.
+ */
+const storedJson: z.ZodType<StoredJson> = jsonValue.refine(
+  (value): value is StoredJson => value !== null,
+  { message: 'must not be null' },
 );
 
 const price = z.number().finite().nonnegative();
@@ -49,8 +63,8 @@ const planCreateSchema = z
     price,
     currency: boundedText(10).default('USD'),
     duration: duration.default('monthly'),
-    features: jsonValue,
-    limits: jsonValue.optional(),
+    features: storedJson,
+    limits: storedJson.optional(),
     targetAudience: boundedText(200).nullable().default(null),
   })
   .strict();
@@ -67,8 +81,8 @@ const planUpdateSchema = z
     price: price.optional(),
     currency: boundedText(10).optional(),
     duration: duration.optional(),
-    features: jsonValue.optional(),
-    limits: jsonValue.optional(),
+    features: storedJson.optional(),
+    limits: storedJson.optional(),
     targetAudience: boundedText(200).nullable().optional(),
     isActive: z.boolean().optional(),
   })
