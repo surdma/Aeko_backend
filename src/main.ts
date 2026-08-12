@@ -19,6 +19,8 @@ import {
 } from './database/prisma/prisma.service';
 import { createAekoAuth } from './lib/auth/auth.config';
 import type { AuthEmailPort } from './lib/auth/auth-email.port';
+import { RedisConnectionsService } from './realtime/redis-connections.service';
+import { SocketIoRedisAdapter } from './realtime/socket-io-redis.adapter';
 
 export interface ApplicationOptions {
   readonly environment?: NodeJS.ProcessEnv;
@@ -81,6 +83,11 @@ export async function createApplication(
     ),
   );
   application.enableShutdownHooks();
+  // Socket.IO creates its server during initialization, so this must happen
+  // before init/listen. A Redis outage deliberately leaves the local adapter
+  // active while health reports degraded rather than blocking HTTP chat.
+  await application.get(RedisConnectionsService).connect();
+  application.useWebSocketAdapter(application.get(SocketIoRedisAdapter));
   await application.init();
   return application;
 }
