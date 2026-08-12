@@ -17,6 +17,13 @@ interface CommunityRow {
   settings: unknown;
 }
 
+interface RelationalMemberRow {
+  communityId: string;
+  userId: string;
+  role: string;
+  status: string;
+}
+
 interface UserRow {
   id: string;
   communities: unknown;
@@ -55,6 +62,7 @@ interface Harness {
   readonly transactions: Map<string, TxRow>;
   readonly communities: Map<string, CommunityRow>;
   readonly users: Map<string, UserRow>;
+  readonly relationalMembers: RelationalMemberRow[];
   readonly transactionOptions: unknown[];
   membershipWrites: number;
 }
@@ -64,6 +72,7 @@ const createHarness = (
     transactions?: readonly TxRow[];
     communities?: readonly CommunityRow[];
     users?: readonly UserRow[];
+    relationalMembers?: readonly RelationalMemberRow[];
   }> = {},
 ): Harness => {
   const transactions = new Map(
@@ -79,8 +88,11 @@ const createHarness = (
     ]),
   );
 
+  const relationalMembers = [...(options.relationalMembers ?? [])];
+
   const harness: Harness = {
     adapter: undefined as unknown as PrismaCommunityPaymentAdapter,
+    relationalMembers,
     transactions,
     communities,
     users,
@@ -136,6 +148,39 @@ const createHarness = (
         };
         communities.set(next.id, next);
         return Promise.resolve(next);
+      },
+    },
+    communityMember: {
+      findUnique: ({
+        where,
+      }: {
+        where: { communityId_userId: { communityId: string; userId: string } };
+      }): Promise<unknown> => {
+        const { communityId, userId } = where.communityId_userId;
+        return Promise.resolve(
+          relationalMembers.find(
+            (m) => m.communityId === communityId && m.userId === userId,
+          ) ?? null,
+        );
+      },
+      create: ({ data }: { data: RelationalMemberRow }): Promise<unknown> => {
+        relationalMembers.push({ ...data });
+        return Promise.resolve(data);
+      },
+      update: ({
+        where,
+        data,
+      }: {
+        where: { communityId_userId: { communityId: string; userId: string } };
+        data: Record<string, unknown>;
+      }): Promise<unknown> => {
+        const { communityId, userId } = where.communityId_userId;
+        const row = relationalMembers.find(
+          (m) => m.communityId === communityId && m.userId === userId,
+        );
+        if (row === undefined) return Promise.reject(new Error('missing'));
+        if (typeof data.status === 'string') row.status = data.status;
+        return Promise.resolve(row);
       },
     },
     user: {
@@ -313,6 +358,14 @@ describe('community payment settlement', () => {
           settings: { payment: { totalEarnings: 100 } },
         }),
       ],
+      relationalMembers: [
+        {
+          communityId: 'community-1',
+          userId: 'user-1',
+          role: 'moderator',
+          status: 'inactive',
+        },
+      ],
     });
 
     await harness.adapter.settle('tx-1');
@@ -327,6 +380,60 @@ describe('community payment settlement', () => {
       status: 'active',
     });
     expect(earningsOf(community)).toMatchObject({ totalEarnings: 125 });
+  });
+
+  it('writes the relational membership every read path actually uses', async () => {
+    const harness = createHarness();
+    await harness.adapter.settle('tx-1');
+
+    // Legacy wrote only the JSON, so a paid member was invisible to the
+    // community detail, the leave check, the join check and the post guard.
+    expect(harness.relationalMembers).toEqual([
+      {
+        communityId: 'community-1',
+        userId: 'user-1',
+        role: 'member',
+        status: 'active',
+      },
+    ]);
+  });
+
+  it('repairs a legacy member who exists only in the json', async () => {
+    // The pre-cutover state: paid membership recorded in JSON alone.
+    const harness = createHarness({
+      communities: [
+        makeCommunity({
+          members: [{ user: 'user-1', role: 'member', status: 'active' }],
+          memberCount: 1,
+        }),
+      ],
+    });
+
+    await harness.adapter.settle('tx-1');
+
+    expect(harness.relationalMembers).toHaveLength(1);
+    // They were never a relational member, so the count moves for them now.
+    expect(harness.communities.get('community-1')?.memberCount).toBe(2);
+  });
+
+  it('reactivates a lapsed relational member without a duplicate row', async () => {
+    const harness = createHarness({
+      communities: [makeCommunity({ memberCount: 1 })],
+      relationalMembers: [
+        {
+          communityId: 'community-1',
+          userId: 'user-1',
+          role: 'member',
+          status: 'inactive',
+        },
+      ],
+    });
+
+    await harness.adapter.settle('tx-1');
+
+    expect(harness.relationalMembers).toHaveLength(1);
+    expect(harness.relationalMembers[0]?.status).toBe('active');
+    expect(harness.communities.get('community-1')?.memberCount).toBe(1);
   });
 
   it('adds to the stored earnings rather than to a total read earlier', async () => {

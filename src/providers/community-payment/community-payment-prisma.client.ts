@@ -40,6 +40,19 @@ export interface CommunitySettlementClient {
     members: WritableJson,
     memberCount: number,
   ): Promise<void>;
+  /**
+   * The relational half of the membership.
+   *
+   * Legacy wrote a paid membership only into the JSON above, while every
+   * request path — the community detail, the leave check, the join check, the
+   * post guard — reads `CommunityMember`. A member who paid was therefore
+   * invisible everywhere except the column that recorded the payment. Both are
+   * written here; reads stay relational, and the JSON keeps being written so
+   * anything outside this migration still reading it keeps working.
+   *
+   * Reports whether the row was newly created, so the member count moves once.
+   */
+  upsertRelationalMember(communityId: string, userId: string): Promise<boolean>;
   saveSettings(id: string, settings: WritableJson): Promise<void>;
   findUserCommunities(userId: string): Promise<JsonValue | undefined>;
   saveUserCommunities(userId: string, communities: WritableJson): Promise<void>;
@@ -108,6 +121,29 @@ const settlementOps = (
       where: { id },
       data: { members: jsonInput(members), memberCount },
     });
+  },
+
+  async upsertRelationalMember(communityId, userId) {
+    const existing = await transaction.communityMember.findUnique({
+      where: { communityId_userId: { communityId, userId } },
+      select: { id: true, status: true },
+    });
+
+    if (existing === null) {
+      await transaction.communityMember.create({
+        data: { communityId, userId, role: 'member', status: 'active' },
+      });
+      return true;
+    }
+
+    // A renewal reactivates without changing the role they already hold.
+    if (existing.status !== 'active') {
+      await transaction.communityMember.update({
+        where: { communityId_userId: { communityId, userId } },
+        data: { status: 'active' },
+      });
+    }
+    return false;
   },
 
   async saveSettings(id, settings) {

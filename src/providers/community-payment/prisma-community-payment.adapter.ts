@@ -126,18 +126,27 @@ async function grantMembership(
   userId: string,
   subscription: Subscription,
 ): Promise<void> {
+  // The relational row is authoritative for every read path, so it decides
+  // whether this is a new member and therefore whether the count moves.
+  const isNewMember = await transaction.upsertRelationalMember(
+    community.id,
+    userId,
+  );
+
   const members = readArray(community.members);
   const index = members.findIndex(
     (entry) => isJsonObject(entry) && entry.user === userId,
   );
+  const memberCount = isNewMember
+    ? community.memberCount + 1
+    : community.memberCount;
 
   if (index >= 0) {
     const existing = members[index];
     const previous = isJsonObject(existing) ? existing : {};
     const next = [...members];
     next[index] = { ...previous, subscription, status: 'active' };
-    // Renewing an existing member must not inflate the member count.
-    await transaction.saveMembership(community.id, next, community.memberCount);
+    await transaction.saveMembership(community.id, next, memberCount);
     return;
   }
 
@@ -147,7 +156,7 @@ async function grantMembership(
       ...members,
       { user: userId, role: 'member', status: 'active', subscription },
     ],
-    community.memberCount + 1,
+    memberCount,
   );
 }
 
