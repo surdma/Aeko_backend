@@ -50,6 +50,24 @@ CREATE TABLE "verification_settings" (
   "id" TEXT PRIMARY KEY,
   "updatedBy" TEXT
 );
+-- Communities exist in an Express-created database too, and the cutover now
+-- backfills their memberships; without them the membership section cannot run.
+CREATE TABLE "communities" (
+  "id" TEXT PRIMARY KEY,
+  "name" TEXT NOT NULL,
+  "memberCount" INTEGER NOT NULL DEFAULT 0,
+  "members" JSONB
+);
+CREATE TABLE "community_members" (
+  "id" TEXT PRIMARY KEY,
+  "communityId" TEXT NOT NULL REFERENCES "communities"("id") ON DELETE CASCADE,
+  "userId" TEXT NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "role" TEXT NOT NULL DEFAULT 'member',
+  "status" TEXT NOT NULL DEFAULT 'active',
+  "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "community_members_communityId_userId_key"
+    UNIQUE ("communityId", "userId")
+);
 `;
 
 const SEED = `

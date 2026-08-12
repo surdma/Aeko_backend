@@ -353,3 +353,66 @@ SELECT gen_random_uuid()::text, m.metric, m.count FROM (
   UNION ALL
   SELECT 'user_interest_edges_total', (SELECT count(*) FROM "user_interests")
 ) AS m;
+
+-- ---------------------------------------------------------------------------
+-- Community memberships paid for before the cutover.
+-- ---------------------------------------------------------------------------
+--
+-- Legacy recorded a PAID community membership only in `communities.members`
+-- (JSON), while every request path reads the relational `community_members`
+-- table. A member who paid was therefore invisible to the community detail,
+-- the leave check, the join check and the post guard.
+--
+-- The NestJS service dual-writes both halves from now on, and repairs a
+-- JSON-only member the next time they pay. This backfill covers the ones who
+-- never pay again: it reads the JSON array and inserts the missing relational
+-- rows.
+--
+-- Only entries that name a real user are taken, and `ON CONFLICT DO NOTHING`
+-- means an existing relational row always wins — the backfill never downgrades
+-- a role or a status that the relational table already holds.
+
+INSERT INTO "community_members" ("id", "communityId", "userId", "role", "status", "joinedAt")
+SELECT
+  gen_random_uuid()::text,
+  c."id",
+  m.value ->> 'user',
+  COALESCE(NULLIF(m.value ->> 'role', ''), 'member'),
+  COALESCE(NULLIF(m.value ->> 'status', ''), 'active'),
+  CURRENT_TIMESTAMP
+FROM "communities" c
+CROSS JOIN LATERAL jsonb_array_elements(
+  CASE WHEN jsonb_typeof(c."members"::jsonb) = 'array'
+       THEN c."members"::jsonb ELSE '[]'::jsonb END) AS m(value)
+WHERE jsonb_typeof(m.value) = 'object'
+  AND m.value ->> 'user' IS NOT NULL
+  AND EXISTS (SELECT 1 FROM "users" u WHERE u."id" = m.value ->> 'user')
+ON CONFLICT ("communityId", "userId") DO NOTHING;
+
+-- `memberCount` is a stored counter that legacy moved by hand, so it has
+-- drifted from the membership it is supposed to count. Reset it to the number
+-- of active relational members now that those rows are complete.
+UPDATE "communities" c
+SET "memberCount" = (
+  SELECT count(*)
+  FROM "community_members" cm
+  WHERE cm."communityId" = c."id" AND cm."status" = 'active'
+);
+
+INSERT INTO "social_graph_backfill_report" ("id", "metric", "count")
+SELECT gen_random_uuid()::text, m.metric, m.count FROM (
+  SELECT 'community_member_rows_total' AS metric,
+         (SELECT count(*)::bigint FROM "community_members") AS count
+  UNION ALL
+  -- JSON entries naming a user who no longer exists; dropped, not migrated.
+  SELECT 'community_member_json_orphans',
+         (SELECT count(*)::bigint
+          FROM "communities" c
+          CROSS JOIN LATERAL jsonb_array_elements(
+            CASE WHEN jsonb_typeof(c."members"::jsonb) = 'array'
+                 THEN c."members"::jsonb ELSE '[]'::jsonb END) AS m(value)
+          WHERE jsonb_typeof(m.value) = 'object'
+            AND m.value ->> 'user' IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM "users" u WHERE u."id" = m.value ->> 'user'))
+) AS m;
