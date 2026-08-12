@@ -2,10 +2,11 @@ import { z } from 'zod';
 
 export const callSignalSchema = z
   .object({
-    target: z.string().min(1).max(256),
-    offer: z.string().min(1).max(1_000_000).optional(),
-    answer: z.string().min(1).max(1_000_000).optional(),
-    candidate: z.string().min(1).max(1_000_000).optional(),
+    chatId: z.string().min(1).max(128),
+    targetUserId: z.string().min(1).max(128),
+    offer: z.string().min(1).max(65_536).optional(),
+    answer: z.string().min(1).max(65_536).optional(),
+    candidate: z.string().min(1).max(16_384).optional(),
   })
   .strict()
   .refine(
