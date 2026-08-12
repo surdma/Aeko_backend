@@ -127,6 +127,7 @@ model Chat {
   groupAdminId String?
   isCommunityChat Boolean @default(false)
   lastMessageId String?
+  nextMessageSequence BigInt @default(0)
   members ChatMember[]
   communities Community? @relation(fields: [communityId], references: [id], onDelete: Cascade)
   users User? @relation(fields: [groupAdminId], references: [id], onDelete: SetNull)
@@ -134,6 +135,7 @@ model Chat {
   enhancedMessages EnhancedMessage[] @relation("enhanced_messages_chatIdTochats")
   live_streams LiveStream?
   messages Message[]
+  outboxEvents ChatOutboxEvent[]
 }
 
 model Comment {
@@ -225,6 +227,8 @@ model EnhancedMessage {
   senderId String
   receiverId String?
   chatId String
+  clientMessageId String?
+  sequence BigInt?
   groupId String?
   messageType String @default("text")
   content String?
@@ -253,6 +257,9 @@ model EnhancedMessage {
   replyTo EnhancedMessage? @relation("enhanced_messagesToenhanced_messages", fields: [replyToId], references: [id])
   replies EnhancedMessage[] @relation("enhanced_messagesToenhanced_messages")
   sender User @relation("enhanced_messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, clientMessageId])
+  @@unique([chatId, sequence])
 }
 
 model Interest {
@@ -336,11 +343,36 @@ model Message {
   senderId String
   receiverId String
   chatId String?
+  clientMessageId String?
+  sequence BigInt?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   chat Chat? @relation(fields: [chatId], references: [id], onDelete: Cascade)
   users_messages_receiverIdTouser User @relation("messages_receiverIdTousers", fields: [receiverId], references: [id], onDelete: Cascade)
   users_messages_senderIdTouser User @relation("messages_senderIdTousers", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, clientMessageId])
+  @@unique([chatId, sequence])
+}
+
+model ChatOutboxEvent {
+  @@map("chat_outbox_events")
+  id String @id @default(uuid())
+  chatId String
+  aggregateId String
+  eventType String
+  payload Json
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  claimedAt DateTime?
+  completedAt DateTime?
+  failedAt DateTime?
+  lastErrorCode String?
+  createdAt DateTime @default(now())
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([completedAt, availableAt])
+  @@index([chatId, createdAt])
 }
 
 model Notification {
