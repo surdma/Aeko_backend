@@ -10,7 +10,6 @@ export const chatMediaMetadataSchema = z
   })
   .strict();
 export type ChatMediaMetadata = z.infer<typeof chatMediaMetadataSchema>;
-
 export const voiceMessageSchema = z
   .object({
     url: z.string().url().max(2_048),

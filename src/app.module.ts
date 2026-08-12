@@ -34,10 +34,6 @@ import { CommunityProfilesModule } from './community-profiles/community-profiles
 import { CommunityPaymentsModule } from './community-payments/community-payments.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { ChatModule } from './chat/chat.module';
-import { ChatMediaModule } from './chat-media/chat-media.module';
-import { ChatDeliveryModule } from './chat-delivery/chat-delivery.module';
-import { VideoCallsModule } from './video-calls/video-calls.module';
-import { BotModule } from './bot/bot.module';
 
 @Module({
   imports: [
@@ -66,10 +62,6 @@ import { BotModule } from './bot/bot.module';
     CommunityPaymentsModule,
     RealtimeModule,
     ChatModule,
-    ChatMediaModule,
-    ChatDeliveryModule,
-    VideoCallsModule,
-    BotModule,
   ],
 })
 export class AppModule {

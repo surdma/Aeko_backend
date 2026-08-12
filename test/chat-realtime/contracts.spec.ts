@@ -40,12 +40,18 @@ const RECEIVER_ID = '44444444-4444-4444-8444-444444444444';
 describe('chat realtime public contracts', () => {
   it('parses the legacy send-message fields without accepting invalid input', () => {
     expect(
-      parseSendMessage({ chatId: CHAT_ID, receiverId: RECEIVER_ID, content: 'hi' }),
+      parseSendMessage({
+        chatId: CHAT_ID,
+        receiverId: RECEIVER_ID,
+        content: 'hi',
+      }),
     ).toEqual({
       chatId: CHAT_ID,
       receiverId: RECEIVER_ID,
       content: 'hi',
       clientMessageId: undefined,
+      messageType: 'text',
+      metadata: {},
     });
     expect(() =>
       parseSendMessage({ chatId: '', content: 'x'.repeat(65_537) }),
@@ -91,13 +97,21 @@ describe('chat realtime public contracts', () => {
         .sort(),
     );
     expect(Object.keys(restContracts).sort()).toEqual(
-      manifest.capabilityIds.filter((capabilityId) => capabilityId.startsWith('rest:')).sort(),
+      manifest.capabilityIds
+        .filter((capabilityId) => capabilityId.startsWith('rest:'))
+        .sort(),
     );
     expect(Object.keys(socketCapabilityContracts).sort()).toEqual(
-      manifest.capabilityIds.filter((capabilityId) => capabilityId.startsWith('socket:')).sort(),
+      manifest.capabilityIds
+        .filter((capabilityId) => capabilityId.startsWith('socket:'))
+        .sort(),
     );
-    expect(manifest.capabilityIds.filter((id) => id.startsWith('rest:'))).toHaveLength(34);
-    expect(manifest.capabilityIds.filter((id) => id.startsWith('socket:'))).toHaveLength(58);
+    expect(
+      manifest.capabilityIds.filter((id) => id.startsWith('rest:')),
+    ).toHaveLength(34);
+    expect(
+      manifest.capabilityIds.filter((id) => id.startsWith('socket:')),
+    ).toHaveLength(58);
   });
 
   it('projects unsafe error payloads to the stable public error envelope', () => {

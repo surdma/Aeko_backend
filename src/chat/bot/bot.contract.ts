@@ -9,7 +9,6 @@ const botPersonalitySchema = z.enum([
   'mentor',
   'companion',
 ]);
-
 export const botCommandSchema = z
   .object({
     message: z.string().trim().min(1).max(65_536),
@@ -19,7 +18,6 @@ export const botCommandSchema = z
   })
   .strict();
 export type BotCommand = z.infer<typeof botCommandSchema>;
-
 export const botSettingsSchema = z
   .object({
     botEnabled: z.boolean(),
@@ -38,4 +36,6 @@ export const rateBotResponseSchema = z
     feedback: z.string().trim().max(4_000).optional(),
   })
   .strict();
-export const imagePromptSchema = z.object({ prompt: z.string().trim().min(1).max(4_000) }).strict();
+export const imagePromptSchema = z
+  .object({ prompt: z.string().trim().min(1).max(4_000) })
+  .strict();

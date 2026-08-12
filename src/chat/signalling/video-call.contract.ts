@@ -9,7 +9,10 @@ export const callSignalSchema = z
   })
   .strict()
   .refine(
-    (signal) => signal.offer !== undefined || signal.answer !== undefined || signal.candidate !== undefined,
+    (signal) =>
+      signal.offer !== undefined ||
+      signal.answer !== undefined ||
+      signal.candidate !== undefined,
     { message: 'A call offer, answer, or ICE candidate is required' },
   );
 export type CallSignal = z.infer<typeof callSignalSchema>;

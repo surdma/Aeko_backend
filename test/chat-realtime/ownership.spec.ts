@@ -19,8 +19,8 @@ const APPROVED_OWNERS = new Set([
   'chat',
   'chat-media',
   'chat-delivery',
-  'video-calls',
   'bot',
+  'video-calls',
   'realtime',
 ]);
 
