@@ -39,7 +39,18 @@
   ],
   "providerPorts": [],
   "corrections": [
+    "correction:community-delete-member-count",
+    "correction:community-golden-tick-missing-user",
+    "correction:community-join-double-count",
+    "correction:community-listing-empty-search",
+    "correction:community-membership-split",
+    "correction:community-payment-mongoid-validation",
+    "correction:community-post-missing-relations",
+    "correction:community-profile-missing-relation",
     "correction:community-profile-ownership-drift",
+    "correction:community-settings-merge-race",
+    "correction:community-stripe-verify-reference",
+    "correction:community-withdrawal-balance-race",
     "correction:nonexistent-prisma-models"
   ],
   "cutoverUnit": [
@@ -72,5 +83,12 @@
     "backend",
     "security",
     "payments"
-  ]
+  ],
+  "migration": {
+    "status": "implemented",
+    "assigned": 23,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  }
 }

@@ -290,6 +290,150 @@
     "status": "approved"
   },
   {
+    "id": "correction:community-delete-member-count",
+    "capabilityIds": [
+      "rest:DELETE:/api/communities/:id:routes/communityRoutes.js:299"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityController.js",
+        "line": 716
+      }
+    ],
+    "legacyBehavior": "Deleting a community removed every membership row but left memberCount at its previous value, so a reactivated community reported members that no longer existed.",
+    "replacementBehavior": "The count is zeroed with the deletion, and the cutover backfill resets counts that have already drifted.",
+    "reason": "A stored counter contradicted the rows it counts.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-golden-tick-missing-user",
+    "capabilityIds": [
+      "rest:POST:/api/communities:routes/communityRoutes.js:70"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityController.js",
+        "line": 23
+      }
+    ],
+    "legacyBehavior": "The golden tick was read off a possibly-missing user row, so a deleted user answered 500.",
+    "replacementBehavior": "A missing user is reported as not found.",
+    "reason": "An unguarded read on a nullable row.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-join-double-count",
+    "capabilityIds": [
+      "rest:POST:/api/communities/:id/join:routes/communityRoutes.js:178"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityController.js",
+        "line": 440
+      }
+    ],
+    "legacyBehavior": "The membership was created and the member count incremented without any gate on whether the row was new, so a racing double join produced two increments.",
+    "replacementBehavior": "The unique constraint on communityId and userId decides, inside a Serializable transaction, so one row and one increment result.",
+    "reason": "A user-visible counter drifted under ordinary retries.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-listing-empty-search",
+    "capabilityIds": [
+      "rest:GET:/api/communities:routes/communityRoutes.js:114",
+      "rest:GET:/api/communities/my:routes/communityRoutes.js:116"
+    ],
+    "category": "performance",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityController.js",
+        "line": 108
+      }
+    ],
+    "legacyBehavior": "The search term defaulted to an empty string, so the listing ran three predicates including two case-insensitive contains scans against every row even when no term was given. Page size was also unbounded.",
+    "replacementBehavior": "An absent term drops the filter entirely, and page size is capped at 100.",
+    "reason": "Needless full-table scans and an unbounded page size.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-membership-split",
+    "capabilityIds": [
+      "rest:GET:/api/communities/:id:routes/communityRoutes.js:146",
+      "rest:POST:/api/communities/:id/join:routes/communityRoutes.js:178",
+      "rest:POST:/api/communities/:id/leave:routes/communityRoutes.js:206",
+      "rest:POST:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:329"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/communityPaymentService.js",
+        "line": 640
+      }
+    ],
+    "legacyBehavior": "A paid membership was written only into the communities.members JSON, while every request path reads the relational community_members table. A member who paid was absent from the community detail, refused by the post guard, told they were not a member on leave, and could be sold the same membership again by join.",
+    "replacementBehavior": "Settlement dual-writes both halves, with the relational row authoritative and deciding whether the member count moves. The JSON keeps being written so anything outside this migration still reading it keeps working. A backfill in the legacy cutover repairs memberships paid for before the cutover.",
+    "reason": "The paid feature failed to grant what was paid for on every route except the one that recorded the payment.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-payment-mongoid-validation",
+    "capabilityIds": [
+      "rest:POST:/api/community/payment/initialize:routes/communityPaymentRoutes.js:63",
+      "rest:POST:/api/community/payment/withdraw:routes/communityPaymentRoutes.js:224",
+      "rest:GET:/api/community/payment/:communityId/transactions:routes/communityPaymentRoutes.js:366"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "middleware/paymentValidation.js",
+        "line": 18
+      }
+    ],
+    "legacyBehavior": "Every community id was validated with isMongoId(), but community ids are uuids. A thirty-six character uuid can never satisfy a twenty-four hex character check, so all three community payment routes answered 400 for every real community.",
+    "replacementBehavior": "The id is validated as the bounded string it actually is.",
+    "reason": "Three always-failing routes cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-post-missing-relations",
+    "capabilityIds": [
+      "rest:POST:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:329",
+      "rest:GET:/api/community-profiles/:id/posts:routes/communityProfileRoutes.js:384"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityProfileController.js",
+        "line": 489
+      }
+    ],
+    "legacyBehavior": "Both post routes included user and community on Post, neither of which is a relation name there, so Prisma rejected the query and both answered 500 on every call.",
+    "replacementBehavior": "The includes use users_posts_userIdTouser and communities, the same relation names the migrated posts domain already uses.",
+    "reason": "Two always-failing routes cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-profile-missing-relation",
+    "capabilityIds": [
+      "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72",
+      "rest:POST:/api/community-profiles/:id/upload-photo:routes/communityProfileRoutes.js:128"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityProfileController.js",
+        "line": 22
+      }
+    ],
+    "legacyBehavior": "Both handlers resolved the caller membership through include: { memberships }, a relation that exists on Community in neither schema, so Prisma rejected the query and both routes answered 500 on every call.",
+    "replacementBehavior": "Membership is read through the real community_members relation.",
+    "reason": "Two always-failing routes cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
     "id": "correction:community-profile-ownership-drift",
     "capabilityIds": [
       "rest:PUT:/api/community-profiles/:id/profile:routes/communityProfileRoutes.js:72",
@@ -313,6 +457,23 @@
     "status": "approved"
   },
   {
+    "id": "correction:community-settings-merge-race",
+    "capabilityIds": [
+      "rest:PUT:/api/communities/:id:routes/communityRoutes.js:256"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "controllers/communityController.js",
+        "line": 655
+      }
+    ],
+    "legacyBehavior": "The settings merge read the current settings outside the update that overwrote them, so two concurrent updates lost one of the changes.",
+    "replacementBehavior": "The read and the write happen in one Serializable transaction.",
+    "reason": "Silent loss of a configuration change.",
+    "status": "approved"
+  },
+  {
     "id": "correction:community-settlement-race",
     "capabilityIds": [
       "rest:POST:/api/webhooks/paystack:routes/webhookRoutes.js:45",
@@ -328,6 +489,41 @@
     "legacyBehavior": "handleCommunityPaymentSuccess read the completed status outside the transaction that writes it, and credited community earnings by adding to a JSON total read earlier, so a redelivered webhook added a second membership, inflated the member count and credited the earnings twice, while two settlements landing together could lose one of the credits.",
     "replacementBehavior": "Settlement is one Serializable transaction whose gate is a conditional update from pending to completed; the membership grant, the User.communities sync and the earnings credit all happen inside it, and the earnings are read in the same transaction that writes them.",
     "reason": "A redelivered provider callback granted a duplicate membership and double-credited community earnings.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-stripe-verify-reference",
+    "capabilityIds": [
+      "rest:GET:/api/community/payment/verify:routes/communityPaymentRoutes.js:133",
+      "rest:POST:/api/community/payment/initialize:routes/communityPaymentRoutes.js:63"
+    ],
+    "category": "correctness",
+    "legacyEvidence": [
+      {
+        "file": "services/communityPaymentService.js",
+        "line": 470
+      }
+    ],
+    "legacyBehavior": "Stripe initialisation never persisted the PaymentIntent id, and verification then asked Stripe to resolve the COMM- prefixed reference, which is not a Stripe id, so Stripe community verification failed on every call.",
+    "replacementBehavior": "The PaymentIntent id is recorded on the transaction at initialisation and verification asks Stripe about that reference.",
+    "reason": "An always-failing payment path cannot be migrated as-is.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:community-withdrawal-balance-race",
+    "capabilityIds": [
+      "rest:POST:/api/community/payment/withdraw:routes/communityPaymentRoutes.js:224"
+    ],
+    "category": "security",
+    "legacyEvidence": [
+      {
+        "file": "services/communityPaymentService.js",
+        "line": 292
+      }
+    ],
+    "legacyBehavior": "The available balance was read and validated outside the write that reserves against it, so two withdrawals racing each other could both pass a check against the same balance and overdraw it.",
+    "replacementBehavior": "The balance is read and the reservation written inside one Serializable transaction.",
+    "reason": "A community could be made to pay out more than it had earned.",
     "status": "approved"
   },
   {
