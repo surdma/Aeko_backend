@@ -12,7 +12,7 @@ import {
   parseWithdrawalRequest,
 } from '../../src/community-payments/community-payment.contract';
 import {
-  parseCommunityPhotoUpload,
+  parseCommunityPhotoQuery,
   parseCommunityPostCreate,
   parseCommunityPostQuery,
   parseCommunityProfileUpdate,
@@ -206,18 +206,19 @@ describe('community payment contracts', () => {
 
 describe('community profile contracts', () => {
   it('keeps a partial profile update partial', () => {
-    expect(parseCommunityProfileUpdate({ bio: 'Hello' })).toEqual({
-      bio: 'Hello',
+    expect(parseCommunityProfileUpdate({ location: 'Lagos' })).toEqual({
+      location: 'Lagos',
     });
     expect(parseCommunityProfileUpdate({})).toEqual({});
   });
 
-  it('defaults a photo upload to the profile image', () => {
-    expect(parseCommunityPhotoUpload({})).toEqual({ type: 'profile' });
-    expect(parseCommunityPhotoUpload({ type: 'banner' })).toEqual({
-      type: 'banner',
+  it('reads the photo kind from the query, defaulting to the avatar', () => {
+    // Legacy read req.query.type and accepted only 'avatar' or 'cover'.
+    expect(parseCommunityPhotoQuery({})).toEqual({ type: 'avatar' });
+    expect(parseCommunityPhotoQuery({ type: 'cover' })).toEqual({
+      type: 'cover',
     });
-    expect(() => parseCommunityPhotoUpload({ type: 'avatar' })).toThrow(
+    expect(() => parseCommunityPhotoQuery({ type: 'banner' })).toThrow(
       /photo/iu,
     );
   });
@@ -232,7 +233,7 @@ describe('community profile contracts', () => {
   it('requires post content and defaults the media', () => {
     expect(parseCommunityPostCreate({ content: 'Hello' })).toEqual({
       content: 'Hello',
-      mediaUrl: null,
+      media: [],
     });
     expect(() => parseCommunityPostCreate({ content: '   ' })).toThrow(
       /post/iu,

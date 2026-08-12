@@ -7,18 +7,22 @@ import {
   queryInteger,
 } from '../common/validation/parse';
 
+/**
+ * The profile route edits two columns and two keys inside the `profile` JSON.
+ * `name` and `description` are columns; `website` and `location` are merged
+ * into `profile`, exactly as legacy did.
+ */
 export interface CommunityProfileUpdate {
-  readonly displayName?: string | undefined;
-  readonly bio?: string | undefined;
+  readonly name?: string | undefined;
+  readonly description?: string | undefined;
   readonly website?: string | undefined;
   readonly location?: string | undefined;
-  readonly bannerImage?: string | undefined;
-  readonly profileImage?: string | undefined;
 }
 
-export type CommunityPhotoKind = 'profile' | 'banner';
+/** Legacy read the photo kind from the query string, not the body. */
+export type CommunityPhotoKind = 'avatar' | 'cover';
 
-export interface CommunityPhotoUpload {
+export interface CommunityPhotoQuery {
   readonly type: CommunityPhotoKind;
 }
 
@@ -28,7 +32,7 @@ export interface CommunitySettingsUpdate {
 
 export interface CommunityPostCreate {
   readonly content: string;
-  readonly mediaUrl: string | null;
+  readonly media: readonly string[];
 }
 
 export interface CommunityPostQuery {
@@ -36,28 +40,52 @@ export interface CommunityPostQuery {
   readonly limit: number;
 }
 
-export interface CommunityFollowResult {
-  readonly success: true;
-  readonly message: string;
-  readonly followerCount: number;
+export interface CommunityPostAuthorView {
+  readonly name: string;
+  readonly username: string;
+  readonly profilePicture: string | null;
+  readonly blueTick: boolean;
+  readonly goldenTick: boolean;
 }
 
-const optionalText = (maximum: number) => boundedText(maximum).optional();
+export interface CommunityPostView {
+  readonly id: string;
+  readonly text: string | null;
+  readonly userId: string;
+  readonly communityId: string | null;
+  readonly media: JsonValue;
+  readonly type: string;
+  readonly status: string;
+  readonly createdAt: string;
+  readonly user: CommunityPostAuthorView | null;
+  readonly community: Readonly<{ name: string; profile: JsonValue }> | null;
+}
+
+export interface CommunityPostPage {
+  readonly posts: readonly CommunityPostView[];
+  readonly pagination: Readonly<{
+    total: number;
+    page: number;
+    pages: number;
+    limit: number;
+  }>;
+}
 
 const profileUpdateSchema = z
   .object({
-    displayName: optionalText(200),
-    bio: optionalText(1_000),
-    website: optionalText(500),
-    location: optionalText(200),
-    bannerImage: optionalText(1_000),
-    profileImage: optionalText(1_000),
+    name: boundedText(200).optional(),
+    description: boundedText(5_000).optional(),
+    website: boundedText(500).optional(),
+    location: boundedText(200).optional(),
   })
   .strip();
 
-/** Legacy read `req.body.type`, defaulting to a profile photo. */
-const photoUploadSchema = z
-  .object({ type: z.enum(['profile', 'banner']).default('profile') })
+/**
+ * Legacy rejected any value other than `avatar` or `cover`, and treated an
+ * absent value as `avatar` when writing the profile key.
+ */
+const photoQuerySchema = z
+  .object({ type: z.enum(['avatar', 'cover']).default('avatar') })
   .strip();
 
 const settingsUpdateSchema = z
@@ -69,7 +97,7 @@ const settingsUpdateSchema = z
 const postCreateSchema = z
   .object({
     content: z.string().trim().min(1).max(10_000),
-    mediaUrl: boundedText(1_000).nullable().default(null),
+    media: z.array(boundedText(1_000)).max(20).default([]),
   })
   .strip();
 
@@ -85,10 +113,8 @@ export const parseCommunityProfileUpdate = (
 ): CommunityProfileUpdate =>
   Object.freeze(parseWithScope(profileUpdateSchema, input, 'profile'));
 
-export const parseCommunityPhotoUpload = (
-  input: unknown,
-): CommunityPhotoUpload =>
-  Object.freeze(parseWithScope(photoUploadSchema, input, 'photo'));
+export const parseCommunityPhotoQuery = (input: unknown): CommunityPhotoQuery =>
+  Object.freeze(parseWithScope(photoQuerySchema, input, 'photo'));
 
 export const parseCommunitySettingsUpdate = (
   input: unknown,
