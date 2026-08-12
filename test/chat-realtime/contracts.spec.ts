@@ -3,12 +3,14 @@ import { join } from 'node:path';
 
 import {
   parseSendMessage,
+  restContracts,
   restRequestSchemas,
   sendMessageSchema,
 } from '../../src/chat/chat.contract';
 import {
   inboundEventSchemas,
   outboundEventViews,
+  socketCapabilityContracts,
 } from '../../src/chat/chat-events.contract';
 import {
   toLegacyMessageSent,
@@ -48,6 +50,16 @@ describe('chat realtime public contracts', () => {
     expect(() =>
       parseSendMessage({ chatId: '', content: 'x'.repeat(65_537) }),
     ).toThrow();
+    expect(
+      parseSendMessage({
+        chatId: CHAT_ID,
+        receiverId: RECEIVER_ID,
+        content: 'hi',
+        messageType: 'text',
+        metadata: { source: 'synthetic' },
+        clientId: 'web-synthetic',
+      }),
+    ).toMatchObject({ messageType: 'text', clientId: 'web-synthetic' });
     expect(() =>
       sendMessageSchema.parse({
         chatId: CHAT_ID,
@@ -78,7 +90,22 @@ describe('chat realtime public contracts', () => {
         .filter((capabilityId) => capabilityId.startsWith('rest:'))
         .sort(),
     );
+    expect(Object.keys(restContracts).sort()).toEqual(
+      manifest.capabilityIds.filter((capabilityId) => capabilityId.startsWith('rest:')).sort(),
+    );
+    expect(Object.keys(socketCapabilityContracts).sort()).toEqual(
+      manifest.capabilityIds.filter((capabilityId) => capabilityId.startsWith('socket:')).sort(),
+    );
     expect(manifest.capabilityIds.filter((id) => id.startsWith('rest:'))).toHaveLength(34);
     expect(manifest.capabilityIds.filter((id) => id.startsWith('socket:'))).toHaveLength(58);
+  });
+
+  it('projects unsafe error payloads to the stable public error envelope', () => {
+    expect(
+      outboundEventViews.message_error({
+        error: new Error('provider detail'),
+        secret: 'never public',
+      }),
+    ).toEqual({ code: 'UNAVAILABLE', message: 'Message could not be sent' });
   });
 });

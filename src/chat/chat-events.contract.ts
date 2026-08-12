@@ -50,9 +50,84 @@ export const OUTBOUND_EVENT_NAMES = [
 ] as const;
 export type OutboundEventName = (typeof OUTBOUND_EVENT_NAMES)[number];
 export type OutboundEventView = (payload: Readonly<Record<string, unknown>>) => Readonly<Record<string, unknown>>;
-const toPublicPayload: OutboundEventView = (payload) => Object.freeze({ ...payload });
-export const outboundEventViews: Readonly<Record<OutboundEventName, OutboundEventView>> =
-  Object.freeze(Object.fromEntries(OUTBOUND_EVENT_NAMES.map((name) => [name, toPublicPayload])) as Record<OutboundEventName, OutboundEventView>);
+const publicError = (code: 'INVALID_PAYLOAD' | 'NOT_FOUND' | 'UNAVAILABLE', message: string): OutboundEventView =>
+  () => ({ code, message });
+const object = (value: Readonly<Record<string, unknown>>): Readonly<Record<string, unknown>> => value;
+const requiredString = (payload: Readonly<Record<string, unknown>>, key: string): string => {
+  const value = payload[key];
+  return typeof value === 'string' ? value : '';
+};
+const messageAckView: OutboundEventView = (payload) => ({
+  messageId: requiredString(payload, 'messageId'),
+  status: requiredString(payload, 'status'),
+  timestamp: requiredString(payload, 'timestamp'),
+});
+const reactionView: OutboundEventView = (payload) => ({
+  messageId: requiredString(payload, 'messageId'),
+  userId: requiredString(payload, 'userId'),
+  ...(typeof payload.username === 'string' ? { username: payload.username } : {}),
+  ...(typeof payload.emoji === 'string' ? { emoji: payload.emoji } : {}),
+  ...(typeof payload.timestamp === 'string' || payload.timestamp instanceof Date ? { timestamp: payload.timestamp } : {}),
+});
+const typingView: OutboundEventView = (payload) => ({
+  userId: requiredString(payload, 'userId'),
+  username: requiredString(payload, 'username'),
+  chatId: requiredString(payload, 'chatId'),
+  typing: payload.typing === true,
+});
+const signalView = (field: 'offer' | 'answer' | 'candidate'): OutboundEventView => (payload) => ({
+  from: requiredString(payload, 'from'),
+  [field]: requiredString(payload, field),
+});
+const messageDeliveryView: OutboundEventView = (payload) => ({
+  message: payload.message,
+  chatId: requiredString(payload, 'chatId'),
+  ...(payload.sender === undefined ? {} : { sender: payload.sender }),
+});
+
+/** Named, field-projected views. Error handlers never expose thrown/provider values. */
+export const outboundEventViews: Readonly<Record<OutboundEventName, OutboundEventView>> = {
+  bot_auto_reply: (payload) => object({ message: payload.message, chatId: requiredString(payload, 'chatId'), botInfo: payload.botInfo }),
+  bot_error: publicError('UNAVAILABLE', 'Bot response is unavailable'),
+  bot_response: (payload) => object({ message: payload.message, chatId: requiredString(payload, 'chatId'), botInfo: payload.botInfo }),
+  bot_sent_reply: (payload) => object({ message: payload.message, chatId: requiredString(payload, 'chatId'), toUser: requiredString(payload, 'toUser') }),
+  'call-answer': signalView('answer'),
+  'call-offer': signalView('offer'),
+  emoji_error: publicError('INVALID_PAYLOAD', 'Emoji could not be sent'),
+  'ice-candidate': signalView('candidate'),
+  joined_chat: (payload) => object({ chatId: requiredString(payload, 'chatId'), message: requiredString(payload, 'message'), onlineUsers: Array.isArray(payload.onlineUsers) ? payload.onlineUsers : [] }),
+  message_error: publicError('UNAVAILABLE', 'Message could not be sent'),
+  message_read: (payload) => object({ messageId: requiredString(payload, 'messageId'), readBy: requiredString(payload, 'readBy'), readAt: payload.readAt }),
+  message_sent: messageAckView,
+  new_message: messageDeliveryView,
+  new_voice_message: messageDeliveryView,
+  reaction_added: reactionView,
+  reaction_error: publicError('NOT_FOUND', 'Reaction could not be updated'),
+  reaction_removed: reactionView,
+  recording_started: (payload) => object({ chatId: requiredString(payload, 'chatId') }),
+  recording_stopped: (payload) => object({ chatId: requiredString(payload, 'chatId') }),
+  unread_count: (payload) => object({ count: typeof payload.count === 'number' ? payload.count : 0 }),
+  user_recording_voice: (payload) => object({ userId: requiredString(payload, 'userId'), username: requiredString(payload, 'username'), recording: payload.recording === true }),
+  user_status_update: (payload) => object({ userId: requiredString(payload, 'userId'), status: requiredString(payload, 'status'), timestamp: payload.timestamp }),
+  user_typing: typingView,
+  voice_message_error: publicError('UNAVAILABLE', 'Voice message could not be sent'),
+  voice_message_sent: (payload) => object({ messageId: requiredString(payload, 'messageId'), status: requiredString(payload, 'status') }),
+};
+
+export const SOCKET_CAPABILITY_IDS = [
+  'socket:/:inbound:add_reaction:sockets/enhancedChatSocket.js:133', 'socket:/:inbound:call-answer:sockets/videoCallSocket.js:6', 'socket:/:inbound:call-offer:sockets/videoCallSocket.js:3', 'socket:/:inbound:chat_with_bot:sockets/enhancedChatSocket.js:129', 'socket:/:inbound:connection:sockets/enhancedChatSocket.js:48', 'socket:/:inbound:connection:sockets/videoCallSocket.js:2', 'socket:/:inbound:create_group_chat:sockets/enhancedChatSocket.js:149', 'socket:/:inbound:delete_message:sockets/enhancedChatSocket.js:137', 'socket:/:inbound:disconnect:sockets/enhancedChatSocket.js:112', 'socket:/:inbound:edit_message:sockets/enhancedChatSocket.js:136', 'socket:/:inbound:enable_bot_in_chat:sockets/enhancedChatSocket.js:130', 'socket:/:inbound:get_chat_history:sockets/enhancedChatSocket.js:150', 'socket:/:inbound:ice-candidate:sockets/videoCallSocket.js:9', 'socket:/:inbound:join_chat:sockets/enhancedChatSocket.js:119', 'socket:/:inbound:mark_message_read:sockets/enhancedChatSocket.js:135', 'socket:/:inbound:remove_reaction:sockets/enhancedChatSocket.js:134', 'socket:/:inbound:reply_to_message:sockets/enhancedChatSocket.js:138', 'socket:/:inbound:search_messages:sockets/enhancedChatSocket.js:151', 'socket:/:inbound:send_emoji:sockets/enhancedChatSocket.js:121', 'socket:/:inbound:send_message:sockets/enhancedChatSocket.js:120', 'socket:/:inbound:send_voice_message:sockets/enhancedChatSocket.js:124', 'socket:/:inbound:share_location:sockets/enhancedChatSocket.js:146', 'socket:/:inbound:start_voice_recording:sockets/enhancedChatSocket.js:125', 'socket:/:inbound:stop_voice_recording:sockets/enhancedChatSocket.js:126', 'socket:/:inbound:typing_start:sockets/enhancedChatSocket.js:141', 'socket:/:inbound:typing_stop:sockets/enhancedChatSocket.js:142', 'socket:/:inbound:upload_file:sockets/enhancedChatSocket.js:145',
+  'socket:/:outbound:bot_auto_reply:sockets/enhancedChatSocket.js:477', 'socket:/:outbound:bot_error:sockets/enhancedChatSocket.js:384', 'socket:/:outbound:bot_error:sockets/enhancedChatSocket.js:430', 'socket:/:outbound:bot_response:sockets/enhancedChatSocket.js:417', 'socket:/:outbound:bot_sent_reply:sockets/enhancedChatSocket.js:489', 'socket:/:outbound:call-answer:sockets/videoCallSocket.js:7', 'socket:/:outbound:call-offer:sockets/videoCallSocket.js:4', 'socket:/:outbound:emoji_error:sockets/enhancedChatSocket.js:265', 'socket:/:outbound:ice-candidate:sockets/videoCallSocket.js:10', 'socket:/:outbound:joined_chat:sockets/enhancedChatSocket.js:639', 'socket:/:outbound:message_error:sockets/enhancedChatSocket.js:246', 'socket:/:outbound:message_read:sockets/enhancedChatSocket.js:673', 'socket:/:outbound:message_sent:sockets/enhancedChatSocket.js:215', 'socket:/:outbound:new_message:sockets/enhancedChatSocket.js:200', 'socket:/:outbound:new_voice_message:sockets/enhancedChatSocket.js:316', 'socket:/:outbound:reaction_added:sockets/enhancedChatSocket.js:535', 'socket:/:outbound:reaction_error:sockets/enhancedChatSocket.js:512', 'socket:/:outbound:reaction_error:sockets/enhancedChatSocket.js:545', 'socket:/:outbound:reaction_error:sockets/enhancedChatSocket.js:558', 'socket:/:outbound:reaction_error:sockets/enhancedChatSocket.js:583', 'socket:/:outbound:reaction_removed:sockets/enhancedChatSocket.js:575', 'socket:/:outbound:recording_started:sockets/enhancedChatSocket.js:355', 'socket:/:outbound:recording_stopped:sockets/enhancedChatSocket.js:368', 'socket:/:outbound:unread_count:sockets/enhancedChatSocket.js:694', 'socket:/:outbound:user_recording_voice:sockets/enhancedChatSocket.js:349', 'socket:/:outbound:user_recording_voice:sockets/enhancedChatSocket.js:362', 'socket:/:outbound:user_status_update:sockets/enhancedChatSocket.js:715', 'socket:/:outbound:user_typing:sockets/enhancedChatSocket.js:601', 'socket:/:outbound:user_typing:sockets/enhancedChatSocket.js:625', 'socket:/:outbound:voice_message_error:sockets/enhancedChatSocket.js:341', 'socket:/:outbound:voice_message_sent:sockets/enhancedChatSocket.js:331',
+] as const;
+type SocketCapabilityId = (typeof SOCKET_CAPABILITY_IDS)[number];
+const socketName = (id: string): string => id.split(':')[3] ?? '';
+export interface SocketCapabilityContract { readonly direction: 'inbound' | 'outbound'; readonly name: string; readonly contract: z.ZodType | OutboundEventView; readonly provenance: string; }
+export const socketCapabilityContracts: Readonly<Record<SocketCapabilityId, SocketCapabilityContract>> = Object.freeze(
+  Object.fromEntries(SOCKET_CAPABILITY_IDS.map((id) => {
+    const direction = id.includes(':inbound:') ? 'inbound' as const : 'outbound' as const;
+    const name = socketName(id);
+    return [id, { direction, name, contract: direction === 'inbound' ? inboundEventSchemas[name as InboundEventName] : outboundEventViews[name as OutboundEventName], provenance: id.slice(id.indexOf('sockets/')) }];
+  })) as Record<SocketCapabilityId, SocketCapabilityContract>,
+);
 
 export interface ChatEventMap {
   readonly inbound: typeof inboundEventSchemas;

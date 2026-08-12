@@ -20,6 +20,9 @@ export const sendMessageSchema = z
     clientMessageId: idSchema.optional(),
     replyToId: idSchema.optional(),
     attachments: z.array(idSchema).max(10).default([]),
+    messageType: z.enum(['text', 'emoji', 'voice', 'image', 'video', 'file', 'sticker', 'ai_response']).default('text'),
+    metadata: z.record(z.string().min(1).max(128), z.unknown()).default({}),
+    clientId: z.string().trim().min(1).max(256).optional(),
   })
   .strict();
 
@@ -35,6 +38,9 @@ export interface ChatCommand {
   readonly clientMessageId: string | undefined;
   readonly replyToId?: string;
   readonly attachments?: readonly string[];
+  readonly messageType: string;
+  readonly metadata: Readonly<Record<string, unknown>>;
+  readonly clientId?: string;
 }
 
 export interface ChatAck {
@@ -136,6 +142,9 @@ export const parseSendMessage = (input: unknown): ChatCommand => {
     ...(command.receiverId === undefined ? {} : { receiverId: command.receiverId }),
     ...(command.replyToId === undefined ? {} : { replyToId: command.replyToId }),
     ...(command.attachments.length === 0 ? {} : { attachments: command.attachments }),
+    messageType: command.messageType,
+    metadata: command.metadata,
+    ...(command.clientId === undefined ? {} : { clientId: command.clientId }),
   };
 };
 
@@ -177,6 +186,61 @@ export const REST_CAPABILITY_IDS = [
 ] as const;
 
 type RestCapabilityId = (typeof REST_CAPABILITY_IDS)[number];
-const emptyRequestSchema = z.object({}).strict();
+const request = (body: z.ZodType, query: z.ZodType = z.object({}).strict(), params: z.ZodType = z.object({}).strict()) =>
+  z.object({ body, query, params }).strict();
+const noInput = z.object({}).strict();
+const chatParam = z.object({ chatId: idSchema }).strict();
+const messageParam = z.object({ messageId: idSchema }).strict();
+const userAndChatParam = z.object({ chatId: idSchema, userId: idSchema }).strict();
+const inviteParam = z.object({ inviteCode: z.string().trim().min(1).max(256) }).strict();
+const paginationQuery = paginationSchema;
+const serializer = <T extends z.ZodType>(schema: T) => (value: unknown): z.output<T> => schema.parse(value);
+const statusSuccessSchema = z.object({ success: z.literal(true), message: z.string().max(500).optional() }).strict();
+const messageSuccessSchema = z.object({ success: z.literal(true), message: z.unknown(), messageId: idSchema.optional() }).strict();
+const jsonSuccessSchema = z.object({ success: z.literal(true) }).passthrough();
+
+export interface RestContract {
+  readonly request: z.ZodType;
+  readonly serializeSuccess: (value: unknown) => unknown;
+}
+
+/** Exact public request boundaries and successful-response projections for every legacy REST handler. */
+export const restContracts: Readonly<Record<RestCapabilityId, RestContract>> = {
+  'rest:DELETE:/api/enhanced-chat/conversations/:chatId:routes/enhancedChatRoutes.js:1192': { request: request(noInput, noInput, chatParam), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.literal('Chat deleted successfully'), chatId: idSchema }).strict()) },
+  'rest:DELETE:/api/enhanced-chat/emoji-reactions/:messageId:routes/enhancedChatRoutes.js:634': { request: request(noInput, reactionSchema, messageParam), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.literal('Reaction removed successfully'), reactions: z.array(z.unknown()) }).strict()) },
+  'rest:DELETE:/api/enhanced-chat/groups/:chatId/leave:routes/enhancedChatRoutes.js:1580': { request: request(noInput, noInput, chatParam), serializeSuccess: serializer(statusSuccessSchema) },
+  'rest:DELETE:/api/enhanced-chat/groups/:chatId/members/:userId:routes/enhancedChatRoutes.js:1520': { request: request(noInput, noInput, userAndChatParam), serializeSuccess: serializer(statusSuccessSchema) },
+  'rest:DELETE:/api/enhanced-chat/messages/:messageId:routes/enhancedChatRoutes.js:1138': { request: request(noInput, noInput, messageParam), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.literal('Message deleted successfully'), messageId: idSchema }).strict()) },
+  'rest:GET:/api/enhanced-bot/analytics:routes/enhancedBotRoutes.js:334': { request: request(noInput), serializeSuccess: serializer(z.object({ userAnalytics: z.record(z.string(), z.unknown()), recentActivity: z.object({ conversationsLast30Days: z.number().int().nonnegative(), sentimentDistribution: z.array(z.unknown()), personalityUsage: z.array(z.unknown()), providerUsage: z.array(z.unknown()) }).strict() }).strict()) },
+  'rest:GET:/api/enhanced-bot/conversation-history:routes/enhancedBotRoutes.js:292': { request: request(noInput, paginationQuery), serializeSuccess: serializer(z.object({ conversations: z.array(z.unknown()), pagination: z.object({ currentPage: z.number().int(), totalPages: z.number().int(), totalConversations: z.number().int(), hasNext: z.boolean(), hasPrev: z.boolean() }).strict() }).strict()) },
+  'rest:GET:/api/enhanced-bot/personalities:routes/enhancedBotRoutes.js:220': { request: request(noInput), serializeSuccess: serializer(z.object({ personalities: z.record(z.string(), z.unknown()) }).strict()) },
+  'rest:GET:/api/enhanced-bot/settings:routes/enhancedBotRoutes.js:126': { request: request(noInput), serializeSuccess: serializer(z.object({ id: idSchema, userId: idSchema, botEnabled: z.boolean(), botPersonality: z.string(), aiProvider: z.string(), model: z.string(), maxTokens: z.number().int(), contextLength: z.number().int(), temperature: z.number() }).passthrough()) },
+  'rest:GET:/api/enhanced-chat/conversations:routes/enhancedChatRoutes.js:88': { request: request(noInput, paginationQuery), serializeSuccess: serializer(z.object({ success: z.literal(true), conversations: z.array(z.unknown()), pagination: z.object({ page: z.number().int(), limit: z.number().int(), total: z.number().int() }).strict() }).strict()) },
+  'rest:GET:/api/enhanced-chat/emoji-list:routes/enhancedChatRoutes.js:1099': { request: request(noInput), serializeSuccess: serializer(z.object({ success: z.literal(true), categories: z.record(z.string(), z.array(z.string())) }).strict()) },
+  'rest:GET:/api/enhanced-chat/groups/:chatId/invite:routes/enhancedChatRoutes.js:1378': { request: request(noInput, noInput, chatParam), serializeSuccess: serializer(z.object({ success: z.literal(true), inviteCode: z.string(), inviteLink: z.string().url() }).strict()) },
+  'rest:GET:/api/enhanced-chat/messages/:chatId:routes/enhancedChatRoutes.js:215': { request: request(noInput, messageQuerySchema, chatParam), serializeSuccess: serializer(z.object({ success: z.literal(true), messages: z.array(z.unknown()), pagination: z.object({ page: z.number().int(), limit: z.number().int(), hasMore: z.boolean() }).strict() }).strict()) },
+  'rest:GET:/api/enhanced-chat/search:routes/enhancedChatRoutes.js:1040': { request: request(noInput, searchQuerySchema), serializeSuccess: serializer(z.object({ success: z.literal(true), results: z.array(z.unknown()), count: z.number().int().nonnegative() }).strict()) },
+  'rest:GET:/api/enhanced-chat/uploads/:folder/:filename:routes/enhancedChatRoutes.js:1639': { request: request(noInput, noInput, z.object({ folder: z.string().trim().min(1).max(128), filename: z.string().trim().min(1).max(255) }).strict()), serializeSuccess: (value: unknown) => value },
+  'rest:GET:/api/enhanced-chat/users:routes/enhancedChatRoutes.js:1249': { request: request(noInput, paginationQuery.extend({ q: z.string().trim().max(256).optional() }).strict()), serializeSuccess: serializer(z.object({ success: z.literal(true), users: z.array(z.unknown()) }).strict()) },
+  'rest:POST:/api/chat/chat:routes/chat.js:179': { request: request(z.object({ message: nonEmptyTextSchema }).strict()), serializeSuccess: serializer(z.object({ botReply: z.string() }).strict()) },
+  'rest:POST:/api/chat/send-message:routes/chat.js:44': { request: request(z.object({ recipientId: idSchema, message: nonEmptyTextSchema }).strict()), serializeSuccess: serializer(z.object({ success: z.literal(true) }).strict()) },
+  'rest:POST:/api/enhanced-bot/chat:routes/enhancedBotRoutes.js:62': { request: request(z.object({ message: nonEmptyTextSchema, instruction: z.string().max(4_000).optional(), personalityOverride: z.string().max(64).optional() }).strict()), serializeSuccess: serializer(z.object({ responseTime: z.number(), timestamp: z.string().datetime() }).passthrough()) },
+  'rest:POST:/api/enhanced-bot/generate-image:routes/enhancedBotRoutes.js:417': { request: request(z.object({ prompt: nonEmptyTextSchema }).strict()), serializeSuccess: (value: unknown) => z.object({ url: z.string().url().optional() }).passthrough().parse(value) },
+  'rest:POST:/api/enhanced-bot/rate-response:routes/enhancedBotRoutes.js:503': { request: request(z.object({ conversationId: idSchema, rating: z.number().int().min(1).max(5), feedback: z.string().max(4_000).optional() }).strict()), serializeSuccess: serializer(z.object({ message: z.literal('Response rated successfully'), conversation: z.unknown() }).strict()) },
+  'rest:POST:/api/enhanced-bot/summarize-conversation:routes/enhancedBotRoutes.js:460': { request: request(z.object({ days: z.number().int().min(1).max(365).default(7) }).strict()), serializeSuccess: serializer(z.object({ summary: z.string(), days: z.number().int() }).strict()) },
+  'rest:POST:/api/enhanced-chat/assist:routes/enhancedChatRoutes.js:813': { request: request(assistSchema), serializeSuccess: serializer(z.object({ success: z.literal(true), result: z.string(), type: z.string(), provider: z.string() }).strict()) },
+  'rest:POST:/api/enhanced-chat/bot-chat:routes/enhancedChatRoutes.js:699': { request: request(z.object({ message: nonEmptyTextSchema, chatId: idSchema.optional(), personality: z.string().max(64).optional(), instruction: z.string().max(4_000).optional() }).strict()), serializeSuccess: serializer(z.object({ success: z.literal(true), response: z.string(), botInfo: z.object({ personality: z.string(), provider: z.string(), confidence: z.number(), responseTime: z.number() }).strict(), message: z.unknown().nullable() }).strict()) },
+  'rest:POST:/api/enhanced-chat/create-chat:routes/enhancedChatRoutes.js:872': { request: request(createChatSchema), serializeSuccess: serializer(z.object({ success: z.literal(true), chat: z.unknown(), message: z.string() }).strict()) },
+  'rest:POST:/api/enhanced-chat/emoji-reactions/:messageId:routes/enhancedChatRoutes.js:565': { request: request(reactionSchema, noInput, messageParam), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.literal('Reaction added successfully'), reactions: z.array(z.unknown()) }).strict()) },
+  'rest:POST:/api/enhanced-chat/groups/:chatId/icon:routes/enhancedChatRoutes.js:1315': { request: request(z.object({}).strict(), noInput, chatParam), serializeSuccess: serializer(z.object({ success: z.literal(true), groupIcon: z.string(), message: z.literal('Group icon updated successfully') }).strict()) },
+  'rest:POST:/api/enhanced-chat/groups/join/:inviteCode:routes/enhancedChatRoutes.js:1443': { request: request(noInput, noInput, inviteParam), serializeSuccess: serializer(z.object({ success: z.literal(true), chatId: idSchema, message: z.string() }).strict()) },
+  'rest:POST:/api/enhanced-chat/mark-read/:chatId:routes/enhancedChatRoutes.js:971': { request: request(noInput, noInput, chatParam), serializeSuccess: serializer(statusSuccessSchema) },
+  'rest:POST:/api/enhanced-chat/send-message:routes/enhancedChatRoutes.js:319': { request: request(sendMessageSchema), serializeSuccess: serializer(messageSuccessSchema) },
+  'rest:POST:/api/enhanced-chat/upload-file:routes/enhancedChatRoutes.js:470': { request: request(uploadFileSchema), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.unknown(), fileUrl: z.string() }).strict()) },
+  'rest:POST:/api/enhanced-chat/upload-voice:routes/enhancedChatRoutes.js:401': { request: request(uploadVoiceSchema), serializeSuccess: serializer(z.object({ success: z.literal(true), message: z.unknown(), voiceUrl: z.string() }).strict()) },
+  'rest:PUT:/api/bot/bot-settings:routes/bot.js:59': { request: request(z.object({ botEnabled: z.boolean(), botPersonality: z.enum(['friendly', 'professional', 'sarcastic']) }).strict()), serializeSuccess: serializer(z.object({ message: z.literal('Smart Bot settings updated successfully'), botSettings: z.unknown() }).strict()) },
+  'rest:PUT:/api/enhanced-bot/settings:routes/enhancedBotRoutes.js:167': { request: request(z.object({ botEnabled: z.boolean().optional(), botPersonality: z.string().max(64).optional(), aiProvider: z.string().max(64).optional(), model: z.string().max(200).optional(), maxTokens: z.number().int().min(1).max(32_000).optional(), contextLength: z.number().int().min(1).max(100).optional(), temperature: z.number().min(0).max(2).optional(), features: z.record(z.string(), z.unknown()).optional(), customInstructions: z.string().max(4_000).optional(), responseStyle: z.record(z.string(), z.unknown()).optional(), restrictions: z.record(z.string(), z.unknown()).optional() }).strict()), serializeSuccess: serializer(z.object({ message: z.literal('Settings updated successfully'), settings: z.unknown() }).strict()) },
+};
+
 export const restRequestSchemas: Readonly<Record<RestCapabilityId, z.ZodType>> =
-  Object.freeze(Object.fromEntries(REST_CAPABILITY_IDS.map((id) => [id, emptyRequestSchema])) as Record<RestCapabilityId, z.ZodType>);
+  Object.freeze(Object.fromEntries(Object.entries(restContracts).map(([id, contract]) => [id, contract.request])) as Record<RestCapabilityId, z.ZodType>);
