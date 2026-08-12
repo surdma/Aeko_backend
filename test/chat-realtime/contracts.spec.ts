@@ -122,4 +122,20 @@ describe('chat realtime public contracts', () => {
       }),
     ).toEqual({ code: 'UNAVAILABLE', message: 'Message could not be sent' });
   });
+
+  it('strips nested private fields from joined-chat users', () => {
+    expect(
+      outboundEventViews.joined_chat({
+        chatId: CHAT_ID,
+        message: 'Joined chat',
+        onlineUsers: [
+          { id: RECEIVER_ID, username: 'synthetic', topSecret: 'no' },
+        ],
+      }),
+    ).toEqual({
+      chatId: CHAT_ID,
+      message: 'Joined chat',
+      onlineUsers: [{ id: RECEIVER_ID, username: 'synthetic' }],
+    });
+  });
 });

@@ -1,10 +1,7 @@
-import {
-  messagePublicViewSchema,
-  type ChatPublicView,
-} from './chat.contract';
+import { messagePublicViewSchema, type ChatPublicView } from './chat.contract';
 
 /** Legacy Prisma records carry extra relation/model fields. Parse required values, then project only the public view. */
-const legacyMessageRecordSchema = messagePublicViewSchema.passthrough();
+const legacyMessageRecordSchema = messagePublicViewSchema.strip();
 const parseRecord = (record: unknown): ChatPublicView => {
   const message = legacyMessageRecordSchema.parse(record);
   return {

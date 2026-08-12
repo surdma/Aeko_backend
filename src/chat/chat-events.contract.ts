@@ -222,6 +222,11 @@ const botInfoSchema = z.object({
   confidence: z.number(),
   responseTime: z.number(),
 });
+const temporalSchema = z.union([z.string().datetime(), z.date()]);
+const publicOnlineUserSchema = publicUserSchema.extend({
+  status: z.string().max(32).optional(),
+  lastSeen: temporalSchema.optional(),
+});
 
 /** Named, field-projected views. Error handlers never expose thrown/provider values. */
 export const outboundEventViews: Readonly<
@@ -255,7 +260,7 @@ export const outboundEventViews: Readonly<
       chatId: requiredString(payload, 'chatId'),
       message: requiredString(payload, 'message'),
       onlineUsers: Array.isArray(payload.onlineUsers)
-        ? payload.onlineUsers
+        ? z.array(publicOnlineUserSchema).parse(payload.onlineUsers)
         : [],
     }),
   message_error: publicError('UNAVAILABLE', 'Message could not be sent'),
@@ -263,7 +268,7 @@ export const outboundEventViews: Readonly<
     object({
       messageId: requiredString(payload, 'messageId'),
       readBy: requiredString(payload, 'readBy'),
-      readAt: payload.readAt,
+      readAt: temporalSchema.parse(payload.readAt),
     }),
   message_sent: messageAckView,
   new_message: messageDeliveryView,
@@ -287,7 +292,7 @@ export const outboundEventViews: Readonly<
     object({
       userId: requiredString(payload, 'userId'),
       status: requiredString(payload, 'status'),
-      timestamp: payload.timestamp,
+      timestamp: temporalSchema.parse(payload.timestamp),
     }),
   user_typing: typingView,
   voice_message_error: publicError(
