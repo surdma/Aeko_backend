@@ -5,15 +5,15 @@ import {
   parseSendMessage,
   restRequestSchemas,
   sendMessageSchema,
-} from '../../src/chat/chat.contract.js';
+} from '../../src/chat/chat.contract';
 import {
   inboundEventSchemas,
   outboundEventViews,
-} from '../../src/chat/chat-events.contract.js';
+} from '../../src/chat/chat-events.contract';
 import {
   toLegacyMessageSent,
   toLegacyNewMessage,
-} from '../../src/chat/chat-compatibility.js';
+} from '../../src/chat/chat-compatibility';
 
 const ROOT = join(__dirname, '..', '..');
 const readJson = <T>(...path: readonly string[]): T =>
