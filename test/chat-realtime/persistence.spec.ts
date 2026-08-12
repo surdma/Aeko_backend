@@ -18,7 +18,10 @@ const command = (clientMessageId: string): SendMessageCommand => ({
 });
 
 /** A transaction-faithful in-memory Prisma boundary for repository behavior. */
-const createStore = (): ChatStore => {
+const createStore = (): {
+  readonly store: ChatStore;
+  readonly outboxCount: () => number;
+} => {
   const messages = new Map<string, {
     id: string;
     chatId: string;
@@ -71,12 +74,15 @@ const createStore = (): ChatStore => {
     },
   };
   Object.assign(db, { enhancedMessage: transaction.enhancedMessage });
-  return createChatPrismaClient(db as never);
+  return {
+    store: createChatPrismaClient(db as never),
+    outboxCount: () => outbox.size,
+  };
 };
 
 describe('ordered chat persistence', () => {
   it('returns the original message for an idempotent retry and emits one outbox event', async () => {
-    const store = createStore();
+    const { store, outboxCount } = createStore();
     const input = command('33333333-3333-4333-8333-333333333333');
     const [first, retry] = await Promise.all([
       store.appendMessage(input),
@@ -85,10 +91,11 @@ describe('ordered chat persistence', () => {
 
     expect(first.id).toBe(retry.id);
     expect(first.sequence).toBe(1n);
+    expect(outboxCount()).toBe(1);
   });
 
   it('assigns contiguous per-chat sequences to concurrent distinct commands', async () => {
-    const store = createStore();
+    const { store } = createStore();
     const messages = await Promise.all(
       Array.from({ length: 20 }, (_, index) =>
         store.appendMessage(command(`33333333-3333-4333-8333-${String(index).padStart(12, '0')}`)),

@@ -63,6 +63,20 @@ describe('chat realtime cutover', () => {
         sequence: null,
       },
     ]);
+
+    const legacyMessage = await db.query<Row>(
+      `SELECT "id", "message", to_char("createdAt", 'YYYY-MM-DD"T"HH24:MI:SS.MS') AS "createdAtText", "clientMessageId", "sequence"
+       FROM "messages" WHERE "id" = 'message-1'`,
+    );
+    expect(legacyMessage.rows).toEqual([
+      {
+        id: 'message-1',
+        message: 'legacy message',
+        createdAtText: '2025-01-03T00:00:00.000',
+        clientMessageId: null,
+        sequence: null,
+      },
+    ]);
   });
 
   it('adds the outbox and per-chat counter without rewriting legacy rows', async () => {
@@ -79,4 +93,5 @@ describe('chat realtime cutover', () => {
     );
     expect(outbox.rows).toEqual([{ aggregateId: 'enhanced-1' }]);
   });
+
 });
