@@ -49,7 +49,7 @@ export interface ChatCommand {
   readonly clientMessageId: string | undefined;
   readonly replyToId?: string;
   readonly attachments?: readonly string[];
-  readonly messageType: string;
+  readonly messageType: z.infer<typeof sendMessageSchema>['messageType'];
   readonly metadata: Readonly<Record<string, unknown>>;
   readonly clientId?: string;
 }

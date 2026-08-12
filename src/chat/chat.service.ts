@@ -39,7 +39,7 @@ export class ChatService {
     }
     return this.store.appendMessage({
       ...input,
-      attachments: input.attachments ?? [],
+      attachments: [...(input.attachments ?? [])],
       principalId: principal.userId,
     });
   }
