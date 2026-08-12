@@ -102,3 +102,11 @@
 | 2026-08-11T12:06:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate module community-payments --no-spec` | `src/community-payments/community-payments.module.ts`; updated AppModule | Communities Task 1 |
 | 2026-08-11T12:07:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate controller community-payments --no-spec` | `src/community-payments/community-payments.controller.ts`; updated CommunityPaymentsModule | Communities Task 1 |
 | 2026-08-11T12:08:00+01:00 | `node node_modules/@nestjs/cli/bin/nest.js generate service community-payments --no-spec` | `src/community-payments/community-payments.service.ts`; updated CommunityPaymentsModule | Communities Task 1 |
+| 2026-08-12T00:00:00+01:00 | `pnpm exec nest generate module realtime --no-spec` | `src/realtime/realtime.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:01:00+01:00 | `pnpm exec nest generate module chat --no-spec` | `src/chat/chat.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:02:00+01:00 | `pnpm exec nest generate module chat-media --no-spec` | `src/chat-media/chat-media.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:03:00+01:00 | `pnpm exec nest generate module chat-delivery --no-spec` | `src/chat-delivery/chat-delivery.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:04:00+01:00 | `pnpm exec nest generate module video-calls --no-spec` | `src/video-calls/video-calls.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:05:00+01:00 | `pnpm exec nest generate module bot --no-spec` | `src/bot/bot.module.ts`; updated `src/app.module.ts` | Chat/realtime Task 1 |
+| 2026-08-12T00:06:00+01:00 | `pnpm add @nestjs/websockets@^11 @nestjs/platform-socket.io@^11 socket.io@^4 @socket.io/redis-adapter@^8 file-type@^21` | Updated `package.json` and `pnpm-lock.yaml` | Chat/realtime Task 1 |
+| 2026-08-12T00:07:00+01:00 | `pnpm add -D autocannon@^8 socket.io-client@^4 @types/autocannon@^7 tsx@^4` | Updated `package.json` and `pnpm-lock.yaml` | Chat/realtime Task 1 |
