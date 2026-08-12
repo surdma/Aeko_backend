@@ -5,6 +5,7 @@
 .pnpm-home/
 /node_modules
 /build
+/.worktrees/
 
 # Logs
 logs
