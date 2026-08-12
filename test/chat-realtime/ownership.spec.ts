@@ -13,24 +13,30 @@ const manifest = readJson(
 };
 const owners = readJson(
   'docs/nestjs-migration/domains/chat-realtime-owners.json',
-) as Readonly<Record<string, readonly [string]>>;
+) as Readonly<Record<string, readonly string[]>>;
+
+const APPROVED_OWNERS = new Set([
+  'chat',
+  'chat-media',
+  'chat-delivery',
+  'video-calls',
+  'bot',
+  'realtime',
+]);
 
 describe('chat realtime ownership', () => {
   it('assigns every capability exactly once to an approved module', () => {
     expect(manifest.capabilityIds).toHaveLength(102);
+    expect(new Set(manifest.capabilityIds).size).toBe(102);
     expect(new Set(Object.keys(owners))).toEqual(
       new Set(manifest.capabilityIds),
     );
     expect(
-      Object.values(owners).every(([owner]) =>
-        [
-          'chat',
-          'chat-media',
-          'chat-delivery',
-          'video-calls',
-          'bot',
-          'realtime',
-        ].includes(owner),
+      Object.values(owners).every(
+        (ownerTuple) =>
+          Array.isArray(ownerTuple) &&
+          ownerTuple.length === 1 &&
+          APPROVED_OWNERS.has(ownerTuple[0]),
       ),
     ).toBe(true);
   });

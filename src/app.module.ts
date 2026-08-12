@@ -33,7 +33,6 @@ import { CommunitiesModule } from './communities/communities.module';
 import { CommunityProfilesModule } from './community-profiles/community-profiles.module';
 import { CommunityPaymentsModule } from './community-payments/community-payments.module';
 import { RealtimeModule } from './realtime/realtime.module';
-import { RealtimeModule } from './realtime/realtime.module';
 import { ChatModule } from './chat/chat.module';
 import { ChatMediaModule } from './chat-media/chat-media.module';
 import { ChatDeliveryModule } from './chat-delivery/chat-delivery.module';
@@ -42,7 +41,6 @@ import { BotModule } from './bot/bot.module';
 
 @Module({
   imports: [
-    RealtimeModule,
     UsersModule,
     ProfilesModule,
     SecurityModule,
