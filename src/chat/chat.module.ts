@@ -12,6 +12,7 @@ import { VideoCallsGateway } from './signalling/video-calls.gateway';
 import { BotController } from './bot/bot.controller';
 import { BotGateway } from './bot/bot.gateway';
 import { BotService } from './bot/bot.service';
+import { ChatDeliveryModule } from './delivery/chat-delivery.module';
 
-@Module({ controllers: [ChatController, ChatMediaController, BotController], providers: [ChatAuthorizationService, ChatService, ChatGateway, ChatEventPublisher, ChatRecoveryService, ChatAttachmentService, VideoCallAuthorizationService, VideoCallsGateway, BotService, BotGateway], exports: [ChatService, ChatRecoveryService] })
+@Module({ imports: [ChatDeliveryModule], controllers: [ChatController, ChatMediaController, BotController], providers: [ChatAuthorizationService, ChatService, ChatGateway, ChatEventPublisher, ChatRecoveryService, ChatAttachmentService, VideoCallAuthorizationService, VideoCallsGateway, BotService, BotGateway], exports: [ChatService, ChatRecoveryService] })
 export class ChatModule {}

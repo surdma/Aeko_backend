@@ -1,0 +1,1 @@
+import{DomainError}from'../../common/errors/domain.error';import{ChatPushPort}from'./chat-push.port';export class UnavailableChatPushAdapter extends ChatPushPort{deliver():Promise<void>{return Promise.reject(new DomainError('PROVIDER_UNAVAILABLE','Push delivery is temporarily unavailable'))}}
