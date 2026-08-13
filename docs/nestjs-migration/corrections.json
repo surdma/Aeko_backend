@@ -1303,5 +1303,95 @@
     "replacementBehavior": "Raw-body signatures, event identity, idempotency, and replay windows are enforced.",
     "reason": "Payment side effects must be authentic and exactly-once at the application boundary.",
     "status": "approved"
+  },
+  {
+    "id": "correction:chat-cross-replica-delivery",
+    "capabilityIds": ["socket:/:outbound:new_message:sockets/enhancedChatSocket.js:200", "socket:/:outbound:user_status_update:sockets/enhancedChatSocket.js:715"],
+    "category": "correctness",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 48 }],
+    "legacyBehavior": "Socket.IO delivery was local to one process, so recipients connected to another replica could miss room and presence events.",
+    "replacementBehavior": "The Nest Socket.IO adapter uses Redis Pub/Sub for cross-replica room fan-out; Postgres remains the recovery source.",
+    "reason": "Realtime delivery must remain correct when traffic is spread across replicas.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-room-message-authorization",
+    "capabilityIds": ["socket:/:inbound:join_chat:sockets/enhancedChatSocket.js:119", "socket:/:inbound:send_message:sockets/enhancedChatSocket.js:120", "rest:GET:/api/enhanced-chat/messages/:chatId:routes/enhancedChatRoutes.js:215"],
+    "category": "security",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 119 }],
+    "legacyBehavior": "Legacy room and message operations trusted event data without one shared membership authorization boundary.",
+    "replacementBehavior": "Nest resolves the authenticated principal server-side and checks membership before joining, reading, or writing a chat.",
+    "reason": "A socket event must not grant access to a chat merely because a client names it.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-secure-call-signalling",
+    "capabilityIds": ["socket:/:inbound:call-offer:sockets/videoCallSocket.js:3", "socket:/:inbound:call-answer:sockets/videoCallSocket.js:6", "socket:/:inbound:ice-candidate:sockets/videoCallSocket.js:9"],
+    "category": "security",
+    "legacyEvidence": [{ "file": "sockets/videoCallSocket.js", "line": 3 }],
+    "legacyBehavior": "Video-call relays accepted a target supplied by the caller without authenticating the sender or proving peer eligibility.",
+    "replacementBehavior": "The Nest gateway authenticates the socket, validates the signal, rate-limits it, and authorizes peers through an existing chat.",
+    "reason": "Unauthenticated relays allow arbitrary signalling and presence disclosure.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-bounded-frames-and-uploads",
+    "capabilityIds": ["socket:/:inbound:send_voice_message:sockets/enhancedChatSocket.js:124", "rest:POST:/api/enhanced-chat/upload-file:routes/enhancedChatRoutes.js:470", "rest:POST:/api/enhanced-chat/upload-voice:routes/enhancedChatRoutes.js:401"],
+    "category": "security",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 124 }],
+    "legacyBehavior": "Legacy sockets accepted oversized base64 payloads and media paths did not enforce byte-derived content validation.",
+    "replacementBehavior": "Multipart upload limits and magic-byte MIME checks protect provider-backed attachments; the legacy base64 adapter is capped at 1 MiB.",
+    "reason": "Unbounded frames and unverified files create memory and content-type risk.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-provider-safe-errors",
+    "capabilityIds": ["provider:ai:1555742fab9b", "provider:ai:5ee4a8bba5f4", "provider:ai:c160df35cd3c", "provider:push-notification:73e660fd0a3a"],
+    "category": "security",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 246 }],
+    "legacyBehavior": "Provider and internal errors could be emitted through socket error events.",
+    "replacementBehavior": "Compatibility views return stable public codes and messages without provider details, secrets, or stack data.",
+    "reason": "Provider errors can expose implementation details and credentials.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-distributed-rate-limits",
+    "capabilityIds": ["socket:/:inbound:typing_start:sockets/enhancedChatSocket.js:141", "socket:/:inbound:typing_stop:sockets/enhancedChatSocket.js:142", "socket:/:inbound:send_message:sockets/enhancedChatSocket.js:120"],
+    "category": "security",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 120 }],
+    "legacyBehavior": "Legacy chat events had no distributed per-principal rate limit or pressure policy.",
+    "replacementBehavior": "Nest prioritizes durable sends and drops or coalesces exhausted ephemeral events through the realtime limiter and backpressure service.",
+    "reason": "One client must not exhaust shared realtime capacity.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-idempotent-retries",
+    "capabilityIds": ["rest:POST:/api/chat/send-message:routes/chat.js:44", "rest:POST:/api/enhanced-chat/send-message:routes/enhancedChatRoutes.js:319", "socket:/:inbound:send_message:sockets/enhancedChatSocket.js:120"],
+    "category": "correctness",
+    "legacyEvidence": [{ "file": "routes/enhancedChatRoutes.js", "line": 319 }],
+    "legacyBehavior": "Retried send operations could create duplicate durable messages when acknowledgement delivery was interrupted.",
+    "replacementBehavior": "A clientMessageId is unique within a chat and repeated submissions return the persisted message rather than inserting another.",
+    "reason": "A durable acknowledgement must be safe for callers to retry.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-durable-outbox-delivery",
+    "capabilityIds": ["socket:/:outbound:new_message:sockets/enhancedChatSocket.js:200", "provider:push-notification:73e660fd0a3a"],
+    "category": "correctness",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 200 }],
+    "legacyBehavior": "Message persistence and downstream fan-out or provider delivery were not coupled through a durable retry record.",
+    "replacementBehavior": "Nest writes the message and outbox event atomically, then idempotent BullMQ workers claim and retry secondary delivery.",
+    "reason": "An acknowledged message cannot be lost because a provider or worker is temporarily unavailable.",
+    "status": "approved"
+  },
+  {
+    "id": "correction:chat-unread-reconciliation",
+    "capabilityIds": ["socket:/:outbound:unread_count:sockets/enhancedChatSocket.js:694", "rest:POST:/api/enhanced-chat/mark-read/:chatId:routes/enhancedChatRoutes.js:971"],
+    "category": "correctness",
+    "legacyEvidence": [{ "file": "sockets/enhancedChatSocket.js", "line": 694 }],
+    "legacyBehavior": "Unread state was tied to connected-process memory and could drift after reconnects or replica changes.",
+    "replacementBehavior": "Unread state is durable in Postgres, with Redis limited to bounded derived cache and reconciliation work.",
+    "reason": "Unread counts must recover after reconnect and cache loss.",
+    "status": "approved"
   }
 ]

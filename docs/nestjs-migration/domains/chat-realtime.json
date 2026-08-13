@@ -122,7 +122,17 @@
     "ai",
     "push-notification"
   ],
-  "corrections": [],
+  "corrections": [
+    "correction:chat-cross-replica-delivery",
+    "correction:chat-room-message-authorization",
+    "correction:chat-secure-call-signalling",
+    "correction:chat-bounded-frames-and-uploads",
+    "correction:chat-provider-safe-errors",
+    "correction:chat-distributed-rate-limits",
+    "correction:chat-idempotent-retries",
+    "correction:chat-durable-outbox-delivery",
+    "correction:chat-unread-reconciliation"
+  ],
   "cutoverUnit": [
     "model:model:BotConversation",
     "model:model:BotSettings",
@@ -232,5 +242,12 @@
     "backend",
     "security",
     "realtime"
-  ]
+  ],
+  "migration": {
+    "status": "implemented",
+    "assigned": 102,
+    "missing": 0,
+    "duplicate": 0,
+    "unresolved": 0
+  }
 }
