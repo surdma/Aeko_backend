@@ -59,6 +59,7 @@ const DIVERGENCES: Readonly<
     string,
     {
       readonly replace?: Readonly<Record<string, string>>;
+      readonly addAfter?: Readonly<Record<string, readonly string[]>>;
       readonly add?: readonly string[];
     }
   >
@@ -83,12 +84,41 @@ const DIVERGENCES: Readonly<
   // these are the dual-written relational tables alongside them.
   Post: { add: ['postLikes PostLike[]', 'notInterestedBy NotInterested[]'] },
   Comment: { add: ['commentLikes CommentLike[]'] },
+  // Durable per-chat ordering and outbox delivery are additive. Legacy keeps
+  // reading the same chat columns while Nest owns these new coordination fields.
+  Chat: {
+    addAfter: {
+      'lastMessageId String?': ['nextMessageSequence BigInt @default(0)'],
+    },
+    add: ['outboxEvents ChatOutboxEvent[]'],
+  },
+  EnhancedMessage: {
+    addAfter: {
+      'chatId String': ['clientMessageId String?', 'sequence BigInt?'],
+    },
+    add: [
+      '@@unique([chatId, clientMessageId])',
+      '@@unique([chatId, sequence])',
+    ],
+  },
+  Message: {
+    addAfter: {
+      'chatId String?': ['clientMessageId String?', 'sequence BigInt?'],
+    },
+    add: [
+      '@@unique([chatId, clientMessageId])',
+      '@@unique([chatId, sequence])',
+    ],
+  },
 };
 
 function applyDivergences(name: string, lines: string[]): string[] {
   const divergence = DIVERGENCES[name];
   if (!divergence) return lines;
-  const replaced = lines.map((line) => divergence.replace?.[line] ?? line);
+  const replaced = lines.flatMap((line) => [
+    divergence.replace?.[line] ?? line,
+    ...(divergence.addAfter?.[line] ?? []),
+  ]);
   return [...replaced, ...(divergence.add ?? [])];
 }
 

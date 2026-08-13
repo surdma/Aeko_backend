@@ -123,14 +123,14 @@
     "push-notification"
   ],
   "corrections": [
+    "correction:chat-bounded-frames-and-uploads",
     "correction:chat-cross-replica-delivery",
+    "correction:chat-distributed-rate-limits",
+    "correction:chat-durable-outbox-delivery",
+    "correction:chat-idempotent-retries",
+    "correction:chat-provider-safe-errors",
     "correction:chat-room-message-authorization",
     "correction:chat-secure-call-signalling",
-    "correction:chat-bounded-frames-and-uploads",
-    "correction:chat-provider-safe-errors",
-    "correction:chat-distributed-rate-limits",
-    "correction:chat-idempotent-retries",
-    "correction:chat-durable-outbox-delivery",
     "correction:chat-unread-reconciliation"
   ],
   "cutoverUnit": [
