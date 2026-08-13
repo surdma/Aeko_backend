@@ -3,7 +3,11 @@ import { ChatAuthorizationService } from './chat-authorization.service';
 import { ChatService } from './chat.service';
 import { ChatController } from './chat.controller';
 import { ChatGateway } from './chat.gateway';
-import { ChatEventPublisher } from './chat-event-publisher';
+import {
+  ChatEventPublisher,
+  ChatEventTransport,
+  SocketIoChatEventTransport,
+} from './chat-event-publisher';
 import { ChatRecoveryService } from './chat-recovery.service';
 import { ChatMediaController } from './media/chat-media.controller';
 import { ChatAttachmentService } from './media/chat-attachment.service';
@@ -22,6 +26,8 @@ import { ChatDeliveryModule } from './delivery/chat-delivery.module';
     ChatService,
     ChatGateway,
     ChatEventPublisher,
+    SocketIoChatEventTransport,
+    { provide: ChatEventTransport, useExisting: SocketIoChatEventTransport },
     ChatRecoveryService,
     ChatAttachmentService,
     VideoCallAuthorizationService,

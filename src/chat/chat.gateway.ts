@@ -1,9 +1,12 @@
+import type { OnGatewayInit } from '@nestjs/websockets';
 import {
   ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
+import type { Server } from 'socket.io';
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import { DomainError } from '../common/errors/domain.error';
 import {
@@ -12,7 +15,10 @@ import {
   type WsPublicError,
 } from './chat.contract';
 import { ChatAuthorizationService } from './chat-authorization.service';
-import { ChatEventPublisher } from './chat-event-publisher';
+import {
+  ChatEventPublisher,
+  SocketIoChatEventTransport,
+} from './chat-event-publisher';
 import { ChatService } from './chat.service';
 
 export interface AuthenticatedSocket {
@@ -23,12 +29,20 @@ export interface AuthenticatedSocket {
 type Ack = (value: ChatAck | WsPublicError) => void;
 
 @WebSocketGateway({ namespace: '/', cors: false })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayInit {
+  @WebSocketServer()
+  private server!: Server;
+
   constructor(
     private readonly chat: ChatService,
     private readonly authorization: ChatAuthorizationService,
     private readonly publisher: ChatEventPublisher,
+    private readonly transport: SocketIoChatEventTransport,
   ) {}
+
+  afterInit(): void {
+    this.transport.bind(this.server);
+  }
 
   private async safely(
     ack: Ack,
