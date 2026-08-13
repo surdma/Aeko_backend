@@ -5,6 +5,7 @@ import { PresencePort, RedisPresenceService } from './presence.service';
 import { RedisConnectionsService } from './redis-connections.service';
 import { RealtimeAuthService } from './realtime-auth.service';
 import { RealtimeHealthService } from './realtime-health.service';
+import { RealtimeBackpressureService } from './realtime-backpressure.service';
 import { RealtimeRateLimiterService } from './realtime-rate-limiter.service';
 import { RealtimeRoomNames } from './realtime-room-names';
 import { SocketIoRedisAdapter } from './socket-io-redis.adapter';
@@ -13,6 +14,7 @@ import { SocketIoRedisAdapter } from './socket-io-redis.adapter';
   imports: [AuthModule],
   providers: [
     RealtimeHealthService,
+    RealtimeBackpressureService,
     RedisConnectionsService,
     SocketIoRedisAdapter,
     RealtimeAuthService,
@@ -27,6 +29,7 @@ import { SocketIoRedisAdapter } from './socket-io-redis.adapter';
     RealtimeRoomNames,
     RealtimeRateLimiterService,
     RealtimeHealthService,
+    RealtimeBackpressureService,
     ChatMembershipCacheService,
     PresencePort,
   ],
