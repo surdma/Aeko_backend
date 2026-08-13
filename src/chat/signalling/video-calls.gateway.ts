@@ -1,4 +1,11 @@
-import { ConnectedSocket, MessageBody, OnGatewayConnection, OnGatewayDisconnect, SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+} from '@nestjs/websockets';
 import { callSignalSchema, CallSignal } from './video-call.contract';
 import { VideoCallAuthorizationService } from './video-call-authorization.service';
 
@@ -16,7 +23,9 @@ interface SignalAcknowledgement {
 }
 
 @WebSocketGateway({ namespace: '/chat' })
-export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class VideoCallsGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly connectionsByUser = new Map<string, Set<SignallingSocket>>();
   private readonly eventTimestamps = new Map<string, number[]>();
 
@@ -29,7 +38,8 @@ export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconne
       return;
     }
 
-    const connections = this.connectionsByUser.get(userId) ?? new Set<SignallingSocket>();
+    const connections =
+      this.connectionsByUser.get(userId) ?? new Set<SignallingSocket>();
     connections.add(socket);
     this.connectionsByUser.set(userId, connections);
   }
@@ -45,31 +55,55 @@ export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconne
   }
 
   @SubscribeMessage('call-offer')
-  offer(@ConnectedSocket() socket: SignallingSocket, @MessageBody() body: unknown, acknowledgement?: SignalAcknowledgement): Promise<void> {
+  offer(
+    @ConnectedSocket() socket: SignallingSocket,
+    @MessageBody() body: unknown,
+    acknowledgement?: SignalAcknowledgement,
+  ): Promise<void> {
     return this.relay('call-offer', socket, body, acknowledgement);
   }
 
   @SubscribeMessage('call-answer')
-  answer(@ConnectedSocket() socket: SignallingSocket, @MessageBody() body: unknown, acknowledgement?: SignalAcknowledgement): Promise<void> {
+  answer(
+    @ConnectedSocket() socket: SignallingSocket,
+    @MessageBody() body: unknown,
+    acknowledgement?: SignalAcknowledgement,
+  ): Promise<void> {
     return this.relay('call-answer', socket, body, acknowledgement);
   }
 
   @SubscribeMessage('ice-candidate')
-  candidate(@ConnectedSocket() socket: SignallingSocket, @MessageBody() body: unknown, acknowledgement?: SignalAcknowledgement): Promise<void> {
+  candidate(
+    @ConnectedSocket() socket: SignallingSocket,
+    @MessageBody() body: unknown,
+    acknowledgement?: SignalAcknowledgement,
+  ): Promise<void> {
     return this.relay('ice-candidate', socket, body, acknowledgement);
   }
 
-  private async relay(event: SignalEvent, socket: SignallingSocket, body: unknown, acknowledgement?: SignalAcknowledgement): Promise<void> {
+  private async relay(
+    event: SignalEvent,
+    socket: SignallingSocket,
+    body: unknown,
+    acknowledgement?: SignalAcknowledgement,
+  ): Promise<void> {
     try {
       const userId = this.userId(socket);
       if (userId === undefined) throw new Error('UNAUTHENTICATED');
       if (!this.withinRateLimit(userId, event)) throw new Error('RATE_LIMITED');
 
       const parsed = callSignalSchema.safeParse(body);
-      if (!parsed.success || !this.matchesEvent(event, parsed.data)) throw new Error('INVALID_SIGNAL');
-      await this.authorization.assertPeers(userId, parsed.data.targetUserId, parsed.data.chatId);
+      if (!parsed.success || !this.matchesEvent(event, parsed.data))
+        throw new Error('INVALID_SIGNAL');
+      await this.authorization.assertPeers(
+        userId,
+        parsed.data.targetUserId,
+        parsed.data.chatId,
+      );
 
-      const targetConnections = this.connectionsByUser.get(parsed.data.targetUserId);
+      const targetConnections = this.connectionsByUser.get(
+        parsed.data.targetUserId,
+      );
       if (targetConnections !== undefined) {
         const payload = this.legacyPayload(userId, parsed.data);
         for (const target of targetConnections) target.emit(event, payload);
@@ -90,7 +124,9 @@ export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconne
   private withinRateLimit(userId: string, event: SignalEvent): boolean {
     const key = `${userId}:${event}`;
     const now = Date.now();
-    const timestamps = (this.eventTimestamps.get(key) ?? []).filter((timestamp) => now - timestamp < 30_000);
+    const timestamps = (this.eventTimestamps.get(key) ?? []).filter(
+      (timestamp) => now - timestamp < 30_000,
+    );
     if (timestamps.length >= 15) return false;
     timestamps.push(now);
     this.eventTimestamps.set(key, timestamps);
@@ -98,12 +134,17 @@ export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconne
   }
 
   private matchesEvent(event: SignalEvent, signal: CallSignal): boolean {
-    return (event === 'call-offer' && signal.offer !== undefined) ||
+    return (
+      (event === 'call-offer' && signal.offer !== undefined) ||
       (event === 'call-answer' && signal.answer !== undefined) ||
-      (event === 'ice-candidate' && signal.candidate !== undefined);
+      (event === 'ice-candidate' && signal.candidate !== undefined)
+    );
   }
 
-  private legacyPayload(senderId: string, signal: CallSignal): Record<string, string> {
+  private legacyPayload(
+    senderId: string,
+    signal: CallSignal,
+  ): Record<string, string> {
     const payload: Record<string, string> = { chatId: signal.chatId, senderId };
     if (signal.offer !== undefined) payload.offer = signal.offer;
     if (signal.answer !== undefined) payload.answer = signal.answer;
@@ -111,10 +152,19 @@ export class VideoCallsGateway implements OnGatewayConnection, OnGatewayDisconne
     return payload;
   }
 
-  private errorCode(error: unknown): 'AUTHORIZATION_DENIED' | 'INVALID_SIGNAL' | 'RATE_LIMITED' | 'UNAUTHENTICATED' {
-    if (error instanceof Error && error.message === 'RATE_LIMITED') return 'RATE_LIMITED';
-    if (error instanceof Error && error.message === 'UNAUTHENTICATED') return 'UNAUTHENTICATED';
-    if (error instanceof Error && error.message === 'INVALID_SIGNAL') return 'INVALID_SIGNAL';
+  private errorCode(
+    error: unknown,
+  ):
+    | 'AUTHORIZATION_DENIED'
+    | 'INVALID_SIGNAL'
+    | 'RATE_LIMITED'
+    | 'UNAUTHENTICATED' {
+    if (error instanceof Error && error.message === 'RATE_LIMITED')
+      return 'RATE_LIMITED';
+    if (error instanceof Error && error.message === 'UNAUTHENTICATED')
+      return 'UNAUTHENTICATED';
+    if (error instanceof Error && error.message === 'INVALID_SIGNAL')
+      return 'INVALID_SIGNAL';
     return 'AUTHORIZATION_DENIED';
   }
 }

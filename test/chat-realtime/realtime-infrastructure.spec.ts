@@ -1,6 +1,12 @@
 import type { IncomingHttpHeaders } from 'node:http';
-import { ConfigurationService, type AppConfig } from '../../src/configuration/configuration/configuration.service';
-import { RealtimeAuthenticationError, RealtimeAuthService } from '../../src/realtime/realtime-auth.service';
+import {
+  ConfigurationService,
+  type AppConfig,
+} from '../../src/configuration/configuration/configuration.service';
+import {
+  RealtimeAuthenticationError,
+  RealtimeAuthService,
+} from '../../src/realtime/realtime-auth.service';
 import { RealtimeHealthService } from '../../src/realtime/realtime-health.service';
 import { RealtimeRateLimiterService } from '../../src/realtime/realtime-rate-limiter.service';
 import { RealtimeRoomNames } from '../../src/realtime/realtime-room-names';
@@ -25,21 +31,18 @@ function configuration(): ConfigurationService {
 
 describe('realtime infrastructure', () => {
   it('authenticates a trusted socket handshake through Better Auth', async () => {
-    const auth = new RealtimeAuthService(
-      configuration(),
-      {
-        resolvePrincipal: jest.fn().mockResolvedValue({
-          userId: USER_ID,
-          sessionId: 'session-id',
-          email: 'member@aeko.test',
-          username: 'member',
-          isAdmin: false,
-          banned: false,
-          twoFactorEnabled: false,
-          twoFactorSatisfied: true,
-        }),
-      },
-    );
+    const auth = new RealtimeAuthService(configuration(), {
+      resolvePrincipal: jest.fn().mockResolvedValue({
+        userId: USER_ID,
+        sessionId: 'session-id',
+        email: 'member@aeko.test',
+        username: 'member',
+        isAdmin: false,
+        banned: false,
+        twoFactorEnabled: false,
+        twoFactorSatisfied: true,
+      }),
+    });
 
     await expect(
       auth.authenticate({

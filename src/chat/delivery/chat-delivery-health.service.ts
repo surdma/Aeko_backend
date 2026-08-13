@@ -1,1 +1,17 @@
-import{Injectable}from'@nestjs/common';@Injectable()export class ChatDeliveryHealthService{private pending=0;private failed=0;update(pending:number,failed:number){this.pending=pending;this.failed=failed}snapshot(){return{status:this.failed>0?'degraded':'ready' as const,pending:this.pending,failed:this.failed}}}
+import { Injectable } from '@nestjs/common';
+@Injectable()
+export class ChatDeliveryHealthService {
+  private pending = 0;
+  private failed = 0;
+  update(pending: number, failed: number) {
+    this.pending = pending;
+    this.failed = failed;
+  }
+  snapshot() {
+    return {
+      status: this.failed > 0 ? 'degraded' : ('ready' as const),
+      pending: this.pending,
+      failed: this.failed,
+    };
+  }
+}

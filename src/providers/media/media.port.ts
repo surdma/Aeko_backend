@@ -13,12 +13,17 @@ export interface UploadedMedia {
   readonly providerId: string;
 }
 export interface UploadAttachmentInput {
-  readonly ownerId: string; readonly chatId: string; readonly bytes: Uint8Array;
-  readonly declaredMimeType: string; readonly filename: string;
+  readonly ownerId: string;
+  readonly chatId: string;
+  readonly bytes: Uint8Array;
+  readonly declaredMimeType: string;
+  readonly filename: string;
 }
 
 export abstract class MediaPort {
   abstract uploadProfileImage(input: UploadImageInput): Promise<UploadedMedia>;
   abstract deleteProfileImage(providerId: string): Promise<void>;
-  abstract uploadChatAttachment(input: UploadAttachmentInput): Promise<UploadedMedia>;
+  abstract uploadChatAttachment(
+    input: UploadAttachmentInput,
+  ): Promise<UploadedMedia>;
 }

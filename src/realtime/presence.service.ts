@@ -25,7 +25,9 @@ export class RedisPresenceService extends PresencePort {
   async disconnect(userId: string, connectionId: string): Promise<void> {
     const cache = this.connections.cache();
     if (!cache) return;
-    await cache.del(this.connectionKey(userId, connectionId)).catch(() => undefined);
+    await cache
+      .del(this.connectionKey(userId, connectionId))
+      .catch(() => undefined);
   }
 
   async isOnline(userId: string): Promise<boolean> {

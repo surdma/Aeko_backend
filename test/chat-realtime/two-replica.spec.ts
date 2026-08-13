@@ -8,7 +8,8 @@ import { io, type Socket } from 'socket.io-client';
 
 const redisUrl = (): string => {
   const value = process.env.REDIS_URL;
-  if (!value) throw new Error('REDIS_URL is required for the two-replica proof');
+  if (!value)
+    throw new Error('REDIS_URL is required for the two-replica proof');
   return value;
 };
 
@@ -37,14 +38,27 @@ describe('two-replica Redis fan-out', () => {
   afterAll(async () => {
     clients.forEach((client) => client.disconnect());
     await Promise.all(ioServers.map((server) => server.close()));
-    await Promise.all(httpServers.map((server) => new Promise<void>((resolve) => server.close(() => resolve()))));
-    await Promise.all(redisClients.map((client) => client.quit().catch(() => client.disconnect())));
+    await Promise.all(
+      httpServers.map(
+        (server) =>
+          new Promise<void>((resolve) => server.close(() => resolve())),
+      ),
+    );
+    await Promise.all(
+      redisClients.map((client) =>
+        client.quit().catch(() => client.disconnect()),
+      ),
+    );
   });
 
   it('delivers a room event from replica A to a recipient on replica B', async () => {
     const ports: number[] = [];
     for (let index = 0; index < 2; index += 1) {
-      const publisher = new Redis(redisUrl(), { lazyConnect: true, connectTimeout: 5_000, maxRetriesPerRequest: 1 });
+      const publisher = new Redis(redisUrl(), {
+        lazyConnect: true,
+        connectTimeout: 5_000,
+        maxRetriesPerRequest: 1,
+      });
       const subscriber = publisher.duplicate();
       publisher.on('error', () => undefined);
       subscriber.on('error', () => undefined);
@@ -52,24 +66,42 @@ describe('two-replica Redis fan-out', () => {
       await Promise.all([publisher.connect(), subscriber.connect()]);
       const http = createServer();
       const ioServer = new Server(http, { transports: ['websocket'] });
-      ioServer.adapter(createAdapter(publisher, subscriber, { key: namespace }));
+      ioServer.adapter(
+        createAdapter(publisher, subscriber, { key: namespace }),
+      );
       ioServer.on('connection', (socket) => {
-        socket.on('join_chat', async (chatId: string, ack: (value: unknown) => void) => {
-          await socket.join(`aeko:chat:${chatId}`);
-          ack({ success: true });
-        });
+        socket.on(
+          'join_chat',
+          async (chatId: string, ack: (value: unknown) => void) => {
+            await socket.join(`aeko:chat:${chatId}`);
+            ack({ success: true });
+          },
+        );
       });
       httpServers.push(http);
       ioServers.push(ioServer);
       ports.push(await listen(http));
     }
 
-    const sender = await connect(ports[0]!);
-    const recipient = await connect(ports[1]!);
+    const [replicaAPort, replicaBPort] = ports;
+    const replicaA = ioServers[0];
+    if (
+      replicaAPort === undefined ||
+      replicaBPort === undefined ||
+      replicaA === undefined
+    ) {
+      throw new Error('Both realtime replicas must be listening');
+    }
+    const sender = await connect(replicaAPort);
+    const recipient = await connect(replicaBPort);
     clients.push(sender, recipient);
     await recipient.emitWithAck('join_chat', 'chat-1');
-    const received = new Promise<unknown>((resolve) => recipient.once('new_message', resolve));
-    ioServers[0]!.to('aeko:chat:chat-1').emit('new_message', { id: 'message-1', sequence: 1 });
+    const received = new Promise<unknown>((resolve) =>
+      recipient.once('new_message', resolve),
+    );
+    replicaA
+      .to('aeko:chat:chat-1')
+      .emit('new_message', { id: 'message-1', sequence: 1 });
     await expect(received).resolves.toEqual({ id: 'message-1', sequence: 1 });
   });
 });

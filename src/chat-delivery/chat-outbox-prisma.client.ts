@@ -49,7 +49,11 @@ export const createChatOutboxPrismaClient = (
     if (!Number.isSafeInteger(limit) || limit < 1) return [];
     const availableAt = now();
     const candidates = await db.chatOutboxEvent.findMany({
-      where: { completedAt: null, claimedAt: null, availableAt: { lte: availableAt } },
+      where: {
+        completedAt: null,
+        claimedAt: null,
+        availableAt: { lte: availableAt },
+      },
       orderBy: [{ availableAt: 'asc' }, { createdAt: 'asc' }],
       take: limit,
       select: { id: true },

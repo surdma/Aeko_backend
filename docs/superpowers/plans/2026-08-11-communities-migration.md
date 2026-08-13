@@ -11,27 +11,27 @@ withdrawal and the transaction history around it.
 
 ## Route surface to preserve
 
-| Route | Auth | Legacy source |
-| --- | --- | --- |
-| `POST /api/communities` | session + 2FA | `communityRoutes.js:70` |
-| `GET /api/communities` | public | `communityRoutes.js:114` |
-| `GET /api/communities/my` | session | `communityRoutes.js:116` |
-| `GET /api/communities/:id` | session | `communityRoutes.js:146` |
-| `POST /api/communities/:id/join` | session | `communityRoutes.js:178` |
-| `POST /api/communities/:id/leave` | session | `communityRoutes.js:206` |
-| `PUT /api/communities/:id` | owner/moderator | `communityRoutes.js:256` |
-| `DELETE /api/communities/:id` | owner + 2FA | `communityRoutes.js:299` |
-| `PUT /api/community-profiles/:id/profile` | owner/moderator | `communityProfileRoutes.js:72` |
-| `POST /api/community-profiles/:id/upload-photo` | owner/moderator | `communityProfileRoutes.js:128` |
-| `PUT /api/community-profiles/:id/settings` | owner only | `communityProfileRoutes.js:199` |
-| `POST /api/community-profiles/:id/follow` | session | `communityProfileRoutes.js:248` |
-| `POST /api/community-profiles/:id/unfollow` | session | `communityProfileRoutes.js:280` |
-| `POST /api/community-profiles/:id/posts` | member/follower | `communityProfileRoutes.js:329` |
-| `GET /api/community-profiles/:id/posts` | session | `communityProfileRoutes.js:384` |
-| `POST /api/community/payment/initialize` | session | `communityPaymentRoutes.js:63` |
-| `GET /api/community/payment/verify` | public | `communityPaymentRoutes.js:133` |
-| `POST /api/community/payment/withdraw` | owner + 2FA | `communityPaymentRoutes.js:224` |
-| `GET /api/community/payment/:communityId/transactions` | owner | `communityPaymentRoutes.js:366` |
+| Route                                                  | Auth            | Legacy source                   |
+| ------------------------------------------------------ | --------------- | ------------------------------- |
+| `POST /api/communities`                                | session + 2FA   | `communityRoutes.js:70`         |
+| `GET /api/communities`                                 | public          | `communityRoutes.js:114`        |
+| `GET /api/communities/my`                              | session         | `communityRoutes.js:116`        |
+| `GET /api/communities/:id`                             | session         | `communityRoutes.js:146`        |
+| `POST /api/communities/:id/join`                       | session         | `communityRoutes.js:178`        |
+| `POST /api/communities/:id/leave`                      | session         | `communityRoutes.js:206`        |
+| `PUT /api/communities/:id`                             | owner/moderator | `communityRoutes.js:256`        |
+| `DELETE /api/communities/:id`                          | owner + 2FA     | `communityRoutes.js:299`        |
+| `PUT /api/community-profiles/:id/profile`              | owner/moderator | `communityProfileRoutes.js:72`  |
+| `POST /api/community-profiles/:id/upload-photo`        | owner/moderator | `communityProfileRoutes.js:128` |
+| `PUT /api/community-profiles/:id/settings`             | owner only      | `communityProfileRoutes.js:199` |
+| `POST /api/community-profiles/:id/follow`              | session         | `communityProfileRoutes.js:248` |
+| `POST /api/community-profiles/:id/unfollow`            | session         | `communityProfileRoutes.js:280` |
+| `POST /api/community-profiles/:id/posts`               | member/follower | `communityProfileRoutes.js:329` |
+| `GET /api/community-profiles/:id/posts`                | session         | `communityProfileRoutes.js:384` |
+| `POST /api/community/payment/initialize`               | session         | `communityPaymentRoutes.js:63`  |
+| `GET /api/community/payment/verify`                    | public          | `communityPaymentRoutes.js:133` |
+| `POST /api/community/payment/withdraw`                 | owner + 2FA     | `communityPaymentRoutes.js:224` |
+| `GET /api/community/payment/:communityId/transactions` | owner           | `communityPaymentRoutes.js:366` |
 
 `GET /api/community/payment/verify` stays public: it is the provider callback.
 
@@ -56,7 +56,7 @@ That is not a subtlety — it is the paid feature failing to grant what was paid
 for, on every route except the one that wrote the JSON.
 
 **Decision: dual-write, relational-authoritative-on-read.** Settlement writes
-the relational `CommunityMember` row *as well as* the JSON it writes today.
+the relational `CommunityMember` row _as well as_ the JSON it writes today.
 Reads stay on the relational table, which is what every route already uses, so
 no read path changes shape. The JSON keeps being written so that anything
 outside this migration still reading it — AdminJS, reports — keeps working, and
@@ -69,16 +69,16 @@ meaningful. It is listed as a task and must not be silently skipped.
 
 ## Legacy defects found while reading the source
 
-| # | Where | Defect | Disposition |
-| --- | --- | --- | --- |
-| 1 | `communityController.js` settlement split | A paid membership is written only to JSON, so every relational read treats the payer as a non-member. | correct — dual-write the relational row at settlement |
-| 2 | `communityController.js:23` | `user.goldenTick` is read off a possibly-missing row, so a deleted user answers 500. | correct — report the missing user |
-| 3 | `communityController.js:112` | The listing builds `OR: [name contains search, description contains search, tags has search]` unconditionally; with no search term this still runs three predicates per row. | correct — omit the filter when no term is given |
-| 4 | `communityController.js` join | `memberCount` is incremented outside any check that the member row was newly created; a racing double join can double-count. | correct — increment inside the transaction that creates the row, keyed on the unique constraint |
-| 5 | `communityController.js` delete | Deleting removes every `CommunityMember` row but leaves `memberCount` at its old value, so a reactivated community reports phantom members. | correct — zero the count with the deletion |
-| 6 | `communityController.js` update | `if (name)` / `if (tags)` skip falsy-but-valid updates and the settings merge is a read-modify-write outside a transaction. | correct — explicit presence checks, merge inside a transaction |
-| 7 | Every controller | 500 responses include `error.message` when `NODE_ENV=development`. | correct — the `DomainError` filter withholds internals |
-| 8 | `communityPaymentRoutes.js` | Withdrawal validates the amount against earnings read outside the transaction that decrements them. | correct — validate and reserve in one `Serializable` transaction |
+| #   | Where                                     | Defect                                                                                                                                                                       | Disposition                                                                                     |
+| --- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | `communityController.js` settlement split | A paid membership is written only to JSON, so every relational read treats the payer as a non-member.                                                                        | correct — dual-write the relational row at settlement                                           |
+| 2   | `communityController.js:23`               | `user.goldenTick` is read off a possibly-missing row, so a deleted user answers 500.                                                                                         | correct — report the missing user                                                               |
+| 3   | `communityController.js:112`              | The listing builds `OR: [name contains search, description contains search, tags has search]` unconditionally; with no search term this still runs three predicates per row. | correct — omit the filter when no term is given                                                 |
+| 4   | `communityController.js` join             | `memberCount` is incremented outside any check that the member row was newly created; a racing double join can double-count.                                                 | correct — increment inside the transaction that creates the row, keyed on the unique constraint |
+| 5   | `communityController.js` delete           | Deleting removes every `CommunityMember` row but leaves `memberCount` at its old value, so a reactivated community reports phantom members.                                  | correct — zero the count with the deletion                                                      |
+| 6   | `communityController.js` update           | `if (name)` / `if (tags)` skip falsy-but-valid updates and the settings merge is a read-modify-write outside a transaction.                                                  | correct — explicit presence checks, merge inside a transaction                                  |
+| 7   | Every controller                          | 500 responses include `error.message` when `NODE_ENV=development`.                                                                                                           | correct — the `DomainError` filter withholds internals                                          |
+| 8   | `communityPaymentRoutes.js`               | Withdrawal validates the amount against earnings read outside the transaction that decrements them.                                                                          | correct — validate and reserve in one `Serializable` transaction                                |
 
 Deliberately **not** changed:
 

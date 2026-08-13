@@ -17,22 +17,49 @@ export class CloudinaryMediaAdapter extends MediaPort {
     super();
   }
 
-  async uploadChatAttachment(input: UploadAttachmentInput): Promise<UploadedMedia> {
+  async uploadChatAttachment(
+    input: UploadAttachmentInput,
+  ): Promise<UploadedMedia> {
     const { cloudName, apiKey, apiSecret } = this.credentials();
     const timestamp = Math.floor(Date.now() / 1_000).toString();
     const folder = `aeko/chats/${encodeURIComponent(input.chatId)}`;
     const publicId = createHash('sha256').update(input.bytes).digest('hex');
-    const signature = createHash('sha1').update(`folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`).digest('hex');
+    const signature = createHash('sha1')
+      .update(
+        `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`,
+      )
+      .digest('hex');
     const form = new FormData();
-    form.append('file', new Blob([Uint8Array.from(input.bytes)], { type: input.declaredMimeType }), input.filename);
-    form.append('api_key', apiKey); form.append('timestamp', timestamp); form.append('signature', signature);
-    form.append('folder', folder); form.append('public_id', publicId);
+    form.append(
+      'file',
+      new Blob([Uint8Array.from(input.bytes)], {
+        type: input.declaredMimeType,
+      }),
+      input.filename,
+    );
+    form.append('api_key', apiKey);
+    form.append('timestamp', timestamp);
+    form.append('signature', signature);
+    form.append('folder', folder);
+    form.append('public_id', publicId);
     try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/auto/upload`, { method: 'POST', body: form, signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MILLISECONDS) });
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/auto/upload`,
+        {
+          method: 'POST',
+          body: form,
+          signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MILLISECONDS),
+        },
+      );
       if (!response.ok) providerUnavailable();
       const body = parseProviderJson(await response.text());
-      return { url: readString(body, 'secure_url'), providerId: readString(body, 'public_id') };
-    } catch { providerUnavailable(); }
+      return {
+        url: readString(body, 'secure_url'),
+        providerId: readString(body, 'public_id'),
+      };
+    } catch {
+      providerUnavailable();
+    }
   }
 
   async uploadProfileImage(input: UploadImageInput): Promise<UploadedMedia> {

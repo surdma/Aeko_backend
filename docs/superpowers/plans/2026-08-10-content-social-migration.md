@@ -237,7 +237,7 @@ nothing is removed, so polling clients are unaffected. Consequences:
 behind `SessionGuard`, emitting the same `NotificationView` the inbox returns,
 plus a periodic heartbeat so proxies do not idle out the connection.
 
-The hard constraint is *where notifications come from*. During the migration
+The hard constraint is _where notifications come from_. During the migration
 window they are written by three producers: this NestJS service, the legacy
 Express service, and any future worker. An in-process event bus only sees the
 first, and only on the instance that handled the write. So an in-process-only
@@ -260,8 +260,8 @@ caveat drove the rest of the design:
 > Redis pub/sub alone does **not** close the producer gap. The legacy Express
 > service writes notifications straight to Postgres and will never call
 > `PUBLISH`. A pub/sub-only stream therefore still misses every legacy-written
-> notification — which today is most of them. Redis fixes *fan-out across
-> instances*, not *discovery of writes we did not make*.
+> notification — which today is most of them. Redis fixes _fan-out across
+> instances_, not _discovery of writes we did not make_.
 
 So the design is three parts, each doing one job:
 

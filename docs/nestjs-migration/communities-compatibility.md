@@ -10,27 +10,27 @@ membership feature granted nothing that any other route could see.
 
 ## Route surface
 
-| Route | Auth | Notes |
-| --- | --- | --- |
-| `POST /api/communities` | session + 2FA | golden tick still required |
-| `GET /api/communities` | public | filter dropped when no search term |
-| `GET /api/communities/my` | session | unchanged |
-| `GET /api/communities/:id` | session | unchanged |
-| `POST /api/communities/:id/join` | session | count no longer double-increments |
-| `POST /api/communities/:id/leave` | session | unchanged |
-| `PUT /api/communities/:id` | owner/moderator | settings merge now transactional |
-| `DELETE /api/communities/:id` | owner + 2FA | now zeroes `memberCount` |
-| `PUT /api/community-profiles/:id/profile` | owner/moderator | previously 500 on every call |
-| `POST /api/community-profiles/:id/upload-photo` | owner/moderator | previously 500 on every call |
-| `PUT /api/community-profiles/:id/settings` | owner only | unchanged |
-| `POST /api/community-profiles/:id/follow` | session | unchanged |
-| `POST /api/community-profiles/:id/unfollow` | session | still idempotent |
-| `POST /api/community-profiles/:id/posts` | member/follower | previously 500 on every call |
-| `GET /api/community-profiles/:id/posts` | session | previously 500 on every call |
-| `POST /api/community/payment/initialize` | session | previously 400 on every call |
-| `GET /api/community/payment/verify` | public | now settles through the shared adapter |
-| `POST /api/community/payment/withdraw` | owner + 2FA | previously 400 on every call |
-| `GET /api/community/payment/:communityId/transactions` | owner | previously 400 on every call |
+| Route                                                  | Auth            | Notes                                  |
+| ------------------------------------------------------ | --------------- | -------------------------------------- |
+| `POST /api/communities`                                | session + 2FA   | golden tick still required             |
+| `GET /api/communities`                                 | public          | filter dropped when no search term     |
+| `GET /api/communities/my`                              | session         | unchanged                              |
+| `GET /api/communities/:id`                             | session         | unchanged                              |
+| `POST /api/communities/:id/join`                       | session         | count no longer double-increments      |
+| `POST /api/communities/:id/leave`                      | session         | unchanged                              |
+| `PUT /api/communities/:id`                             | owner/moderator | settings merge now transactional       |
+| `DELETE /api/communities/:id`                          | owner + 2FA     | now zeroes `memberCount`               |
+| `PUT /api/community-profiles/:id/profile`              | owner/moderator | previously 500 on every call           |
+| `POST /api/community-profiles/:id/upload-photo`        | owner/moderator | previously 500 on every call           |
+| `PUT /api/community-profiles/:id/settings`             | owner only      | unchanged                              |
+| `POST /api/community-profiles/:id/follow`              | session         | unchanged                              |
+| `POST /api/community-profiles/:id/unfollow`            | session         | still idempotent                       |
+| `POST /api/community-profiles/:id/posts`               | member/follower | previously 500 on every call           |
+| `GET /api/community-profiles/:id/posts`                | session         | previously 500 on every call           |
+| `POST /api/community/payment/initialize`               | session         | previously 400 on every call           |
+| `GET /api/community/payment/verify`                    | public          | now settles through the shared adapter |
+| `POST /api/community/payment/withdraw`                 | owner + 2FA     | previously 400 on every call           |
+| `GET /api/community/payment/:communityId/transactions` | owner           | previously 400 on every call           |
 
 No routes were added and none were removed; `test/communities/cutover.spec.ts`
 pins the set exactly.

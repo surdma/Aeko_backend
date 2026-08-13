@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await -- in-memory Prisma doubles preserve async interface */
 import {
   createChatPrismaClient,
   type ChatStore,
@@ -22,13 +23,16 @@ const createStore = (): {
   readonly store: ChatStore;
   readonly outboxCount: () => number;
 } => {
-  const messages = new Map<string, {
-    id: string;
-    chatId: string;
-    clientMessageId: string | null;
-    sequence: bigint;
-    createdAt: Date;
-  }>();
+  const messages = new Map<
+    string,
+    {
+      id: string;
+      chatId: string;
+      clientMessageId: string | null;
+      sequence: bigint;
+      createdAt: Date;
+    }
+  >();
   const byClientId = new Map<string, string>();
   const outbox = new Map<string, { aggregateId: string }>();
   let sequence = 0n;
@@ -46,11 +50,23 @@ const createStore = (): {
       },
     },
     enhancedMessage: {
-      findUnique: async ({ where }: { where: { chatId_clientMessageId: { chatId: string; clientMessageId: string } } }) => {
-        const id = byClientId.get(`${where.chatId_clientMessageId.chatId}:${where.chatId_clientMessageId.clientMessageId}`);
-        return id === undefined ? null : messages.get(id) ?? null;
+      findUnique: async ({
+        where,
+      }: {
+        where: {
+          chatId_clientMessageId: { chatId: string; clientMessageId: string };
+        };
+      }) => {
+        const id = byClientId.get(
+          `${where.chatId_clientMessageId.chatId}:${where.chatId_clientMessageId.clientMessageId}`,
+        );
+        return id === undefined ? null : (messages.get(id) ?? null);
       },
-      create: async ({ data }: { data: { chatId: string; clientMessageId?: string; sequence: bigint } }) => {
+      create: async ({
+        data,
+      }: {
+        data: { chatId: string; clientMessageId?: string; sequence: bigint };
+      }) => {
         if (
           data.clientMessageId !== undefined &&
           byClientId.has(`${data.chatId}:${data.clientMessageId}`)
@@ -60,9 +76,16 @@ const createStore = (): {
           });
         }
         const id = `message-${++nextId}`;
-        const row = { id, chatId: data.chatId, clientMessageId: data.clientMessageId ?? null, sequence: data.sequence, createdAt: new Date() };
+        const row = {
+          id,
+          chatId: data.chatId,
+          clientMessageId: data.clientMessageId ?? null,
+          sequence: data.sequence,
+          createdAt: new Date(),
+        };
         messages.set(id, row);
-        if (data.clientMessageId !== undefined) byClientId.set(`${data.chatId}:${data.clientMessageId}`, id);
+        if (data.clientMessageId !== undefined)
+          byClientId.set(`${data.chatId}:${data.clientMessageId}`, id);
         return row;
       },
     },
@@ -98,12 +121,14 @@ describe('ordered chat persistence', () => {
     const { store } = createStore();
     const messages = await Promise.all(
       Array.from({ length: 20 }, (_, index) =>
-        store.appendMessage(command(`33333333-3333-4333-8333-${String(index).padStart(12, '0')}`)),
+        store.appendMessage(
+          command(`33333333-3333-4333-8333-${String(index).padStart(12, '0')}`),
+        ),
       ),
     );
 
-    expect(messages.map(({ sequence }) => sequence).sort((a, b) => Number(a - b))).toEqual(
-      Array.from({ length: 20 }, (_, index) => BigInt(index + 1)),
-    );
+    expect(
+      messages.map(({ sequence }) => sequence).sort((a, b) => Number(a - b)),
+    ).toEqual(Array.from({ length: 20 }, (_, index) => BigInt(index + 1)));
   });
 });

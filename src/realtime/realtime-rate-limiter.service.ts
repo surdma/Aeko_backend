@@ -35,7 +35,9 @@ export class RealtimeRateLimiterService {
     private readonly connections?: RedisConnectionsService,
   ) {}
 
-  async consume(input: RealtimeRateLimitInput): Promise<RealtimeRateLimitDecision> {
+  async consume(
+    input: RealtimeRateLimitInput,
+  ): Promise<RealtimeRateLimitDecision> {
     // Read configuration here to make disabled Redis an intentional, explicit
     // local-safe-mode rather than an accidental missing dependency.
     if (this.configuration.redisUrl === null) {

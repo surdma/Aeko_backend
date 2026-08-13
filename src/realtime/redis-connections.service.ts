@@ -3,7 +3,8 @@ import Redis from 'ioredis';
 import { ConfigurationService } from '../configuration/configuration/configuration.service';
 import { RealtimeHealthService } from './realtime-health.service';
 
-export type RedisConnectionKind = 'publisher' | 'subscriber' | 'cache' | 'queue';
+export type RedisConnectionKind =
+  'publisher' | 'subscriber' | 'cache' | 'queue';
 
 @Injectable()
 export class RedisConnectionsService implements OnModuleDestroy {

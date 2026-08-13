@@ -1,4 +1,8 @@
-import { ChatAuthorizationService, ChatMembershipPort } from '../../src/chat/chat-authorization.service';
+/* eslint-disable @typescript-eslint/require-await -- async test doubles implement membership port */
+import {
+  ChatAuthorizationService,
+  ChatMembershipPort,
+} from '../../src/chat/chat-authorization.service';
 import { VideoCallAuthorizationService } from '../../src/chat/signalling/video-call-authorization.service';
 
 describe('VideoCallAuthorizationService', () => {
@@ -7,9 +11,13 @@ describe('VideoCallAuthorizationService', () => {
       isMember: async (_chatId, userId) => userId === 'member-a',
       invalidate: async () => undefined,
     };
-    const calls = new VideoCallAuthorizationService(new ChatAuthorizationService(memberships));
+    const calls = new VideoCallAuthorizationService(
+      new ChatAuthorizationService(memberships),
+    );
 
-    await expect(calls.assertPeers('member-a', 'attacker', 'chat-1')).rejects.toMatchObject({
+    await expect(
+      calls.assertPeers('member-a', 'attacker', 'chat-1'),
+    ).rejects.toMatchObject({
       code: 'AUTHORIZATION_DENIED',
     });
   });

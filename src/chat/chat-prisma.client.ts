@@ -57,7 +57,9 @@ const toPersisted = (row: {
   });
 };
 
-const eventPayload = (message: PersistedChatMessage): Prisma.InputJsonValue => ({
+const eventPayload = (
+  message: PersistedChatMessage,
+): Prisma.InputJsonValue => ({
   messageId: message.id,
   chatId: message.chatId,
   sequence: message.sequence.toString(),
@@ -132,7 +134,10 @@ export const createChatPrismaClient = (db: ChatDatabase): ChatStore => ({
         // A concurrent transaction may have passed its initial read before the
         // unique `(chatId, clientMessageId)` constraint committed. This is not
         // a transaction retry: return the winning durable message instead.
-        if (isIdempotencyConflict(error) && command.clientMessageId !== undefined) {
+        if (
+          isIdempotencyConflict(error) &&
+          command.clientMessageId !== undefined
+        ) {
           const existing = await existingMessage(db, command);
           if (existing !== null) return existing;
         }

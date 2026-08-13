@@ -7,11 +7,25 @@ import { ChatAuthorizationService } from './chat-authorization.service';
 export type SendMessageInput = ChatCommand;
 
 export type CoreChatOperation =
-  | 'createChat' | 'listConversations' | 'deleteConversation'
-  | 'listMessages' | 'editMessage' | 'deleteMessage' | 'replyToMessage'
-  | 'searchMessages' | 'addReaction' | 'removeReaction' | 'markRead'
-  | 'listEmojis' | 'listUsers' | 'getInvite' | 'joinGroup'
-  | 'leaveGroup' | 'removeGroupMember' | 'legacyChat' | 'legacySendMessage';
+  | 'createChat'
+  | 'listConversations'
+  | 'deleteConversation'
+  | 'listMessages'
+  | 'editMessage'
+  | 'deleteMessage'
+  | 'replyToMessage'
+  | 'searchMessages'
+  | 'addReaction'
+  | 'removeReaction'
+  | 'markRead'
+  | 'listEmojis'
+  | 'listUsers'
+  | 'getInvite'
+  | 'joinGroup'
+  | 'leaveGroup'
+  | 'removeGroupMember'
+  | 'legacyChat'
+  | 'legacySendMessage';
 
 export interface CoreChatApplicationPort {
   execute(

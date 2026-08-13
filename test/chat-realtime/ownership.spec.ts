@@ -32,12 +32,14 @@ describe('chat realtime ownership', () => {
       new Set(manifest.capabilityIds),
     );
     expect(
-      Object.values(owners).every(
-        (ownerTuple) =>
-          Array.isArray(ownerTuple) &&
+      Object.values(owners).every((ownerTuple) => {
+        const owner = ownerTuple[0];
+        return (
           ownerTuple.length === 1 &&
-          APPROVED_OWNERS.has(ownerTuple[0]),
-      ),
+          owner !== undefined &&
+          APPROVED_OWNERS.has(owner)
+        );
+      }),
     ).toBe(true);
   });
 });

@@ -93,5 +93,4 @@ describe('chat realtime cutover', () => {
     );
     expect(outbox.rows).toEqual([{ aggregateId: 'enhanced-1' }]);
   });
-
 });

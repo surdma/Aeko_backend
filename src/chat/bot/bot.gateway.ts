@@ -1,1 +1,18 @@
-import{ConnectedSocket,MessageBody,SubscribeMessage,WebSocketGateway}from'@nestjs/websockets';import type{AuthenticatedPrincipal}from'../../auth/auth.types';import{BotService}from'./bot.service';@WebSocketGateway({namespace:'/',cors:false})export class BotGateway{constructor(private readonly bot:BotService){}@SubscribeMessage('chat_with_bot')chat(@ConnectedSocket()s:{data:{principal:AuthenticatedPrincipal}},@MessageBody()b:unknown){return this.bot.chat(s.data.principal,b)}}
+import {
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+} from '@nestjs/websockets';
+import type { AuthenticatedPrincipal } from '../../auth/auth.types';
+import { BotService } from './bot.service';
+@WebSocketGateway({ namespace: '/', cors: false })
+export class BotGateway {
+  constructor(private readonly bot: BotService) {}
+  @SubscribeMessage('chat_with_bot') chat(
+    @ConnectedSocket() s: { data: { principal: AuthenticatedPrincipal } },
+    @MessageBody() b: unknown,
+  ) {
+    return this.bot.chat(s.data.principal, b);
+  }
+}

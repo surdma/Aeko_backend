@@ -1,1 +1,13 @@
-import{Module}from'@nestjs/common';import{ChatOutboxDispatcherService}from'./chat-outbox-dispatcher.service';import{ChatDeliveryWorker}from'./chat-delivery.worker';import{ChatDeliveryHealthService}from'./chat-delivery-health.service';@Module({providers:[ChatOutboxDispatcherService,ChatDeliveryWorker,ChatDeliveryHealthService],exports:[ChatOutboxDispatcherService,ChatDeliveryHealthService]})export class ChatDeliveryModule{}
+import { Module } from '@nestjs/common';
+import { ChatOutboxDispatcherService } from './chat-outbox-dispatcher.service';
+import { ChatDeliveryWorker } from './chat-delivery.worker';
+import { ChatDeliveryHealthService } from './chat-delivery-health.service';
+@Module({
+  providers: [
+    ChatOutboxDispatcherService,
+    ChatDeliveryWorker,
+    ChatDeliveryHealthService,
+  ],
+  exports: [ChatOutboxDispatcherService, ChatDeliveryHealthService],
+})
+export class ChatDeliveryModule {}

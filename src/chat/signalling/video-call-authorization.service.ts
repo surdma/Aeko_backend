@@ -6,7 +6,11 @@ import { ChatAuthorizationService } from '../chat-authorization.service';
 export class VideoCallAuthorizationService {
   constructor(private readonly chatAuthorization: ChatAuthorizationService) {}
 
-  async assertPeers(callerId: string, targetId: string, chatId: string): Promise<void> {
+  async assertPeers(
+    callerId: string,
+    targetId: string,
+    chatId: string,
+  ): Promise<void> {
     const [caller, target] = await Promise.all([
       this.isMember(callerId, chatId),
       this.isMember(targetId, chatId),

@@ -12,7 +12,10 @@ export class ChatAuthorizationService {
 
   async assertMember(userId: string, chatId: string): Promise<void> {
     if (!(await this.memberships.isMember(chatId, userId))) {
-      throw new DomainError('AUTHORIZATION_DENIED', 'Chat membership is required.');
+      throw new DomainError(
+        'AUTHORIZATION_DENIED',
+        'Chat membership is required.',
+      );
     }
   }
 

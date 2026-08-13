@@ -8,27 +8,27 @@ verbatim.
 
 ## Route surface
 
-| Route | Auth | Notes |
-| --- | --- | --- |
-| `GET /api/coins/packages` | public | unchanged |
-| `GET /api/coins/balance` | session | missing user now 404, was 500 |
-| `GET /api/coins/history` | session | page size capped |
-| `POST /api/coins/purchase` | session | unchanged |
-| `GET /api/coins/purchase/verify` | public | amount now verified; credit is atomic |
-| `POST /api/coins/purchase/verify-stripe` | session | as above |
-| `POST /api/payments/pay` | session + 2FA | preserved as found |
-| `GET /api/payments/verify` | session | previously could never report success |
-| `GET /api/subscription/admin/all` | admin | page size capped |
-| `GET /api/subscription/admin/stats` | admin | unchanged |
-| `POST /api/subscription/initialize` | session + 2FA | now stores the provider reference |
-| `GET /api/subscription/verify` | public | completion is now idempotent |
-| `GET /api/subscription/status` | session | previously returned 500 on every call |
-| `GET /api/subscription-plans` | public | unchanged |
-| `POST /api/subscription-plans` | admin | unchanged |
-| `PUT /api/subscription-plans/:id` | admin | accepts only documented columns |
-| `DELETE /api/subscription-plans/:id` | admin | still deactivates, never deletes |
-| `POST /api/webhooks/paystack` | signature | constant-time verification |
-| `POST /api/webhooks/stripe` | signature | events without metadata acknowledged |
+| Route                                    | Auth          | Notes                                 |
+| ---------------------------------------- | ------------- | ------------------------------------- |
+| `GET /api/coins/packages`                | public        | unchanged                             |
+| `GET /api/coins/balance`                 | session       | missing user now 404, was 500         |
+| `GET /api/coins/history`                 | session       | page size capped                      |
+| `POST /api/coins/purchase`               | session       | unchanged                             |
+| `GET /api/coins/purchase/verify`         | public        | amount now verified; credit is atomic |
+| `POST /api/coins/purchase/verify-stripe` | session       | as above                              |
+| `POST /api/payments/pay`                 | session + 2FA | preserved as found                    |
+| `GET /api/payments/verify`               | session       | previously could never report success |
+| `GET /api/subscription/admin/all`        | admin         | page size capped                      |
+| `GET /api/subscription/admin/stats`      | admin         | unchanged                             |
+| `POST /api/subscription/initialize`      | session + 2FA | now stores the provider reference     |
+| `GET /api/subscription/verify`           | public        | completion is now idempotent          |
+| `GET /api/subscription/status`           | session       | previously returned 500 on every call |
+| `GET /api/subscription-plans`            | public        | unchanged                             |
+| `POST /api/subscription-plans`           | admin         | unchanged                             |
+| `PUT /api/subscription-plans/:id`        | admin         | accepts only documented columns       |
+| `DELETE /api/subscription-plans/:id`     | admin         | still deactivates, never deletes      |
+| `POST /api/webhooks/paystack`            | signature     | constant-time verification            |
+| `POST /api/webhooks/stripe`              | signature     | events without metadata acknowledged  |
 
 No routes were added and none were removed. `test/payments-subscriptions/cutover.spec.ts`
 pins this set exactly, so a future addition fails the build.
@@ -69,7 +69,7 @@ cookie. Requiring one would break payment entirely.
    either schema, so Prisma rejected the query and the route answered 500 every
    time. Both are dropped; `goldenTick` is real and is kept.
 7. **`correction:flutterwave-verify-status-field`** — the route compared the
-   response *envelope's* `status` to `'successful'`, but the envelope reads
+   response _envelope's_ `status` to `'successful'`, but the envelope reads
    `'success'` for any answered call and the transaction state lives at
    `data.status`. The route could never report a settled payment. It now reads
    the right field.
@@ -93,7 +93,7 @@ cookie. Requiring one would break payment entirely.
 
 ## Community settlement: carved out, not deferred
 
-Both providers deliver subscription *and* community events down the same two
+Both providers deliver subscription _and_ community events down the same two
 webhook URLs, so the dispatcher had to migrate with this domain even though
 community payments belong to `communities` (programme order 6).
 
@@ -121,7 +121,7 @@ sync and the earnings credit all inside it.
 
 ## Two things the atomic gate had to get right
 
-Making settlement idempotent means settling **exactly once** — not *at most*
+Making settlement idempotent means settling **exactly once** — not _at most_
 once. Two traps sit either side of that, and both are pinned by test.
 
 **`correction:settlement-claim-honours-failed-initialisation`.** The natural
@@ -135,7 +135,7 @@ avoided this by short-circuiting only on `completed`, and the gate is
 have a test that settles a `failed` transaction and asserts the grant lands.
 
 **`correction:coin-replay-reports-live-balance`.** A replayed coin
-verification must report the balance the buyer holds *now*. The ledger row's
+verification must report the balance the buyer holds _now_. The ledger row's
 `balanceAfter` records what it was when that credit landed, and goes stale the
 moment they spend. The replay path reads the live balance inside the same
 transaction, as legacy did.
@@ -143,7 +143,7 @@ transaction, as legacy did.
 ## Preserved deliberately, not corrected
 
 - **Renewal resets the term.** `subscriptionExpiry` is set a month or year from
-  *now*, so renewing early forfeits the remainder. Changing it would alter
+  _now_, so renewing early forfeits the remainder. Changing it would alter
   billing outcomes — a business decision, not a migration one.
 - **Coin pricing.** `pricePaise` is charged to Paystack as kobo. The field name
   says paise, the charge says naira. Prices are preserved exactly.

@@ -9,6 +9,10 @@ export abstract class ChatEventTransport {
 export class ChatEventPublisher {
   constructor(private readonly transport: ChatEventTransport) {}
   messageCreated(message: PersistedChatMessage): Promise<void> {
-    return this.transport.toRoom(`chat:${message.chatId}`, 'new_message', message);
+    return this.transport.toRoom(
+      `chat:${message.chatId}`,
+      'new_message',
+      message,
+    );
   }
 }

@@ -26,15 +26,15 @@
 
 Recorded here so the tasks below are implementing against evidence, not guesses.
 
-| # | Route | Defect |
-| - | ----- | ------ |
-| 1 | `PUT /api/challenges/:challengeId/vote` | The voter is read from **`req.body.userId`**, so any caller can cast a vote as any other user. The legacy source even comments that this is questionable. |
-| 2 | `PUT /api/debates/:debateId/vote` | No per-voter record at all — `votes[participantId] += 1` on every call, so one user can vote without limit. |
-| 3 | `PUT /api/debates/:debateId/score` | No authorization whatsoever: any authenticated user can drive the AI scorer against any debate and overwrite a participant's score. |
-| 4 | `PUT /api/spaces/:spaceId/highlight` | No authorization whatsoever: any authenticated user can append highlights to anyone's space. |
-| 5 | `GET /api/challenges` | Includes a Challenge relation named `creator`, which does not exist on the model — the relation is `user`. Every call raises a Prisma validation error and returns 500, exactly like the posts `/reposts` defect. |
-| 6 | All of `scores`, `votes`, `participants`, `highlights` | Read-modify-write of a JSON column outside any transaction; concurrent writes silently lose one another. |
-| 7 | Both list routes | `limit` is unbounded, and participants are resolved with one user query per row. |
+| #   | Route                                                  | Defect                                                                                                                                                                                                            |
+| --- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `PUT /api/challenges/:challengeId/vote`                | The voter is read from **`req.body.userId`**, so any caller can cast a vote as any other user. The legacy source even comments that this is questionable.                                                         |
+| 2   | `PUT /api/debates/:debateId/vote`                      | No per-voter record at all — `votes[participantId] += 1` on every call, so one user can vote without limit.                                                                                                       |
+| 3   | `PUT /api/debates/:debateId/score`                     | No authorization whatsoever: any authenticated user can drive the AI scorer against any debate and overwrite a participant's score.                                                                               |
+| 4   | `PUT /api/spaces/:spaceId/highlight`                   | No authorization whatsoever: any authenticated user can append highlights to anyone's space.                                                                                                                      |
+| 5   | `GET /api/challenges`                                  | Includes a Challenge relation named `creator`, which does not exist on the model — the relation is `user`. Every call raises a Prisma validation error and returns 500, exactly like the posts `/reposts` defect. |
+| 6   | All of `scores`, `votes`, `participants`, `highlights` | Read-modify-write of a JSON column outside any transaction; concurrent writes silently lose one another.                                                                                                          |
+| 7   | Both list routes                                       | `limit` is unbounded, and participants are resolved with one user query per row.                                                                                                                                  |
 
 Two behaviors that look like defects but are **preserved**, because clients depend on them:
 
@@ -120,7 +120,7 @@ Corrections: scoring requires the debate creator or an administrator; both count
 > half of the defect, and the ballot-stuffing half is registered as
 > `correction:debate-vote-ballot-stuffing` with status `pending-schema`. It is
 > carried the same way the social graph normalization was: a `DebateVote(voterId,
-> debateId, participantId)` table with a unique constraint, backfilled from the
+debateId, participantId)` table with a unique constraint, backfilled from the
 > existing counts as anonymous votes, then a read cutover. Task 6 records it as
 > an open gate rather than counting it as corrected.
 

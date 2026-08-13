@@ -12,9 +12,7 @@ export interface RealtimeHandshake {
 export type RealtimePrincipal = AuthenticatedPrincipal;
 
 export class RealtimeAuthenticationError extends Error {
-  constructor(
-    readonly code: 'AUTHENTICATION_REQUIRED' | 'UNTRUSTED_ORIGIN',
-  ) {
+  constructor(readonly code: 'AUTHENTICATION_REQUIRED' | 'UNTRUSTED_ORIGIN') {
     super(
       code === 'AUTHENTICATION_REQUIRED'
         ? 'Authentication is required.'

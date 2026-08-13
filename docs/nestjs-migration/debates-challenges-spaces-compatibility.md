@@ -7,21 +7,21 @@ could not be carried across verbatim.
 
 ## Route surface
 
-| Route | Auth | Notes |
-| --- | --- | --- |
-| `POST /api/debates/start` | session | unchanged |
-| `PUT /api/debates/:debateId/score` | session | creator or admin only (was: any user) |
-| `PUT /api/debates/:debateId/vote` | session | unchanged shape; now transactional |
-| `PUT /api/debates/:debateId/end` | session | unchanged |
-| `GET /api/debates` | public | unchanged; one participant query per page |
-| `POST /api/challenges/create` | session | unchanged |
-| `PUT /api/challenges/:challengeId/duet` | session | now transactional |
-| `PUT /api/challenges/:challengeId/vote` | session | voter is the session, not the body |
-| `PUT /api/challenges/:challengeId/end` | session | creator or admin only |
-| `GET /api/challenges` | public | previously returned 500 on every call |
-| `POST /api/spaces/create` | session | unchanged |
-| `PATCH /api/spaces/:spaceId/end` | session | host only; idempotent |
-| `PUT /api/spaces/:spaceId/highlight` | session | host only (was: any user) |
+| Route                                   | Auth    | Notes                                     |
+| --------------------------------------- | ------- | ----------------------------------------- |
+| `POST /api/debates/start`               | session | unchanged                                 |
+| `PUT /api/debates/:debateId/score`      | session | creator or admin only (was: any user)     |
+| `PUT /api/debates/:debateId/vote`       | session | unchanged shape; now transactional        |
+| `PUT /api/debates/:debateId/end`        | session | unchanged                                 |
+| `GET /api/debates`                      | public  | unchanged; one participant query per page |
+| `POST /api/challenges/create`           | session | unchanged                                 |
+| `PUT /api/challenges/:challengeId/duet` | session | now transactional                         |
+| `PUT /api/challenges/:challengeId/vote` | session | voter is the session, not the body        |
+| `PUT /api/challenges/:challengeId/end`  | session | creator or admin only                     |
+| `GET /api/challenges`                   | public  | previously returned 500 on every call     |
+| `POST /api/spaces/create`               | session | unchanged                                 |
+| `PATCH /api/spaces/:spaceId/end`        | session | host only; idempotent                     |
+| `PUT /api/spaces/:spaceId/highlight`    | session | host only (was: any user)                 |
 
 No routes were added and none were removed. `test/debates-challenges-spaces/cutover.spec.ts`
 asserts this set exactly, so a future addition fails the build.
