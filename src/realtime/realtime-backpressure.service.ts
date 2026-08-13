@@ -1,4 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Optional } from '@nestjs/common';
+
+export const REALTIME_EPHEMERAL_LIMIT = Symbol('REALTIME_EPHEMERAL_LIMIT');
 
 export interface RealtimePressureMetrics {
   readonly droppedEphemeral: number;
@@ -13,7 +15,11 @@ export class RealtimeBackpressureService {
   private acceptedDurable = 0;
   private lostAcknowledgedMessages = 0;
 
-  constructor(private readonly ephemeralLimit = 64) {}
+  constructor(
+    @Optional()
+    @Inject(REALTIME_EPHEMERAL_LIMIT)
+    private readonly ephemeralLimit = 64,
+  ) {}
 
   async ephemeral(operation: () => Promise<void>): Promise<boolean> {
     if (this.ephemeralInFlight >= this.ephemeralLimit) {
