@@ -12,8 +12,9 @@ export interface OutboxRecord {
   readonly createdAt: Date;
 }
 
-export interface ChatOutboxStore {
-  claimBatch(limit: number): Promise<readonly OutboxRecord[]>;
+export abstract class ChatOutboxStore {
+  abstract claimBatch(limit: number): Promise<readonly OutboxRecord[]>;
+  abstract release(id: string): Promise<void>;
 }
 
 const toOutboxRecord = (row: {
@@ -71,5 +72,11 @@ export const createChatOutboxPrismaClient = (
     return claimed
       .filter((record): record is NonNullable<typeof record> => record !== null)
       .map(toOutboxRecord);
+  },
+  async release(id) {
+    await db.chatOutboxEvent.updateMany({
+      where: { id, completedAt: null },
+      data: { claimedAt: null },
+    });
   },
 });

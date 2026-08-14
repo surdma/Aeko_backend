@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { DomainError } from '../common/errors/domain.error';
 
-export interface ChatMembershipPort {
-  isMember(chatId: string, userId: string): Promise<boolean>;
-  invalidate(chatId: string, userId: string): Promise<void>;
+export abstract class ChatMembershipPort {
+  abstract isMember(chatId: string, userId: string): Promise<boolean>;
+  abstract invalidate(chatId: string, userId: string): Promise<void>;
 }
 
 @Injectable()

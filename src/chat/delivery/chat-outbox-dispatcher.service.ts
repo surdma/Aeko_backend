@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { ChatOutboxStore } from '../../chat-delivery/chat-outbox-prisma.client';
+import { ChatOutboxStore } from '../../chat-delivery/chat-outbox-prisma.client';
 import type { ChatDeliveryJob } from './chat-delivery.contract';
 export abstract class ChatDeliveryQueue {
   abstract add(
@@ -38,6 +38,7 @@ export class ChatOutboxDispatcherService {
         );
         queued++;
       } catch {
+        await this.store.release(r.id);
         break;
       }
     }

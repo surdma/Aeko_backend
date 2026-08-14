@@ -10,8 +10,10 @@ export interface PersistedChatMessage {
   readonly createdAt: Date;
 }
 
-export interface ChatStore {
-  appendMessage(command: SendMessageCommand): Promise<PersistedChatMessage>;
+export abstract class ChatStore {
+  abstract appendMessage(
+    command: SendMessageCommand,
+  ): Promise<PersistedChatMessage>;
 }
 
 const SERIALIZABLE_ATTEMPTS = 3;

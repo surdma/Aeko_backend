@@ -27,6 +27,8 @@
     "test:chat-realtime": "jest --config test/chat-realtime/jest.config.json --runInBand",
     "bench:chat:legacy": "tsx test/chat-realtime/load/legacy-chat-load.ts",
     "bench:chat:nest": "tsx test/chat-realtime/load/chat-load.ts",
+    "bench:chat:nest:server": "tsx test/chat-realtime/load/nest-chat-server.ts",
+    "bench:chat:seed": "tsx scripts/seed-chat-benchmark.ts",
     "bench:chat:report": "tsx test/chat-realtime/load/report.ts",
     "prisma:generate": "prisma generate",
     "prisma:validate": "prisma validate",

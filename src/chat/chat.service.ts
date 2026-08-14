@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import type { AuthenticatedPrincipal } from '../auth/auth.types';
 import type { ChatCommand } from './chat.contract';
-import type { ChatStore, PersistedChatMessage } from './chat-prisma.client';
+import { ChatStore, type PersistedChatMessage } from './chat-prisma.client';
 import { ChatAuthorizationService } from './chat-authorization.service';
 
 export type SendMessageInput = ChatCommand;
@@ -27,8 +27,8 @@ export type CoreChatOperation =
   | 'legacyChat'
   | 'legacySendMessage';
 
-export interface CoreChatApplicationPort {
-  execute(
+export abstract class CoreChatApplicationPort {
+  abstract execute(
     operation: CoreChatOperation,
     principal: AuthenticatedPrincipal,
     input: Readonly<Record<string, unknown>>,
@@ -40,7 +40,7 @@ export class ChatService {
   constructor(
     private readonly store: ChatStore,
     private readonly authorization: ChatAuthorizationService,
-    private readonly application?: CoreChatApplicationPort,
+    @Optional() private readonly application?: CoreChatApplicationPort,
   ) {}
 
   async sendMessage(

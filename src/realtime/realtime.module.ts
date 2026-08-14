@@ -1,5 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import {
+  ChatEventTransport,
+  SocketIoChatEventTransport,
+} from '../chat/chat-event-publisher';
 import { ChatMembershipCacheService } from './chat-membership-cache.service';
 import { PresencePort, RedisPresenceService } from './presence.service';
 import { RedisConnectionsService } from './redis-connections.service';
@@ -21,6 +25,8 @@ import { SocketIoRedisAdapter } from './socket-io-redis.adapter';
     RealtimeRoomNames,
     RealtimeRateLimiterService,
     ChatMembershipCacheService,
+    SocketIoChatEventTransport,
+    { provide: ChatEventTransport, useExisting: SocketIoChatEventTransport },
     { provide: PresencePort, useClass: RedisPresenceService },
   ],
   exports: [
@@ -32,6 +38,8 @@ import { SocketIoRedisAdapter } from './socket-io-redis.adapter';
     RealtimeBackpressureService,
     ChatMembershipCacheService,
     PresencePort,
+    ChatEventTransport,
+    SocketIoChatEventTransport,
   ],
 })
 export class RealtimeModule {}
